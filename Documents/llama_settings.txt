@@ -1,5 +1,12 @@
 open source llm - llama 세팅
 
+# ref links...
+a) https://huggingface.co/docs/huggingface_hub/package_reference/environment_variables
+
+
+
+#########################################################################################################
+
 1) https://huggingface.co/ 
  -> 계정 생성
 
@@ -29,3 +36,5 @@ pip install torch transformers
 4) 이후 필요한 라이브러리는 chat-gpt와 얘기하면서 보충한다.
 
 5)
+
+#########################################################################################################
