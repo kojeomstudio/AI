@@ -1,0 +1,31 @@
+open source llm - llama 세팅
+
+1) https://huggingface.co/ 
+ -> 계정 생성
+
+2) huggingface 에서 원하는 모델을 다운받으려면, 해당 model-repo에 대한 접근 권한을 얻어야함.
+ -> 계정을 만들고 나면, 각 모델에 대한 access 현황을 알 수 있음
+ -> huggingface에 대한 로그인을 위한 cli ( command line tool ) 을 제공하고 있음.
+
+3) 
+
+# Python 설치 확인 (필요 시 Python 설치)
+python --version
+
+# 가상 환경 생성
+python -m venv llama_env
+
+# 가상 환경 활성화
+# Windows PowerShell
+.\llama_env\Scripts\Activate
+
+# 필요한 라이브러리 설치
+pip install torch transformers
+
+대충 이런 느낌으로, 파이썬의 가상 환경 workspace를 만들어서 해당 경로에서 llm을 세팅 필요.
+( 필요한 라이브러리들 포함 )
+-> 가상 환경 세팅을 해줘야, 단일 머신에서 패키지 충돌을 미연에 방지할 수 있음. ( docker에서의 container와 비슷한 개념 )
+
+4) 이후 필요한 라이브러리는 chat-gpt와 얘기하면서 보충한다.
+
+5)
