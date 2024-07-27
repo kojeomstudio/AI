@@ -3,9 +3,6 @@ import torch
 
 from huggingface_hub import login
 
-# Log in using your token
-login(token='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')
-
 model_id = "meta-llama/Meta-Llama-3.1-8B-Instruct"
 
 pipeline = transformers.pipeline(
