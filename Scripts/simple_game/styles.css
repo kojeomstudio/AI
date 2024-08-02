@@ -1,0 +1,134 @@
+body {
+    margin: 0;
+    font-family: 'Roboto', sans-serif;
+}
+
+.screen {
+    display: none;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+#loading-screen,
+#login-screen,
+#game-screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #f0f0f0;
+}
+
+#login-screen .login-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+#game-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: #e0e0e0;
+}
+
+.entity {
+    position: absolute;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+    font-size: 12px;
+    color: #333;
+    border-radius: 5px; /* Adds a slight rounding to all elements */
+}
+
+.player,
+.npc,
+.monster {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    font-weight: bold; /* Bold text for moving entities */
+}
+
+.player {
+    background-color: #73aadb;
+}
+
+.npc.team-1 {
+    background-color: #db7373;
+}
+
+.npc.team-2 {
+    background-color: #73db73;
+}
+
+.npc.team-3 {
+    background-color: #7373db;
+}
+
+.npc.team-4 {
+    background-color: #dbdb73;
+}
+
+.monster {
+    background-color: #ff5733; /* Monster 색상을 구분하기 위해 새로운 색상으로 설정 */
+}
+
+.terrain,
+.pond,
+.building,
+.capture-object,
+.boundary {
+    width: 50px;
+    height: 50px;
+}
+
+.terrain {
+    background-color: #98d398;
+}
+
+.pond {
+    background-color: #73aadb;
+}
+
+.building {
+    background-color: #d1a473;
+}
+
+.capture-object {
+    background-color: #e6a773;
+}
+
+.boundary {
+    background-color: #a0a0a0;
+}
+
+.action-label {
+    position: absolute;
+    bottom: -20px;
+    font-size: 10px;
+    color: #555;
+    background-color: #f9f9f9;
+    padding: 2px;
+    border-radius: 3px;
+    box-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
+    white-space: nowrap;
+}
+
+#fps-counter {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    font-size: 14px;
+    color: #333;
+    background-color: #f9f9f9;
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+}
