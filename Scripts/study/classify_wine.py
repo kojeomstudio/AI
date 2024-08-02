@@ -51,7 +51,6 @@ logisticiReg = LogisticRegression(C=100, max_iter=1000)
 logisticiReg.fit(x_train, y_train)
 
 print("logisticRegression -> coef : {0}".format(logisticiReg.coef_))
-
 print("logisticRegression -> score (test data) : {0}".format(logisticiReg.score(x_test, y_test)))
 print("logisticRegression -> score (train data) : {0}".format(logisticiReg.score(x_train, y_train)))
 
