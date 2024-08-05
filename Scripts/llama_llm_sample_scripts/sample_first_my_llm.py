@@ -9,6 +9,7 @@ login(token='Youre Huggingface user token')
 
 # huggingface의 경우, 모델 다운로드 기본 경로가 유저/.cache/~
 # 필요하면 system var 추가해서 local storage 경로 변경 가능.
+# HF_HOME <---
 
 model_id = "meta-llama/Meta-Llama-3.1-8B-Instruct"
 

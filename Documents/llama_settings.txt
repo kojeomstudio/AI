@@ -14,7 +14,16 @@ a) https://huggingface.co/docs/huggingface_hub/package_reference/environment_var
  -> 계정을 만들고 나면, 각 모델에 대한 access 현황을 알 수 있음
  -> huggingface에 대한 로그인을 위한 cli ( command line tool ) 을 제공하고 있음.
 
-3) 
+3) 모델 다운로드 경로는 디폴트로 HF_HOME = 사용자/.cache
+-> 다른 경로 변경은 아래와 같이 진행.
+
+// 맥에서 영구적으로 변경.
+echo 'export HF_HOME=/Volumes/MyExternalDrive/huggingface' >> ~/.zshrc
+source ~/.zshrc
+
+// 맥에서 해당 터미널에서만 변경
+export HF_HOME=/Volumes/MyExternalDrive/huggingface
+
 
 # Python 설치 확인 (필요 시 Python 설치)
 python --version
