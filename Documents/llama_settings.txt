@@ -47,3 +47,21 @@ pip install torch transformers
 5)
 
 #########################################################################################################
+
+1. llama 모델은 ollma 프레임워크 + open web ui 를 같이 사용하고 있다.
+ -> 이 방법에는 docker를 권장하고 있다. ( 공식적으로..)
+ -> 그러나 docker는 퍼스널이 아니면 유료 라이센스를 구매해야 한다.
+ 
+@m3kwong We store the models in layers in ~/.ollama/models.
+If you list that folder, you'll see two directories: blobs and manifests. Blob is the raw data, and manifest is the metadata. Together, they make up the model.
+If you are looking for a model file (e.g. .bin file), it's currently not available. We can look into potentially building an export feature for the file.
+
+깃허브 ollama repo에 있던 글이다. 대충, ~/.ollama/models 폴더 밑에 모델이 받아지고, 메타데이터 및 blob으로 관리중. 
+그렇다면, 해당 모델에 직접 접근해서 파인튜닝을 하거나 적절하게 변형을 가하려면? ollama 에서 제공하려나..
+
+기본적으로 ollama에서는 한번 변환을 거친 형태로 llm 모델을 사용한다. 따라서, 허깅페이스에서 받은 모델을 직접 밀어 넣어서는 사용 불가.
+( safetensor, pytorch 모델들은 -> https://github.com/ollama/ollama/blob/main/docs/import.md  / gguf ?)
+
+huggingface에서 llama모델을 받으면 기본적으로 safetensor 파일인데, 이를 gguf 를 이용해서 open web ui 에 밀어넣어 볼까 생각 중.
+ -> 2024.8월 기준 gguf 모델 적용이 실험적 기능으로 제공되고 있음.
+
