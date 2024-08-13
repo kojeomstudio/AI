@@ -48,3 +48,7 @@ result_history = model.fit(x_train, y_train, epochs=30, validation_data=(x_valid
 pd.DataFrame(result_history.history).plot(figsize=(8,5), xlim=[0, 29], ylim=[0, 1], grid=True, xlabel="epoch",
                                           style=['r--', 'r--', 'b-', 'b-*'])
 plt.show()
+
+# 검증
+print(f"model evaluate : {model.evaluate()}")
+
