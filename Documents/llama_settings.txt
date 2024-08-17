@@ -65,3 +65,31 @@ If you are looking for a model file (e.g. .bin file), it's currently not availab
 huggingface에서 llama모델을 받으면 기본적으로 safetensor 파일인데, 이를 gguf 를 이용해서 open web ui 에 밀어넣어 볼까 생각 중.
  -> 2024.8월 기준 gguf 모델 적용이 실험적 기능으로 제공되고 있음.
 
+================== huggingface model to gguf 포멧 변환 방법 ========================
+
+1. llama.cpp 설치
+-> 해당 repo에 있는 파이썬 코드가 필요함. / 해당 프로젝트를 빌드할 필요는 없음.
+
+2.
+-> brew install cmake
+   brew install gcc
+   ( 빌드가 필요하면 )
+-> git clone https://github.com/ggerganov/llama.cpp.git
+-> 클론이 끝나면 아래 사이트를 참고해서 진행한다.
+ ( https://grip.news/archives/3000/ )
+-> 요점은,  pip install -r llama.cpp/requirements.txt ( 필요한 파이선 라이브러리 다운. 해당 내용을 보면 알 수 있음. )
+
+3.
+-> brew install python
+-> pip install torch transformers
+
+4. 
+from transformers import AutoModelForCausalLM, AutoTokenizer
+
+model_name = "huggingface/transformers"
+model = AutoModelForCausalLM.from_pretrained(model_name)
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+
+5. 
+-> python convert-hf-to-gguf.py --model PATH_TO_MODEL --output PATH_TO_OUTPUT
+   -h 명령어로, 도움말 먼저 확인해도 좋음. ( --outtype 옵션으로 f32, f16, f8_0, auto )
