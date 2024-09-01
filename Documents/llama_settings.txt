@@ -105,6 +105,11 @@ tokenizer = AutoTokenizer.from_pretrained(model_name)
 
 ========================== open-web-ui 프레임워크의 pipeline을 이용한 rag 구성  ================================
 
+참고 문서
+-> https://www.ncloud-forums.com/topic/283
+-> https://www.ncloud-forums.com/forum/6/
+-> https://www.ncloud-forums.com/topic/318/
+
 open-web-ui 에서는 pipeline 이라는 별도의 rag/filter등의 개념을 도입하기 편하게 해준다.
 -> docker 에서 운용되고 있음을 기반으로 아래와 같이 시작.
 a) https://docs.llamaindex.ai/en/stable/examples/llm/ollama/
@@ -120,5 +125,8 @@ b) https://docs.llamaindex.ai/en/stable/#getting-started
 -> https://github.com/open-webui/pipelines
 -> 해당 git clone 이후에, examples 폴더 아래에 여러가지 파이선 샘플들이 있다.
 -> 해당 스크립트를 open-web-ui 관리자 패널에서 파이프라인 -> 스크립트 등록 후에 세팅한다.
-    -> 스크립트는 기본적으로 start-up등 스테이트 처리가 되고 있는데, pipe() 구간에서 필요한 작업을 추가 하면 될 것 같음.
+   -> 스크립트는 기본적으로 start-up등 스테이트 처리가 되고 있는데, pipe() 구간에서 필요한 작업을 추가 하면 될 것 같음.
        ( 해당 파이선이 파이프라인에 등록되면 필요한 lib들은 자동으로 설치되는 것 같다. -> pipeline 이 설치된 컨테이너)
+   -> llama-index 라는 프레임워크를 통해 ollama 을 기반으로 하는 커스텀 rag도 구성할 수 있다.
+       (llama-index : https://www.llamaindex.ai)
+   -> https://docs.llamaindex.ai/en/stable/examples/data_connectors/simple_directory_reader/
