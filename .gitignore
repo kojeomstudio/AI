@@ -2,3 +2,4 @@
 /llama_Scripts
 /.venv
 llm/rag/test_docs
+llm/rag/chroma_db
