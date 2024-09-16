@@ -91,17 +91,22 @@ tokenizer = AutoTokenizer.from_pretrained(model_name)
 -> python convert-hf-to-gguf.py --model PATH_TO_MODEL --output PATH_TO_OUTPUT
    -h 명령어로, 도움말 먼저 확인해도 좋음. ( --outtype 옵션으로 f32, f16, f8_0, auto )
 
-========================== 랭체인(langchain) 프레임워크를 이용한 rag 구성  =======================================
+========================== 랭체인(langchain) / 랭그래프(langgraph) 프레임워크를 이용한 rag 구성  =======================================
 
 -> https://github.com/langchain-ai/langchain
+-> https://langchain-ai.github.io/langgraph/
 
 사전 지식
 1) https://arxiv.org/abs/2201.11903 -> chain of thoughts
 2) https://arxiv.org/abs/2302.04761
 3) langsmith
    - 애플리케이션의 성능 측정 및 분석 툴셋
+4) langgraph
+   - https://langchain-ai.github.io/langgraph/concepts/low_level/#graphs
+   - https://langchain-ai.github.io/langgraph/tutorials/#quick-start
+
 4) 흐름
-   - load (raw data ex: pdf, word, url...) -> split -> embed -> store
+   - load (raw data ex: pdf, word, url...) -> split -> embed -> store -> query
 
 ========================== open-web-ui 프레임워크의 pipeline을 이용한 rag 구성  ================================
 
