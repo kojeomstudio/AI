@@ -14,12 +14,14 @@ from langgraph.graph import StateGraph, END, START
 from typing import Annotated
 from typing_extensions import TypedDict
 
+from enum import Enum
+
 # pip install --upgrade langchain langsmith langchain-chroma langchain-community pydantic langgraph
 
 # https://pypi.org/project/langgraph/0.0.24/
 
 
-################ global variables #####################
+############################ global variables ####################################
 ollama_model_name = "EEVE-Korean-Instruct-10.8B-v1.0-Q4_K_S.gguf:latest"
 ollama_service_url = 'http://localhost:11434'
 
@@ -30,36 +32,67 @@ documents_path = "./test_docs"
 # 노드 네임 정의
 load_node_name = "load_node"
 embedding_node_name = "embedding_node"
+search_documents_node_name = "search_doucments_node"
 query_node_name = "query_node"
 
-#####################################################
+###################################################################################
+
+class StateResultType(Enum):
+    NONE = 0
+    SUCCESS = 1
+    FAIL_NONE_DOCUMENTS = 2
+    FAIL_NOT_FOUND_DOCUMENTS = 3
+    FAIL_QUERY_ERROR = 4
+    FAIL_MAKE_VECTORSTORE = 5
+    FAIL_UNKNOWN = 100
 
 class StateTypeDict(TypedDict):
     documents : list
+    similarity_documents : list
     vectorstore : Chroma
     user_query : str
+    llm_answer : str
+    state_result_msg : str
+    state_result_type : StateResultType
 
-# 1. 문서 로딩 노드
-def process_load_documents(state : StateTypeDict):
+class ErrorHandler:
+    @staticmethod
+    def check(state : StateTypeDict):
+        return True
+    
+class Embedding_Helper:
+    @staticmethod
+    def MakeVectorStoreDB(documents_source : list):
+        text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=0)
+        all_splits = text_splitter.split_documents(documents_source)
+
+        oembed = OllamaEmbeddings(base_url=ollama_service_url, model=ollama_model_name)
+        vectorstore = Chroma.from_documents(documents=all_splits, embedding=oembed, persist_directory=vectorstore_db_path)
+        vectorstore.persist()
+
+        return f"기존에 존재하는 db가 없으므로 신규 생성합니다."
+
+# 문서 로딩 노드
+def state_load_documents(state : StateTypeDict):
     loader = DirectoryLoader(path=documents_path, glob='**/*.txt')
     txt_files = loader.load()
 
     total_data = txt_files
-    print(f"txt files num : {len(txt_files)}")
+    #print(f"txt files num : {len(txt_files)}")
 
     pdf_loader = DirectoryLoader(path=documents_path, glob='**/*.pdf')
     pdf_files = pdf_loader.load()
-    print(f"pdf_fiels num : {len(pdf_files)}")
+    #print(f"pdf files num : {len(pdf_files)}")
     total_data += pdf_files
 
     docx_loader = DirectoryLoader(path=documents_path, glob='**/*.docx')
     docx_files = docx_loader.load()
-    print(f"docx_files num : {len(docx_files)}")
+    #print(f"docx_files num : {len(docx_files)}")
     total_data += docx_files
 
     doc_loader = DirectoryLoader(path=documents_path, glob='**/*.doc')
     doc_files = doc_loader.load()
-    print(f"doc_files num : {len(doc_files)}")
+    #print(f"doc_files num : {len(doc_files)}")
     total_data += doc_files
 
     xlsx_files = DirectoryLoader(path=documents_path, glob='**/*.xlsx').load()
@@ -69,89 +102,169 @@ def process_load_documents(state : StateTypeDict):
             text_data = " ".join([str(cell) for cell in row])
             total_data.append({"text": text_data})
 
-    return {"documents" : total_data}
+    file_type_string = f"txt : {len(txt_files)}, pdf : {len(pdf_files)}, docx : {len(docx_files)}, xlsx : {len(xlsx_files)}"
+
+    result_msg = ""
+    result_type = StateResultType.NONE
+    if len(total_data) > 0:
+        result_type = StateResultType.SUCCESS
+        result_msg = f"로딩에 성공했습니다. files : {file_type_string}"
+    else:
+        result_type = StateResultType.FAIL_NONE_DOCUMENTS
+        result_msg = f"로딩에 성공한 문서가 없습니다."
+
+    state['documents'] = total_data
+    state['state_result_type'] = result_type
+    state['state_result_msg'] = result_msg
+
+    return state
 
 
-# 2. 벡터 스토어 처리 노드 ( 임베딩 )
-def process_embedding(state : StateTypeDict):
-    total_data = state['documents']
+# 벡터 스토어 처리 노드 ( 임베딩 )
+def state_embedding(state : StateTypeDict):
 
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=0)
-    all_splits = text_splitter.split_documents(total_data)
+    documents_source = state['documents']
+
+    vectorstore_process_msg = ""
 
     if not os.path.exists(vectorstore_db_path):
-        print("벡터 스토어가 존재하지 않으므로, 새로 생성합니다.")
-        oembed = OllamaEmbeddings(base_url=ollama_service_url, model=ollama_model_name)
-        vectorstore = Chroma.from_documents(documents=all_splits, embedding=oembed, persist_directory=vectorstore_db_path)
-        vectorstore.persist()
+        vectorstore_process_msg = Embedding_Helper.MakeVectorStoreDB(documents_source)
     else:
-        print("기존 벡터 스토어를 불러옵니다.")
         vectorstore = Chroma(persist_directory=vectorstore_db_path, embedding_function=OllamaEmbeddings(base_url=ollama_service_url, model=ollama_model_name))
 
-    return {"vectorstore" : vectorstore}
+        collected_docs = []
+        for index in range(len(vectorstore.get()["ids"])):
+            doc_metadata = vectorstore.get()["metadatas"][index]
+            collected_docs.append(doc_metadata["source"])
 
+        new_docs = []
+        for data in documents_source:
+            new_docs.append(data.metadata['source'])
 
-# 3. 쿼리 처리 노드
-def process_query(state: StateTypeDict):
+        is_new_docs_subset = set(new_docs).issubset(set(collected_docs))
+
+        if not is_new_docs_subset:
+            vectorstore_process_msg = Embedding_Helper.MakeVectorStoreDB(documents_source)
+        else:
+            vectorstore_process_msg = f"신규 문서가 없으므로, 기존 벡터스토어 DB를 사용합니다."
+
+    result_msg = ""
+    result_type = StateResultType.NONE
+    if vectorstore != None:
+        result_type = StateResultType.SUCCESS
+        result_msg = f"임베딩에 성공했습니다. detail : {vectorstore_process_msg}"
+    else:
+        result_type = StateResultType.FAIL_MAKE_VECTORSTORE
+        result_msg = f"임베딩에 실패했습니다. detail : {vectorstore_process_msg}"
+
+    state['vectorstore'] = vectorstore
+    state['state_result_type'] = result_type
+    state['state_result_msg'] = result_msg
+
+    return state
+
+# 유사 문서 검색 노드
+def state_search_similarity_documents(state: StateTypeDict):
+
+    result_type = StateResultType.NONE
 
     vectorstore = state['vectorstore']
     question = state['user_query']
 
     result_docs = vectorstore.similarity_search(question)
 
-    if len(result_docs) == 0:
-        print(f"유사한 문서를 찾지 못했습니다.")
-    else:
-        print(f"총 {len(result_docs)}개의 유사 문서를 찾았습니다.")
+    result_msg = ""
 
+    if len(result_docs) == 0:
+        result_type = StateResultType.FAIL_NOT_FOUND_DOCUMENTS
+        result_msg = f"유사한 문서를 찾기 못했습니다."
+    else:
+        result_type = StateResultType.SUCCESS
+        result_msg = f"모두 {len(result_docs)}개의 유사 문서를 찾았습니다."
+
+    state['similarity_documents'] = result_docs
+    state['state_result_type'] = result_type
+    state['state_result_msg'] = result_msg
+
+    return state
+
+def state_query(state : StateTypeDict):
+
+    vectorstore = state['vectorstore']
+    question = state['user_query']
+    
     ollama = Ollama(base_url=ollama_service_url, model=ollama_model_name)
     qachain = RetrievalQA.from_chain_type(ollama, retriever=vectorstore.as_retriever())
 
+    result_msg = ""
+    result_type = StateResultType.NONE
+
     try:
-        response = qachain.invoke({"query": question})
-        print(f"답변: {response['result']}")
+        response = qachain.invoke({"query": question}) # response['result']
+        result_type = StateResultType.SUCCESS
     except Exception as e:
-        print(f"쿼리 처리 중 에러 발생: {e}")
+        result_type = StateResultType.FAIL_QUERY_ERROR
+        result_msg = f"쿼리 처리 중 에러 발생: {e}"
 
-    return {}
+    if (response != None) and (response['result']):
+        state['llm_answer'] = response['result']
+    else:
+        state['llm_answer'] = f"답변을 할 수 없습니다."
 
+    state['state_result_type'] = result_type
+    state['state_result_msg'] = result_msg
 
-# 4. 상태 그래프를 사용하여 노드 구성 및 실행
+    return state
+
+# 상태 그래프를 사용하여 노드 구성 및 실행
 def build_stategraph():
     
     # 그래프 생성
     graph = StateGraph(StateTypeDict)
 
     # 노드 추가
-    graph.add_node(load_node_name, process_load_documents)
-    graph.add_node(embedding_node_name, process_embedding)
-    graph.add_node(query_node_name, process_query)
+    graph.add_node(load_node_name, state_load_documents)
+    graph.add_node(embedding_node_name, state_embedding)
+    graph.add_node(search_documents_node_name, state_search_similarity_documents)
+    graph.add_node(query_node_name, state_query)
 
     # 노드 연결
-    # ( START -> load -> embedding -> query -> END 흐름으로 처리)
+    # ( START -> load -> embedding -> search(documents) -> query -> END 흐름으로 처리)
     graph.add_edge(START, load_node_name)
     graph.add_edge(load_node_name, embedding_node_name)
-    graph.add_edge(embedding_node_name, query_node_name)
+    graph.add_edge(embedding_node_name, search_documents_node_name)
+    graph.add_edge(search_documents_node_name, query_node_name)
     graph.add_edge(query_node_name, END)
-
 
     # 컴파일. ( 그래프에 설정된 노드, 엣지, 컨디셔널등을 컴파일한다. )
     app = graph.compile()
     return app
 
-
 # build graph
 app_result = build_stategraph()
 
-inputs = {'user_query' : "중국 위안화 강세와 추세는 어때?", "documents" : {}, "vectorstore" : None}
+# 유저 쿼리만 필요하므로 해당 내용만 설정.
+inputs = {'user_query' : "요즘 대한민국 날씨는 어때?"}
 
 for output in app_result.stream(inputs):
     # 출력된 결과에서 키와 값을 순회합니다.
     for key, value in output.items():
-        # 노드의 이름과 해당 노드에서 나온 출력을 출력합니다.
-        print(f"Output from node '{key}':")
-        print("---")
-        # 출력 값을 예쁘게 출력합니다.
-        print(f" value : {value}")
+
+        print(f"==================================")
+        print(f"[Langgraph_DebugLog] Output from node name : {key}")
+        
+        message = value['state_result_msg']
+        type = value['state_result_type']
+
+        print(f"[Langgraph_DebugLog] state result msg : {message} type : {type}")
+
+        # 쿼리 노드인 경우, 유저 질의와 llm의 대답을 출력한다.
+        # 해당 내용이 empty 인 경우는 없을 것 ( 있으명 명백한 버그 )
+        if key == query_node_name:
+            answer = value.get('llm_answer')
+            user_query = value.get('user_query')
+            print(f"[Langgraph_DebugLog] user_query : {user_query}")
+            print(f"[Langgraph_DebugLog] llm_answer : {answer}")
+        
     # 각 출력 사이에 구분선을 추가합니다.
-    print("\n---\n")
+    print(f"\n=======================================\n")
