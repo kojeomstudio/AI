@@ -68,7 +68,7 @@ class Embedding_Helper:
 
         oembed = OllamaEmbeddings(base_url=ollama_service_url, model=ollama_model_name)
         vectorstore = Chroma.from_documents(documents=all_splits, embedding=oembed, persist_directory=vectorstore_db_path)
-        vectorstore.persist()
+        #vectorstore.persist()
 
         return f"기존에 존재하는 db가 없으므로 신규 생성합니다."
 
