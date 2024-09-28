@@ -2,7 +2,10 @@
 import os
 import pandas as pd
 
+# 웹서버 동작을 위해 추가.==========================
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
+#=============================================
 
 from langchain.llms import Ollama
 from langchain_chroma import Chroma
@@ -36,6 +39,9 @@ load_node_name = "load_node"
 embedding_node_name = "embedding_node"
 search_documents_node_name = "search_doucments_node"
 query_node_name = "query_node"
+
+# FastAPI 서버 생성
+api_app_server = FastAPI()
 
 DEBUG_LOG_PREFIX_LANGGRAPH = "[LANGGRAPH_DEBUG_LOG]"
 DEBUG_LOG_PREFIX_API_APP = "[API_APP_DEBUG_LOG]"
@@ -294,7 +300,19 @@ def process_user_query(in_user_query : str):
                 SimpleLogger.Log(f"llm_answer : {result_llm_answer}", LogType.LANGGRAPH)
 
                 return result_llm_answer
-            
-# main start
-if __name__ == "__main__":
-    process_user_query("요즘 중극 증시와 전망은 어때?")
+
+
+# API 엔드포인트 정의
+@api_app_server.post("/query")
+async def query_api_process(query: QueryRequest):
+    SimpleLogger.Log(f"query_api : user_query : {query.user_query}", LogType.API_APP)
+    try:
+        llm_answer = process_user_query(query.user_query)
+        SimpleLogger.Log(f"llm(+rag) answer : {llm_answer}", LogType.API_APP)
+        return {"llm_answer": llm_answer}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_app_server.get("/")
+async def root_api_process():
+    SimpleLogger.Log(f"rag app server root! ", LogType.API_APP)
