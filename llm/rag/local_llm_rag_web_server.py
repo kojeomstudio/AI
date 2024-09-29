@@ -7,12 +7,18 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 #=============================================
 
-from langchain.llms import Ollama
+#import tiktoken # 입력 토큰화에 사용되는 라이브러리.
+
+from langchain_community.llms import Ollama
 from langchain_chroma import Chroma
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.embeddings import OllamaEmbeddings
-from langchain.chains import RetrievalQA
+
+from langchain.chains import create_retrieval_chain
+from langchain.chains.combine_documents import create_stuff_documents_chain
+
 from langchain.document_loaders import DirectoryLoader
+from langchain.prompts import PromptTemplate # 프롬프트 엔지니어링을 위한 라이브러리.
 
 from langgraph.graph import StateGraph, END, START
 
@@ -39,6 +45,7 @@ load_node_name = "load_node"
 embedding_node_name = "embedding_node"
 search_documents_node_name = "search_doucments_node"
 query_node_name = "query_node"
+make_prompt_template_node_name = "make_prompt_template_node"
 
 # FastAPI 서버 생성
 api_app_server = FastAPI()
@@ -59,6 +66,7 @@ class StateResultType(Enum):
     FAIL_NOT_FOUND_DOCUMENTS = 3
     FAIL_QUERY_ERROR = 4
     FAIL_MAKE_VECTORSTORE = 5
+    FAIL_MAKE_PROMPT_TEMPLATE = 6
     FAIL_UNKNOWN = 100
 
 class StateTypeDict(TypedDict):
@@ -67,6 +75,7 @@ class StateTypeDict(TypedDict):
     vectorstore : Chroma
     user_query : str
     llm_answer : str
+    prompt_template : PromptTemplate
     state_result_msg : str
     state_result_type : StateResultType
 
@@ -78,13 +87,12 @@ class ErrorHandler:
 class Embedding_Helper:
     @staticmethod
     def MakeVectorStoreDB(documents_source : list):
-        text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=0)
+        text_splitter = RecursiveCharacterTextSplitter(chunk_size=250, chunk_overlap=50)
         all_splits = text_splitter.split_documents(documents_source)
 
         oembed = OllamaEmbeddings(base_url=ollama_service_url, model=ollama_model_name)
         vectorstore = Chroma.from_documents(documents=all_splits, embedding=oembed, persist_directory=vectorstore_db_path)
-        #vectorstore.persist()
-
+        
         return f"기존에 존재하는 db가 없으므로 신규 생성합니다."
 
 class LogType(Enum):
@@ -177,7 +185,7 @@ def state_embedding(state : StateTypeDict):
         if not is_new_docs_subset:
             vectorstore_process_msg = Embedding_Helper.MakeVectorStoreDB(documents_source)
         else:
-            vectorstore_process_msg = f"신규 문서가 없으므로, 기존 벡터스토어 DB를 사용합니다."
+            vectorstore_process_msg = f"신규 문서가 없으므로, 기존 임베딩된 벡터스토어 DB를 사용합니다."
 
     result_msg = ""
     result_type = StateResultType.NONE
@@ -204,6 +212,9 @@ def state_search_similarity_documents(state: StateTypeDict):
 
     result_docs = vectorstore.similarity_search(question)
 
+    #for doc in result_docs:
+    #    print(f"similarity searched document content : {doc.page_content}")
+
     result_msg = ""
 
     if len(result_docs) == 0:
@@ -219,29 +230,62 @@ def state_search_similarity_documents(state: StateTypeDict):
 
     return state
 
+def state_make_prompt_template(state : StateTypeDict):
+ 
+    custom_template = '''
+    You are an assistant for question-answering tasks.
+    Use the following pieces of retrieved context to answer the question.
+    If you don't know the answer, just say that you don't know.
+    Don't try to make up an answer.
+    \n\n
+    {context}
+    '''
+    result_prompt = PromptTemplate(
+        template=custom_template
+    )
+
+    result_type = StateResultType.NONE
+    if result_prompt == None:
+        result_type = StateResultType.FAIL_MAKE_PROMPT_TEMPLATE
+        result_msg = f"프롬프트 생성에 실패했습니다."
+    else:
+        result_type = StateResultType.SUCCESS
+        result_msg = f"프롬프트 생성에 성공했습니다."
+
+    state['state_result_type'] = result_type
+    state['state_result_msg'] = result_msg
+    state['prompt_template'] = result_prompt
+
+    return state
+
 def state_query(state : StateTypeDict):
 
     vectorstore = state['vectorstore']
     question = state['user_query']
-    
-    ollama = Ollama(base_url=ollama_service_url, model=ollama_model_name)
-    qachain = RetrievalQA.from_chain_type(ollama, retriever=vectorstore.as_retriever())
+    prompt_template = state['prompt_template']
 
     result_msg = ""
     result_type = StateResultType.NONE
 
+    response = None
     try:
-        response = qachain.invoke({"query": question}) # response['result']
+        ollama = Ollama(base_url=ollama_service_url, model=ollama_model_name)
+        combine_docs_chain = create_stuff_documents_chain(ollama, prompt_template)
+        qachain = create_retrieval_chain(vectorstore.as_retriever(), combine_docs_chain)
+        
+        response = qachain.invoke({"input": question}) # response['answer']
         result_type = StateResultType.SUCCESS
+        result_msg = f"쿼리 처리 성공."
+
     except Exception as e:
         result_type = StateResultType.FAIL_QUERY_ERROR
         result_msg = f"쿼리 처리 중 에러 발생: {e}"
 
-    if (response != None) and (response['result']):
-        state['llm_answer'] = response['result']
+    if (response != None) and (response['answer'] != None):
+        state['llm_answer'] = response['answer']
     else:
         state['llm_answer'] = f"답변을 할 수 없습니다."
-
+    
     state['state_result_type'] = result_type
     state['state_result_msg'] = result_msg
 
@@ -257,21 +301,23 @@ def build_stategraph():
     graph.add_node(load_node_name, state_load_documents)
     graph.add_node(embedding_node_name, state_embedding)
     graph.add_node(search_documents_node_name, state_search_similarity_documents)
+    graph.add_node(make_prompt_template_node_name, state_make_prompt_template)
     graph.add_node(query_node_name, state_query)
 
     # 노드 연결
-    # ( START -> load -> embedding -> search(documents) -> query -> END 흐름으로 처리)
+    # ( START -> load -> embedding -> search(documents) -> make prompot -> (apply prompt) query -> END 흐름으로 처리)
     graph.add_edge(START, load_node_name)
     graph.add_edge(load_node_name, embedding_node_name)
     graph.add_edge(embedding_node_name, search_documents_node_name)
-    graph.add_edge(search_documents_node_name, query_node_name)
+    graph.add_edge(search_documents_node_name, make_prompt_template_node_name)
+    graph.add_edge(make_prompt_template_node_name, query_node_name)
     graph.add_edge(query_node_name, END)
 
     # 컴파일. ( 그래프에 설정된 노드, 엣지, 컨디셔널등을 컴파일한다. )
     app = graph.compile()
     return app
 
-def process_user_query(in_user_query : str):
+def process_rag_system(in_user_query : str):
     # build graph
     app_result = build_stategraph()
 
@@ -282,7 +328,7 @@ def process_user_query(in_user_query : str):
         # 출력된 결과에서 키와 값을 순회합니다.
         for key, value in output.items():
 
-            SimpleLogger.Log(f"==================================", LogType.LANGGRAPH)
+            SimpleLogger.Log(f"==================================================", LogType.LANGGRAPH)
             SimpleLogger.Log(f"Output from node name : {key}", LogType.LANGGRAPH)
             
             message = value['state_result_msg']
@@ -291,7 +337,6 @@ def process_user_query(in_user_query : str):
             SimpleLogger.Log(f"state result msg : {message} type : {type}", LogType.LANGGRAPH)
 
             # 쿼리 노드인 경우, 유저 질의와 llm의 대답을 출력한다.
-            # 해당 내용이 empty 인 경우는 없을 것
             if key == query_node_name:
                 result_llm_answer = value.get('llm_answer')
                 result_user_query = value.get('user_query')
@@ -307,7 +352,7 @@ def process_user_query(in_user_query : str):
 async def query_api_process(query: QueryRequest):
     SimpleLogger.Log(f"query_api : user_query : {query.user_query}", LogType.API_APP)
     try:
-        llm_answer = process_user_query(query.user_query)
+        llm_answer = process_rag_system(query.user_query)
         SimpleLogger.Log(f"llm(+rag) answer : {llm_answer}", LogType.API_APP)
         return {"llm_answer": llm_answer}
     except Exception as e:
