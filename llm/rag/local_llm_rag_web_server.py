@@ -233,12 +233,19 @@ def state_search_similarity_documents(state: StateTypeDict):
 def state_make_prompt_template(state : StateTypeDict):
  
     custom_template = '''
-    You are an assistant for question-answering tasks.
-    Use the following pieces of retrieved context to answer the question.
-    If you don't know the answer, just say that you don't know.
-    Don't try to make up an answer.
-    \n\n
+    You are an intelligent assistant.
+    Strictly Use ONLY the following pieces of context to answer the question at the end. Think step-by-step and then answer.
+
+    Do not try to make up an answer:
+    - If the answer to the question cannot be determined from the context alone, just say "문의하신 내용에 대한 정확한 답변을 드리기 어렵습니다."
+    - If the context is empty, just say "문의하신 내용에 대한 답변이 불가능합니다."
+
+    CONTEXT:
     {context}
+
+    QUESTION:
+    {input}
+    
     '''
     result_prompt = PromptTemplate(
         template=custom_template
@@ -271,9 +278,9 @@ def state_query(state : StateTypeDict):
     try:
         ollama = Ollama(base_url=ollama_service_url, model=ollama_model_name)
         combine_docs_chain = create_stuff_documents_chain(ollama, prompt_template)
-        qachain = create_retrieval_chain(vectorstore.as_retriever(), combine_docs_chain)
+        retrieval_chain = create_retrieval_chain(vectorstore.as_retriever(), combine_docs_chain)
         
-        response = qachain.invoke({"input": question}) # response['answer']
+        response = retrieval_chain.invoke({"input": question}) # response['answer']
         result_type = StateResultType.SUCCESS
         result_msg = f"쿼리 처리 성공."
 
