@@ -237,8 +237,8 @@ def state_make_prompt_template(state : StateTypeDict):
     Strictly Use ONLY the following pieces of context to answer the question at the end. Think step-by-step and then answer.
 
     Do not try to make up an answer:
-    - If the answer to the question cannot be determined from the context alone, just say "문의하신 내용에 대한 정확한 답변을 드리기 어렵습니다."
-    - If the context is empty, just say "문의하신 내용에 대한 답변이 불가능합니다."
+    - If the answer to the question cannot be determined from the context alone, just say "문의하신 내용에 대한 정확한 답변을 드리기 어렵습니다. \n 관련 내용을 찾으려면 https://google.com 을 이용해주세요."
+    - If the context is empty, just say "문의하신 내용에 대한 답변이 불가능합니다. \n 관련 내용을 찾으려면 https://google.com 을 이용해주세요."
 
     CONTEXT:
     {context}
