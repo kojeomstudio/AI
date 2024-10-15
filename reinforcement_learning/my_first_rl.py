@@ -11,6 +11,7 @@ env = GridWorld(grid_size, start, goal, obstacles)
 env.render()
 
 # 랜덤으로 액션을 결정한다.
+# 전후좌우 액션중에 하나이므로 각 확률은 25% = 0.25
 def get_action_policy():
     return AgentHelper.get_rand_agent_action_type()
 
@@ -20,6 +21,11 @@ def get_state_reward_value():
 
 rl_grid_info = np.zeros((5,5))
 print(f"rl_grid_info \n{rl_grid_info}")
+
+total_episode_num = 5000
+
+#for episode_idx in range(total_episode_num):
+
 
 
 

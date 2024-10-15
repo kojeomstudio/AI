@@ -36,7 +36,9 @@ class GridCell:
         self.reward = reward  # reward value for this cell
         self.display_char = display_char  # Character for rendering
 
-# 그리드월드를 생성하는 클래스. 
+# 그리드월드를 생성하는 클래스.
+# -> 상태에서 다른 상태 전이로의 확률 및 각 전이에서의 보상값을 알고 있는 MDP를 아는 상태.
+# ->
 class GridWorld:
     def __init__(self, grid_size : tuple, start : tuple, goal : tuple, obstacles):
         self.grid_size = grid_size
