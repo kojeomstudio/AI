@@ -3,11 +3,17 @@ import os
 import pandas as pd
 import asyncio
 import time
+import json
+
+import tracemalloc
+tracemalloc.start()
 
 # 웹서버 동작을 위해 추가.==========================
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse  # responses 모듈에서 HTMLResponse 가져오기
 from pydantic import BaseModel
+import uvicorn # 비동기 처리.
 #=============================================
 
 #import tiktoken # 입력 토큰화에 사용되는 라이브러리.
@@ -46,14 +52,28 @@ class PerformanceHelper:
         execution_time_sec = execution_time_ms * 1000
 
         return execution_time_ms, execution_time_sec
+    
+class AppConfig:
+    config_file : object
+    
+    def __init__(self):
+        with open(f"./rag_config.json", 'r') as file:
+            self.config_file = json.load(file)
+
+    def get_value(self, in_config_key : str):
+        return self.config_file.get(in_config_key)
 
 ############################ global variables ####################################
-ollama_model_name = "EEVE-Korean-Instruct-10.8B-v1.0-Q4_K_S.gguf:latest"
-ollama_service_url = 'http://localhost:11434'
+
+app_config = AppConfig()
+performance_helper = PerformanceHelper()
+
+ollama_model_name = app_config.get_value("ollama_model_name") 
+ollama_service_url = app_config.get_value("ollama_service_url")
 
 # 벡터 스토어를 저장할 경로 설정
-vectorstore_db_path = "./chroma_db"
-documents_path = "./test_docs"
+vectorstore_db_path = app_config.get_value("vectorstore_db_path")
+documents_path =  app_config.get_value("documents_path")
 
 # 노드 네임 정의
 load_node_name = "load_node"
@@ -64,10 +84,10 @@ make_prompt_template_node_name = "make_prompt_template_node"
 
 # FastAPI 서버 생성
 api_app_server = FastAPI()
+default_time_out_sec = app_config.get_value("default_time_out_sec")
 
-performance_helper = PerformanceHelper()
-
-default_time_out_sec = 120
+# 템플릿 경로 설정
+html_templates = Jinja2Templates(directory="templates")
 
 DEBUG_LOG_PREFIX_LANGGRAPH = "[LANGGRAPH_DEBUG_LOG]"
 DEBUG_LOG_PREFIX_API_APP = "[API_APP_DEBUG_LOG]"
@@ -223,13 +243,13 @@ def state_embedding(state : StateTypeDict):
         vectorstore = Chroma(persist_directory=vectorstore_db_path, embedding_function=OllamaEmbeddings(base_url=ollama_service_url, model=ollama_model_name))
 
         collected_docs = []
-        #for index in range(len(vectorstore.get()["ids"])):
-        #    doc_metadata = vectorstore.get()["metadatas"][index]
-        #    collected_docs.append(doc_metadata["source"])
+        for index in range(len(vectorstore.get()["ids"])):
+            doc_metadata = vectorstore.get()["metadatas"][index]
+            collected_docs.append(doc_metadata["source"])
 
         new_docs = []
-        #for data in documents_source:
-        #    new_docs.append(data.metadata['source'])
+        for data in documents_source:
+            new_docs.append(data.metadata['source'])
 
         is_new_docs_subset = set(new_docs).issubset(set(collected_docs))
 
@@ -430,7 +450,7 @@ def process_rag_system(in_user_query : str, in_graph_query_type : GraphQueryType
 async def process_rag_system_with_timeout(in_user_query: str, in_timeout: int = default_time_out_sec):
     try:
         # asyncio.wait_for를 사용하여 타임아웃 적용
-        llm_answer = await asyncio.wait_for(asyncio.to_thread(process_rag_system, in_user_query, GraphQueryType.USER_REQUEST), timeout=in_timeout)
+        llm_answer = await asyncio.wait_for(await asyncio.to_thread(process_rag_system, in_user_query, GraphQueryType.USER_REQUEST), timeout=in_timeout)
         return llm_answer
     except asyncio.TimeoutError:
         return f"llm 응답 생성에 실패했습니다. 다시 시도 해주세요!"
@@ -454,19 +474,47 @@ async def shutdown_event():
     await asyncio.sleep(2)  # 2초 동안 대기 (작업 완료를 위해)
     SimpleLogger.Log(f"Shutdown complete.", LogType.API_APP)
 
+
+# 루트 엔드포인트에서 HTML 파일을 렌더링
 @api_app_server.get("/", response_class=HTMLResponse)
-async def root_api_process():
-    SimpleLogger.Log(f"rag app server root! ", LogType.API_APP)
-     # HTML 콘텐츠를 반환합니다.
-    html_content = """
-    <html>
-        <head>
-            <title>RAG App Server</title>
-        </head>
-        <body>
-            <h1>Welcome to the RAG App Server!</h1>
-            <p>This is a simple FastAPI web page.</p>
-        </body>
-    </html>
-    """
-    return html_content
+async def root_api_process(request: Request):
+    return html_templates.TemplateResponse("index.html", {"request": request})
+
+if __name__ == "__main__":
+    # 비동기 서버 실행
+    uvicorn.run(api_app_server, host=app_config.get_value("server_host"), port=app_config.get_value("server_port"))
+
+#########################################################################
+
+def commandlet_embedding_docs():
+    # 그래프 생성
+    commandlet_graph = StateGraph(StateTypeDict)
+
+    # 노드 추가
+    commandlet_graph.add_node(load_node_name, state_load_documents)
+    commandlet_graph.add_node(embedding_node_name, state_embedding)
+    
+    # 노드 연결
+    # ( START -> load -> embedding -> search(documents) -> make prompot -> (apply prompt) query -> END 흐름으로 처리)
+    commandlet_graph.add_edge(START, load_node_name)
+    commandlet_graph.add_edge(load_node_name, embedding_node_name)
+    commandlet_graph.add_edge(embedding_node_name, END)
+    
+    # 컴파일. ( 그래프에 설정된 노드, 엣지, 컨디셔널등을 컴파일한다. )
+    commandlet_app = commandlet_graph.compile()
+
+     # 유저 쿼리 / 그래프 쿼리 타입 설정.
+    inputs = {'user_query' : "", 'graph_query_type' : GraphQueryType.DOCS_EMBEDDING }
+
+    for output in commandlet_app.stream(inputs):
+        # 출력된 결과에서 키와 값을 순회합니다.
+        for key, value in output.items():
+
+            SimpleLogger.Log(f"==================================================", LogType.LANGGRAPH)
+            SimpleLogger.Log(f"Output from node name : {key}", LogType.LANGGRAPH)
+            
+            message = value['state_result_msg']
+            type = value['state_result_type']
+            execution_time_ms = value['execution_time_ms']
+
+            SimpleLogger.Log(f"state_result_msg : {message}, type : {type}, execution_time : {execution_time_ms:.3f}(ms)", LogType.LANGGRAPH)

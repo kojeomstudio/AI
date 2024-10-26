@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LLM 채팅 인터페이스</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* 다크 모드 색상 정의 */
+        :root {
+            --bg-color-dark: #121212; /* 깊고 어두운 회색 */
+            --container-color-dark: #1f1f1f; /* 약간 밝은 회색 */
+            --text-color-dark: #e0e0e0; /* 부드러운 밝은 색 */
+            --user-message-bg-dark: #005bbb; /* 사용자 메시지 배경: 약한 파란색 */
+            --bot-message-bg-dark: #333333; /* 봇 메시지 배경: 중간 회색 */
+            --button-color-dark: #4a90e2; /* 버튼 색상 */
+            --loader-color-dark: #4a90e2; /* 스로버 색상 */
+
+            /* 라이트 모드 색상 정의 */
+            --bg-color-light: #f9f9f9; /* 밝고 은은한 회색 */
+            --container-color-light: #ffffff; /* 순백색 */
+            --text-color-light: #333333; /* 다크 그레이, 눈에 편안한 텍스트 색 */
+            --user-message-bg-light: #007bff; /* 사용자 메시지 배경: 시원한 파란색 */
+            --bot-message-bg-light: #f1f3f5; /* 봇 메시지 배경: 부드러운 회색 */
+            --button-color-light: #007bff; /* 버튼 색상 */
+            --loader-color-light: #007bff; /* 스로버 색상 */
+        }
+
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: var(--bg-color-dark);
+            color: var(--text-color-dark);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .chat-container {
+            width: 100%;
+            max-width: 600px;
+            background-color: var(--container-color-dark);
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.25);
+        }
+
+        .messages {
+            padding: 20px;
+            height: 500px;
+            overflow-y: auto;
+        }
+
+        .messages div {
+            margin-bottom: 15px;
+            padding: 10px;
+            border-radius: 8px;
+            max-width: 75%;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+
+        .user-message {
+            background-color: var(--user-message-bg-dark);
+            color: #ffffff;
+            align-self: flex-end;
+            text-align: right;
+        }
+
+        .bot-message {
+            background-color: var(--bot-message-bg-dark);
+            color: var(--text-color-dark);
+            align-self: flex-start;
+            text-align: left;
+            white-space: pre-wrap;
+        }
+
+        .input-area {
+            padding: 15px;
+            display: flex;
+            border-top: 1px solid #3e3e50;
+            background-color: var(--bg-color-dark);
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 12px;
+            font-size: 16px;
+            background-color: #3b3b4f;
+            border: none;
+            border-radius: 8px;
+            color: #ffffff;
+            outline: none;
+            margin-right: 10px;
+            transition: background-color 0.3s;
+        }
+
+        button {
+            padding: 12px 20px;
+            font-size: 16px;
+            background-color: var(--button-color-dark);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s, opacity 0.3s;
+        }
+
+        button:disabled {
+            background-color: #666666;
+            color: #cccccc;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 10px;
+            background-color: var(--button-color-dark);
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 4px solid var(--loader-color-dark);
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            display: none;
+            margin-left: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* 라이트 모드 테마 적용 */
+        .light-theme {
+            --bg-color-dark: var(--bg-color-light);
+            --container-color-dark: var(--container-color-light);
+            --text-color-dark: var(--text-color-light);
+            --user-message-bg-dark: var(--user-message-bg-light);
+            --bot-message-bg-dark: var(--bot-message-bg-light);
+            --button-color-dark: var(--button-color-light);
+            --loader-color-dark: var(--loader-color-light);
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <button class="theme-toggle" onclick="toggleTheme()">다크 모드</button>
+        <div class="messages" id="chat-messages"></div>
+        <div class="input-area">
+            <input type="text" id="user-query" placeholder="질문을 입력하세요..." onkeydown="checkEnter(event)" />
+            <button id="send-button" onclick="sendQuery()">보내기</button>
+            <div class="loader" id="loader"></div>
+        </div>
+    </div>
+    <script>
+        function applyTheme(theme) {
+            if (theme === 'light') {
+                document.body.classList.add('light-theme');
+                document.querySelector('.theme-toggle').textContent = '다크 모드';
+            } else {
+                document.body.classList.remove('light-theme');
+                document.querySelector('.theme-toggle').textContent = '라이트 모드';
+            }
+            localStorage.setItem('theme', theme);
+        }
+
+        function toggleTheme() {
+            const currentTheme = document.body.classList.contains('light-theme') ? 'dark' : 'light';
+            applyTheme(currentTheme);
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            applyTheme(savedTheme);
+        });
+
+        async function sendQuery() {
+            const userInput = document.getElementById('user-query').value;
+            if (!userInput) return;
+            const messagesDiv = document.getElementById('chat-messages');
+            messagesDiv.innerHTML += `<div class='user-message'>${userInput}</div>`;
+            document.getElementById('user-query').value = '';
+
+            document.getElementById('send-button').disabled = true;
+            document.getElementById('user-query').disabled = true;
+            document.getElementById('loader').style.display = 'inline-block';
+
+            try {
+                const response = await fetch('/query', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_query: userInput })
+                });
+                const data = await response.json();
+                const formattedAnswer = data.llm_answer.replace(/\n/g, '<br>');
+                messagesDiv.innerHTML += `<div class='bot-message'>${formattedAnswer}</div>`;
+            } catch (error) {
+                messagesDiv.innerHTML += `<div class='bot-message'>오류: ${error.message}</div>`;
+            } finally {
+                document.getElementById('send-button').disabled = false;
+                document.getElementById('user-query').disabled = false;
+                document.getElementById('loader').style.display = 'none';
+            }
+        }
+
+        function checkEnter(event) {
+            if (!document.getElementById('send-button').disabled && event.key === 'Enter') {
+                sendQuery();
+            }
+        }
+    </script>
+</body>
+</html>
