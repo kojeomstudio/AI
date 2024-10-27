@@ -317,20 +317,23 @@ def state_make_prompt_template(state : StateTypeDict):
     performance_helper.start_timer()
 
     custom_template = '''
-    You are an intelligent assistant.
-    Strictly Use ONLY the following pieces of context to answer the question at the end. Think step-by-step and then answer.
+    You are an intelligent QA chatbot.
+    Use **only the provided document content** to answer each question, and respond step-by-step with clear logic.
 
-    Do not try to make up an answer:
-    - If the answer to the question cannot be determined from the context alone, just say "문의하신 내용에 대한 정확한 답변을 드리기 어렵습니다. \n 관련 내용을 찾으려면 https://google.com 을 이용해주세요."
-    - If the context is empty, just say "문의하신 내용에 대한 답변이 불가능합니다. \n 관련 내용을 찾으려면 https://google.com 을 이용해주세요."
+    Answering Guidelines:
+    - **If the answer cannot be determined from the document content**: Respond only with "The exact answer to your question is difficult to provide. Please consider using https://google.com for further information."
+    - **For any question involving sensitive topics (sexual, political, or morally contentious)**: Respond only with "I am unable to provide answers to questions that may violate common standards of morality, politics, or sensitivity."
+    - **If the document content is empty**: Respond only with "Answering your question is not possible. Please consider using https://google.com for further information."
+    - All responses must be **written in Korean only** and **strictly based on the document content**.
+    - Do not add unnecessary information. Provide only the answer that directly addresses the question.
 
     CONTEXT:
     {context}
 
     QUESTION:
     {input}
-    
     '''
+
     result_prompt = PromptTemplate(
         template=custom_template
     )
