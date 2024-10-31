@@ -1,3 +1,10 @@
+[agent]
+system_instruction_name = "my_local_rag_agent"
+tool_names = ["search"]
+
+  [agent.generation_config]
+  model = "ollama/EEVE-Korean-Instruct-10.8B-v1.0-Q4_K_S.gguf:latest"
+
 [completion]
 provider = "litellm"
 concurrent_request_limit = 1
@@ -10,16 +17,22 @@ concurrent_request_limit = 1
   stream = false
   add_generation_kwargs = { }
 
-[database]
-provider = "postgres"
-
 [embedding]
 provider = "ollama"
-base_model = "EEVE-Korean-Instruct-10.8B-v1.0-Q4_K_S.gguf:latest"
+base_model = "ollama/EEVE-Korean-Instruct-10.8B-v1.0-Q4_K_S.gguf:latest"
 base_dimension = 1_024
 batch_size = 32
 add_title_as_prefix = true
-concurrent_request_limit = 32
+concurrent_request_limit = 2
 
 [ingestion]
-excluded_parsers = [ "mp4" ]
+provider = "unstructured_local"
+strategy = "auto"
+chunking_strategy = "by_title"
+new_after_n_chars = 512
+max_characters = 1_024
+combine_under_n_chars = 128
+overlap = 20
+
+[orchestration]
+provider = "hatchet"
