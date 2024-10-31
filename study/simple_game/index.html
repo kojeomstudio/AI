@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Game</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="loading-screen" class="screen">
+        <h2>Loading...</h2>
+    </div>
+    <div id="login-screen" class="screen">
+        <div class="login-container">
+            <h2>Login</h2>
+            <input type="text" id="username" placeholder="Username" autocomplete="username">
+            <input type="password" id="password" placeholder="Password" autocomplete="current-password">
+            <button id="login-button">Login</button>
+        </div>
+    </div>
+    <div id="game-screen" class="screen">
+        <div id="game-container"></div>
+        <div id="fps-counter" class="fps-counter"></div>
+    </div>
+    <script src="gameconfig.js"></script>
+    <script src="db.js"></script>
+    <script src="world.js"></script>
+    <script src="entities.js"></script>
+    <script src="behaviorTree.js"></script>
+    <script src="game.js"></script>
+</body>
+</html>
