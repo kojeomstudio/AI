@@ -1,0 +1,16 @@
+
+1. https://arxiv.org/abs/1706.03762
+ -> Attention Is All You Need
+
+2. https://arxiv.org/abs/2106.04554
+
+3. https://ieeexplore.ieee.org/document/10508558
+-> memory repo and llm
+
+4. https://ieeexplore.ieee.org/document/10548314
+-> human like app testing by llm
+
+5. https://ieeexplore.ieee.org/document/10433480
+-> A Review on Large Language Models: Architectures, Applications, Taxonomies, Open Issues and Challenges
+
+6.

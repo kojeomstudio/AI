@@ -1,0 +1,46 @@
+해당 GitHub 이슈에서 제안된 해결책은 VS Code에서 TensorFlow와 Keras를 사용하는 동안 IntelliSense(자동 완성 및 도움말 기능)가 작동하지 않는 문제를 해결하기 위한 방법입니다. 이 내용을 단계별로 설명해드리겠습니다.
+
+### **문제의 원인**
+1. **Lazy Loading**:
+   - Keras는 TensorFlow 내에서 lazy loading(지연 로딩) 방식을 사용하여 동작합니다. 이는 모듈이 실제로 사용되기 전까지 로드되지 않음을 의미합니다. 이 방식은 가끔 VS Code와 같은 IDE에서 모듈의 자동 완성 기능이 제대로 작동하지 않는 문제를 일으킬 수 있습니다.
+
+### **해결 방법**
+문제 해결을 위한 접근법은 `tensorflow/__init__.py` 파일에 몇 가지 코드 조각을 추가하는 것입니다. 이 파일은 TensorFlow 패키지의 초기화와 관련된 설정을 포함하고 있습니다.
+
+#### **1. 수정할 파일**
+- `tensorflow/__init__.py` 파일은 TensorFlow의 패키지 초기화 파일입니다.
+- 이 파일은 TensorFlow 패키지가 임포트될 때 어떤 모듈이 로드될지를 정의합니다.
+- 이 파일은 `site-packages/tensorflow` 디렉토리 내에 위치합니다 (`.venv/Lib/site-packages/tensorflow`).
+
+#### **2. 추가할 코드**
+코드의 목적은 Keras 모듈의 lazy loading 문제를 해결하여 IntelliSense가 올바르게 작동하도록 하는 것입니다. 이를 위해 `__init__.py` 파일에 다음 코드를 추가합니다:
+
+```python
+# Explicitly import lazy-loaded modules to support autocompletion.
+# pylint: disable=g-import-not-at-top
+if _typing.TYPE_CHECKING:
+  from tensorflow_estimator.python.estimator.api._v2 import estimator as estimator
+  from keras.api._v2 import keras
+  from keras.api._v2.keras import losses
+  from keras.api._v2.keras import metrics
+  from keras.api._v2.keras import optimizers
+  from keras.api._v2.keras import initializers
+# pylint: enable=g-import-not-at-top
+```
+
+- **`if _typing.TYPE_CHECKING:`**:
+  - 이 조건은 타입 체크 모듈이 활성화된 경우에만 다음의 임포트를 수행하도록 합니다. 이는 IntelliSense와 같은 도구가 타입 정보를 사용하는 상황을 의미합니다.
+  
+- **`from keras.api._v2 import keras`**:
+  - Keras 관련 모듈들을 명시적으로 임포트하여, 모듈 로드와 관련된 문제를 해결합니다. 이는 VS Code와 같은 IDE에서 코드 자동 완성 및 도움말 기능이 올바르게 작동하도록 합니다.
+
+#### **3. 해결 방법**
+- 이 방법은 Keras가 lazy loading 방식을 사용하기 때문에 발생하는 문제를 해결하기 위한 것입니다.
+- 하지만, TensorFlow 및 VS Code의 업데이트 후에는 이 수정이 필요 없을 수 있습니다. 최근에는 `keras = tf.keras`와 같이 TensorFlow의 Keras를 직접 사용하는 방식으로 문제를 해결할 수 있는 경우가 많습니다.
+
+### **결론**
+이러한 수정은 Keras와 TensorFlow를 사용할 때 IDE의 자동 완성 문제를 해결하기 위한 방법 중 하나입니다. TensorFlow 및 관련 라이브러리의 업데이트로 인해 이 문제가 해결될 수 있으며, 최신 환경에서는 이러한 수정을 필요로 하지 않을 수 있습니다.
+
+##############################################################################################################################
+
+-> 사실 이 방법 말고, 그냥 import keras 하는게 속편할 수 있음.
