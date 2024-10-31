@@ -1,0 +1,137 @@
+open source llm - llama 세팅
+
+# ref links...
+a) https://huggingface.co/docs/huggingface_hub/package_reference/environment_variables
+
+
+
+#########################################################################################################
+
+1) https://huggingface.co/ 
+ -> 계정 생성
+
+2) huggingface 에서 원하는 모델을 다운받으려면, 해당 model-repo에 대한 접근 권한을 얻어야함.
+ -> 계정을 만들고 나면, 각 모델에 대한 access 현황을 알 수 있음
+ -> huggingface에 대한 로그인을 위한 cli ( command line tool ) 을 제공하고 있음.
+
+3) 모델 다운로드 경로는 디폴트로 HF_HOME = 사용자/.cache
+-> 다른 경로 변경은 아래와 같이 진행.
+
+// 맥에서 영구적으로 변경.
+echo 'export HF_HOME=/Volumes/MyExternalDrive/huggingface' >> ~/.zshrc
+source ~/.zshrc
+
+// 맥에서 해당 터미널에서만 변경
+export HF_HOME=/Volumes/MyExternalDrive/huggingface
+
+
+# Python 설치 확인 (필요 시 Python 설치)
+python --version
+
+# 가상 환경 생성
+python -m venv llama_env
+
+# 가상 환경 활성화
+# Windows PowerShell
+.\llama_env\Scripts\Activate
+
+# 필요한 라이브러리 설치
+pip install torch transformers
+
+대충 이런 느낌으로, 파이썬의 가상 환경 workspace를 만들어서 해당 경로에서 llm을 세팅 필요.
+( 필요한 라이브러리들 포함 )
+-> 가상 환경 세팅을 해줘야, 단일 머신에서 패키지 충돌을 미연에 방지할 수 있음. ( docker에서의 container와 비슷한 개념 )
+
+
+#########################################################################################################
+
+1. llama 모델은 ollma 프레임워크 + open web ui 를 같이 사용하고 있다.
+ -> 이 방법에는 docker를 권장하고 있다. ( 공식적으로..)
+ -> 그러나 docker는 퍼스널이 아니면 유료 라이센스를 구매해야 한다.
+ 
+@m3kwong We store the models in layers in ~/.ollama/models.
+If you list that folder, you'll see two directories: blobs and manifests. Blob is the raw data, and manifest is the metadata. Together, they make up the model.
+If you are looking for a model file (e.g. .bin file), it's currently not available. We can look into potentially building an export feature for the file.
+
+깃허브 ollama repo에 있던 글이다. 대충, ~/.ollama/models 폴더 밑에 모델이 받아지고, 메타데이터 및 blob으로 관리중. 
+그렇다면, 해당 모델에 직접 접근해서 파인튜닝을 하거나 적절하게 변형을 가하려면? ollama 에서 제공하려나..
+
+기본적으로 ollama에서는 한번 변환을 거친 형태로 llm 모델을 사용한다. 따라서, 허깅페이스에서 받은 모델을 직접 밀어 넣어서는 사용 불가.
+( safetensor, pytorch 모델들은 -> https://github.com/ollama/ollama/blob/main/docs/import.md  / gguf ?)
+
+huggingface에서 llama모델을 받으면 기본적으로 safetensor 파일인데, 이를 gguf 를 이용해서 open web ui 에 밀어넣어 볼까 생각 중.
+ -> 2024.8월 기준 gguf 모델 적용이 실험적 기능으로 제공되고 있음.
+
+================== huggingface model to gguf 포멧 변환 방법 ========================
+
+1. llama.cpp 설치
+-> 해당 repo에 있는 파이썬 코드가 필요함. / 해당 프로젝트를 빌드할 필요는 없음.
+
+2.
+-> brew install cmake
+   brew install gcc
+   ( 빌드가 필요하면 )
+-> git clone https://github.com/ggerganov/llama.cpp.git
+-> 클론이 끝나면 아래 사이트를 참고해서 진행한다.
+ ( https://grip.news/archives/3000/ )
+-> 요점은,  pip install -r llama.cpp/requirements.txt ( 필요한 파이선 라이브러리 다운. 해당 내용을 보면 알 수 있음. )
+
+3.
+-> brew install python
+-> pip install torch transformers
+
+4. 
+from transformers import AutoModelForCausalLM, AutoTokenizer
+
+model_name = "huggingface/transformers"
+model = AutoModelForCausalLM.from_pretrained(model_name)
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+
+5. 
+-> python convert-hf-to-gguf.py --model PATH_TO_MODEL --output PATH_TO_OUTPUT
+   -h 명령어로, 도움말 먼저 확인해도 좋음. ( --outtype 옵션으로 f32, f16, f8_0, auto )
+
+========================== 랭체인(langchain) / 랭그래프(langgraph) 프레임워크를 이용한 rag 구성  =======================================
+
+-> https://github.com/langchain-ai/langchain
+-> https://langchain-ai.github.io/langgraph/
+
+사전 지식
+1) https://arxiv.org/abs/2201.11903 -> chain of thoughts
+2) https://arxiv.org/abs/2302.04761
+3) langsmith
+   - 애플리케이션의 성능 측정 및 분석 툴셋
+4) langgraph
+   - https://langchain-ai.github.io/langgraph/concepts/low_level/#graphs
+   - https://langchain-ai.github.io/langgraph/tutorials/#quick-start
+
+4) 흐름
+   - load (raw data ex: pdf, word, url...) -> split -> embed -> store -> query
+
+========================== open-web-ui 프레임워크의 pipeline을 이용한 rag 구성  ================================
+
+참고 문서
+-> https://www.ncloud-forums.com/topic/283
+-> https://www.ncloud-forums.com/forum/6/
+-> https://www.ncloud-forums.com/topic/318/
+
+open-web-ui 에서는 pipeline 이라는 별도의 rag/filter등의 개념을 도입하기 편하게 해준다.
+-> docker 에서 운용되고 있음을 기반으로 아래와 같이 시작.
+a) https://docs.llamaindex.ai/en/stable/examples/llm/ollama/
+b) https://docs.llamaindex.ai/en/stable/#getting-started
+
+1) https://github.com/open-webui/pipelines
+-> docker run -d -p 9099:9099 --add-host=host.docker.internal:host-gateway -v pipelines:/app/pipelines --name pipelines --restart always ghcr.io/open-webui/pipelines:main
+-> 도커에 이미지 컨테이너로 세팅되면 open-web-ui -> 관리자 패널에서 연결(connect) 항목에서 아래와 같이 연결해준다.
+-> http://host.docker.internal:9099 / 0p3n-w3bu! (url / access-token)
+-> 이제 open-web-ui 와 pipeline 2개의 컨테이너가 연결이 되었음을 알 수 있다.
+
+2) 유용한 샘플 세팅
+-> https://github.com/open-webui/pipelines
+-> 해당 git clone 이후에, examples 폴더 아래에 여러가지 파이선 샘플들이 있다.
+-> 해당 스크립트를 open-web-ui 관리자 패널에서 파이프라인 -> 스크립트 등록 후에 세팅한다.
+   -> 스크립트는 기본적으로 start-up등 스테이트 처리가 되고 있는데, pipe() 구간에서 필요한 작업을 추가 하면 될 것 같음.
+       ( 해당 파이선이 파이프라인에 등록되면 필요한 lib들은 자동으로 설치되는 것 같다. -> pipeline 이 설치된 컨테이너)
+   -> llama-index 라는 프레임워크를 통해 ollama 을 기반으로 하는 커스텀 rag도 구성할 수 있다.
+       (llama-index : https://www.llamaindex.ai)
+   -> https://docs.llamaindex.ai/en/stable/examples/data_connectors/simple_directory_reader/
