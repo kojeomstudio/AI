@@ -8,7 +8,7 @@
 
 # r2r serve --docker --full --config-name=full_local_llm
 
-# r2r serve --docker --full --config-path=/Users/kojeomstudio/AI/llm/rag/r2r_framework/my_r2_config.toml 
+# r2r serve --docker --full --config-path=/Users/kojeomstudio/AI/llm/rag/r2r_framework/my_r2r_config.toml 
 # (path는 도커 이미지 내 경로 혹은 share 인것 같음.)
 
 # r2r docker-down
