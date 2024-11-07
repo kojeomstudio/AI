@@ -36,7 +36,7 @@ from typing_extensions import TypedDict
 
 from enum import Enum
 
-# pip install --upgrade langchain langsmith langchain-chroma langchain-community pydantic langgraph
+# pip install --upgrade langchain langsmith langchain-chroma langchain-community pydantic langgraph uvicorn fastapi pandas jinja2
 
 # https://pypi.org/project/langgraph/0.0.24/
 
