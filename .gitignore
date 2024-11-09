@@ -6,3 +6,4 @@
 llm/rag/test_docs
 llm/rag/chroma_db
 __pycache__
+iris_tree.dot
