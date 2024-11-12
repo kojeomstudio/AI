@@ -1,5 +1,5 @@
 [agent]
-system_instruction_name = "my_custom_local_rag_agent"
+system_instruction_name = "rag_agent"
 tool_names = ["search"]
 
   [agent.generation_config]
@@ -19,7 +19,7 @@ concurrent_request_limit = 6
 
 [embedding]
 provider = "ollama"
-base_model = "EEVE-Korean-Instruct-10.8B-v1.0-Q4_K_S.gguf:latest"
+base_model = "mxbai-embed-large"
 base_dimension = 1_024
 batch_size = 32
 add_title_as_prefix = true
