@@ -57,13 +57,19 @@ class AppConfig:
     config_file : object
     
     def __init__(self):
-        with open(f"./rag_config.json", 'r') as file:
+        # 현재 파이썬 파일이 위치한 디렉터리 경로 가져오기
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        config_path = f"{script_dir}/rag_config.json"
+
+        with open(config_path, 'r') as file:
             self.config_file = json.load(file)
 
     def get_value(self, in_config_key : str):
         return self.config_file.get(in_config_key)
 
 ############################ global variables ####################################
+
+this_file_path = os.path.dirname(os.path.abspath(__file__))
 
 app_config = AppConfig()
 performance_helper = PerformanceHelper()
@@ -72,8 +78,8 @@ ollama_model_name = app_config.get_value("ollama_model_name")
 ollama_service_url = app_config.get_value("ollama_service_url")
 
 # 벡터 스토어를 저장할 경로 설정
-vectorstore_db_path = app_config.get_value("vectorstore_db_path")
-documents_path =  app_config.get_value("documents_path")
+vectorstore_db_path = os.path.join(this_file_path, app_config.get_value("vectorstore_db_path"))
+documents_path =  os.path.join(this_file_path, app_config.get_value("documents_path"))
 
 # 노드 네임 정의
 load_node_name = "load_node"
