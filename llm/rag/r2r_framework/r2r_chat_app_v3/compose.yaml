@@ -1,6 +1,6 @@
 services:
   app:
-    image: xhbuildagent11:5443/r2r-chat-app:v3  # 사용할 Docker 이미지
+    image: r2r-chat-app:v3  # 사용할 Docker 이미지
     container_name: r2r-chat-app-c  # 컨테이너 이름
     ports:
       - "9000:9000"  # 호스트:컨테이너 포트 매핑

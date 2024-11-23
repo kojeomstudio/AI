@@ -3,6 +3,7 @@ import json
 import asyncio
 import aiofiles
 import sqlite3
+from pathlib import Path
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
@@ -25,8 +26,10 @@ templates = Jinja2Templates(directory="templates")
 # 정적 파일 경로 설정
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
+config_path = Path(f"config.json")
+
 # 설정 파일 로드
-with open("config.json") as f:
+with open(config_path.absolute()) as f:
     config = json.load(f)
 
 # 주기적으로 체크할 파일 경로 및 설정값들
