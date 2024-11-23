@@ -9,10 +9,15 @@ WORKDIR /app
 
 COPY ./simple/requirements.txt .
 # 필수 패키지 설치를 위한 업데이트
-RUN apt-get update && apt-get install -y --no-install-recommends libmagic1 \
-    && apt-get clean && rm -rf /var/lib/apt/lists/* && pip install -r requirements.txt
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libmagic1 \
+    libgl1-mesa-glx \
+    libglib2.0-0 \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+RUN python3 -m pip install --no-cache-dir -r requirements.txt
 
 # WORKDIR은 목적지 경로의 루트 디렉터리.
 COPY ./simple ./dist
 
-RUN python ./dist/commandlet_embedding.py && python ./dist/local_llm_rag_web_server.py
+RUN ./dist/start.sh
