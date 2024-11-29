@@ -10,6 +10,21 @@ import logging
 from docling.datamodel.base_models import InputFormat
 from docling.document_converter import DocumentConverter, MarkdownFormatOption
 
+
+# output directory path.
+output_path_inst = Path("")
+
+def convert_file_path(in_origin: str):
+    if getattr(sys, 'frozen', False):  # 바이너리로 실행되었다면
+        # 실행 파일이 위치한 실제 경로를 기준으로
+        script_dir = os.path.dirname(sys.executable)
+    else:  # 일반 스크립트 실행
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+
+    converted_path = os.path.join(script_dir, in_origin)
+    return converted_path
+
+
 # Logging 설정
 logger = logging.getLogger(__name__)
 logging.basicConfig(
@@ -41,22 +56,6 @@ class LogHandler(logging.Handler):
         log_entry = self.format(record)
         self.log_callback(log_entry)
 
-
-def get_base_path():
-    """스크립트 또는 바이너리 실행 경로를 반환."""
-    if getattr(sys, 'frozen', False):  # PyInstaller로 패키징된 경우
-        return Path(sys._MEIPASS).resolve()  # 바이너리 내부의 임시 디렉터리
-    else:  # 일반 스크립트 실행
-        return Path(__file__).resolve().parent
-
-# 실행 경로 기반으로 디렉터리 설정
-base_path = get_base_path()
-output_path = base_path / "converted_files"
-output_path.mkdir(parents=True, exist_ok=True)
-
-print(f"Base path: {base_path}")
-print(f"Output directory: {output_path}")
-
 doc_converter = DocumentConverter(
     allowed_formats=[
         InputFormat.PDF,
@@ -70,45 +69,9 @@ doc_converter = DocumentConverter(
     format_options={InputFormat.MD: MarkdownFormatOption()},
 )
 
-
-def convert_files(file_paths, update_progress_callback):
-    results = []
-    for idx, path in enumerate(file_paths):
-
-        output_file_abs_path_str = ""
-
-        try:
-            if not os.path.exists(path):
-                raise FileNotFoundError(f"File not found: {path}")
-            res = doc_converter.convert_all([Path(path)])
-
-            for conv_result in res:
-
-                output_file_path = output_path.joinpath(f"{conv_result.input.file.stem}.md")
-                output_file_abs_path_str = output_file_path.absolute()
-
-                logger.info(f"convert -> output_file_path: {output_file_path.absolute()}")
-                with output_file_path.open("w", encoding="utf-8", errors="replace") as fp:
-                    writed_bytes = fp.write(conv_result.document.export_to_markdown())
-                    logger.info(f"{output_file_path} is writed {writed_bytes} bytes")
-
-                results.append(output_file_path)
-                
-        except FileNotFoundError as e:
-            logger.error(f"File not found: {path} - {e}  output_file_path : {output_file_abs_path_str}")
-        except RuntimeError as e:
-            logger.error(f"PDF conversion error: {path} - {e}  output_file_path : {output_file_abs_path_str}")
-        except Exception as e:
-            logger.error(f"Unexpected error converting {path}: {e}, output_file_path : {output_file_abs_path_str}")
-        finally:
-            update_progress_callback(idx + 1, len(file_paths))
-    return results
-
-
 def start_event_loop(loop):
     asyncio.set_event_loop(loop)
     loop.run_forever()
-
 
 class App(tk.Tk):
     def __init__(self, loop):
@@ -244,6 +207,7 @@ class App(tk.Tk):
                 converted_files = await self.loop.run_in_executor(
                     executor,
                     convert_files,
+                    self,
                     self.file_paths,
                     lambda current, total: self.after(0, self.update_progress, current, total),
                 )
@@ -277,12 +241,62 @@ class App(tk.Tk):
         self.file_paths.clear()
         self.update_file_listbox()
 
+def convert_files(app_inst : App , file_paths, update_progress_callback):
+    results = []
+    for idx, path in enumerate(file_paths):
 
-def main():
+        output_file_abs_path_str = ""
+
+        try:
+            if not os.path.exists(path):
+                raise FileNotFoundError(f"File not found: {path}")
+            res = doc_converter.convert_all([Path(path)])
+
+            for conv_result in res:
+
+                output_path = output_path_inst.joinpath(f"{conv_result.input.file.stem}.md")
+                output_file_abs_path_str = output_path.absolute()
+
+                app_inst.log_message(f"for conv_result in res: --> [detail :: model dump json ->  {conv_result.model_dump_json()}, output_path(abs) -> {output_path.absolute()}]")
+                    
+                with output_path.open("w", encoding="utf-8", errors="replace") as fp:
+                    writed_bytes = fp.write(conv_result.document.export_to_markdown())
+
+                    logger.info(f"{output_path} is writed {writed_bytes} bytes")
+                    app_inst.log_message(f"{output_path} is writed {writed_bytes} bytes")
+
+                results.append(output_path)
+                
+        except FileNotFoundError as e:
+            logger.error(f"File not found: {path} - error : {e}  output_file_abs_path : {output_file_abs_path_str}")
+            #app_inst.log_message(f"File not found: {path} - {e}  output_file_abs_path : {output_file_abs_path_str}")
+        except RuntimeError as e:
+            logger.error(f"PDF conversion error: {path} - error : {e}  output_file_abs_path : {output_file_abs_path_str}")
+            #app_inst.log_message(f"PDF conversion error: {path} - {e}  output_file_abs_path : {output_file_abs_path_str}")
+        except Exception as e:
+            logger.error(f"Unexpected error converting {path}: error : {e}, output_file_abs_path : {output_file_abs_path_str}")
+            #app_inst.log_message(f"Unexpected error converting {path}: {e}, output_file_abs_path : {output_file_abs_path_str}")
+        finally:
+            update_progress_callback(idx + 1, len(file_paths))
+    return results
+
+
+def main_func():
+    
     loop = asyncio.new_event_loop()
     app = App(loop)
+
+
+    # 실행 경로 기반으로 디렉터리 설정
+    file_path = convert_file_path("converted_files")
+
+    output_path_inst = Path(file_path)
+    output_path_inst.mkdir(parents=True, exist_ok=True)
+
+    app.log_message(f"Output directory: {output_path_inst}")
+
     app.mainloop()
 
 
 if __name__ == "__main__":
-    main()
+    main_func()
