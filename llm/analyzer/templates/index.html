@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LLM 분석 결과</title>
+    <link rel="stylesheet" href="/static/styles.css"> <!-- 예시로 CSS 파일 링크 추가 -->
+</head>
+<body>
+    <h1>분석된 파일 목록</h1>
+    <ul>
+        {% for file in files %}
+            <li><a href="/file/{{ file }}">{{ file }}</a></li>
+        {% endfor %}
+    </ul>
+</body>
+</html>

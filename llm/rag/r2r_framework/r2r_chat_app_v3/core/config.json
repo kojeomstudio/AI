@@ -1,0 +1,6 @@
+{
+    "r2r_server_url": "http://r2r:7272",
+    "host": "0.0.0.0",
+    "port": 9000,
+    "typing_delay": 10
+}

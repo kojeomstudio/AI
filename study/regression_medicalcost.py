@@ -12,7 +12,7 @@ from sklearn.linear_model import Lasso # 랏쏘회귀 ( 규제 )
 import seaborn as sns
 
 # CSV 파일 불러오기
-file_path = './Datas/MedicalCostDatasets.csv'
+file_path = './datas/MedicalCostDatasets.csv'
 raw_data = pd.read_csv(file_path)
 
 # One-Hot Encoding

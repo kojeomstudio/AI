@@ -10,7 +10,7 @@ from sklearn.preprocessing import StandardScaler # 표준화 (데이터 전처�
 import matplotlib.pyplot as plt
 
 # CSV 파일 불러오기
-file_path = './Datas/heart.csv'
+file_path = './datas/heart.csv'
 heart_data = pd.read_csv(file_path)
 
 # 데이터 확인

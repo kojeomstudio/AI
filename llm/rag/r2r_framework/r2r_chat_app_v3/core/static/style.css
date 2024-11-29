@@ -1,0 +1,129 @@
+/* 전체 레이아웃 스타일 */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f6f9;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+/* 채팅 컨테이너 */
+.chat-container {
+    width: 100%;
+    max-width: 768px;
+    height: 90vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #ffffff;
+    border: 1px solid #e0e0e0;
+    border-radius: 15px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+/* 대화창 레이아웃 */
+.chat-window {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+}
+
+/* 메시지 영역 */
+.messages {
+    flex-grow: 1;
+    padding: 15px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background-color: #f9f9f9;
+}
+
+.message {
+    padding: 15px 20px;
+    border-radius: 20px;
+    max-width: 75%;
+    line-height: 1.6;
+    word-wrap: break-word;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.user-message {
+    background: linear-gradient(135deg, #42a5f5, #1e88e5);
+    color: #ffffff;
+    align-self: flex-end;
+    text-align: right;
+}
+
+.bot-message {
+    background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+    color: #0d47a1;
+    align-self: flex-start;
+    text-align: left;
+    white-space: pre-line; /* 줄바꿈과 문단 구분 반영 */
+}
+
+/* 입력 영역 */
+.input-area {
+    display: flex;
+    padding: 10px 15px;
+    background-color: #ffffff;
+    border-top: 1px solid #e0e0e0;
+}
+
+#input {
+    flex-grow: 1;
+    padding: 10px;
+    border-radius: 20px;
+    border: 1px solid #e0e0e0;
+    outline: none;
+    font-size: 16px;
+    margin-right: 10px;
+    background-color: #f4f6f9;
+}
+
+#submit-btn {
+    padding: 10px 20px;
+    border-radius: 20px;
+    border: none;
+    background-color: #007aff;
+    color: #ffffff;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+#submit-btn:hover {
+    background-color: #005bb5;
+}
+
+#submit-btn:disabled {
+    background-color: #d0d0d0;
+    cursor: not-allowed;
+}
+
+/* 스크롤바 숨기기 */
+.messages::-webkit-scrollbar {
+    width: 0;
+}
+
+/* 로더 스타일 */
+.loader {
+    border: 4px solid #f3f3f3;
+    border-radius: 50%;
+    border-top: 4px solid #3498db;
+    width: 20px;
+    height: 20px;
+    animation: spin 1s linear infinite;
+    margin: 10px auto;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}

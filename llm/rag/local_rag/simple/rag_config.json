@@ -1,0 +1,9 @@
+{
+    "ollama_model_name" : "qwen2.5-coder:latest",
+    "ollama_service_url" : "http://host.docker.internal:11434",
+    "vectorstore_db_path" : "./chroma_db",
+    "documents_path" : "./test_docs",
+    "default_time_out_sec" : 160,
+    "server_host" : "0.0.0.0",
+    "server_port" : 8888
+}

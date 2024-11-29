@@ -1,6 +1,9 @@
 /llama_env
 /llama_Scripts
 /my_ai_venv
+/my_r2r_venv
+/my_rag_venv
 llm/rag/test_docs
 llm/rag/chroma_db
 __pycache__
+iris_tree.dot

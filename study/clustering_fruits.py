@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from sklearn.cluster import KMeans
 
 # KMeans 에서 사용할 수 있게 2차원 배열 형태로 수정.
-fruits = np.load('./Datas/fruits.npy') # RGBA 4차원 원소
+fruits = np.load('./datas/fruits.npy') # RGBA 4차원 원소
 fruits_2d = fruits.reshape(-1, 128 * 128) # 128 x 128 size image
 #print(friuits)
 

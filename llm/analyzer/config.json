@@ -1,0 +1,9 @@
+{
+    "text_file_path": "./input_texts", 
+    "output_file_path": "./output_texts",
+    "db_path" : "./processed_files.db", 
+    "ollama_host_url" : "http://localhost:11434",
+    "ollama_model": "your_model_name", 
+    "check_days": ["mon", "wed", "fri"], 
+    "check_time": "07:00"
+}

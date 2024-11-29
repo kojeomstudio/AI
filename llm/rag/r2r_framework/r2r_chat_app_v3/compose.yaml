@@ -1,0 +1,16 @@
+services:
+  app:
+    image: r2r-chat-app:v3  # 사용할 Docker 이미지
+    container_name: r2r-chat-app-c  # 컨테이너 이름
+    ports:
+      - "9000:9000"  # 호스트:컨테이너 포트 매핑
+    environment:
+      - HOST=0.0.0.0
+      - PORT=9000
+    networks: # 네트워크 설정
+      - devman_default
+    restart: always  # 자동 재시작 정책
+
+networks:
+  devman_default:
+    external: true
