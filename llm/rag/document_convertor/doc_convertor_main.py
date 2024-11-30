@@ -56,19 +56,6 @@ class LogHandler(logging.Handler):
         log_entry = self.format(record)
         self.log_callback(log_entry)
 
-doc_converter = DocumentConverter(
-    allowed_formats=[
-        InputFormat.PDF,
-        InputFormat.IMAGE,
-        InputFormat.DOCX,
-        InputFormat.HTML,
-        InputFormat.PPTX,
-        InputFormat.ASCIIDOC,
-        InputFormat.MD,
-    ],
-    format_options={InputFormat.MD: MarkdownFormatOption()},
-)
-
 def start_event_loop(loop):
     asyncio.set_event_loop(loop)
     loop.run_forever()
@@ -243,39 +230,56 @@ class App(tk.Tk):
 
 def convert_files(app_inst : App , file_paths, update_progress_callback):
     results = []
-    for idx, path in enumerate(file_paths):
+    for idx, target_file_path in enumerate(file_paths):
 
         output_file_abs_path_str = ""
 
         try:
-            if not os.path.exists(path):
-                raise FileNotFoundError(f"File not found: {path}")
-            res = doc_converter.convert_all([Path(path)])
+            if not os.path.exists(target_file_path):
+                raise FileNotFoundError(f"File not found: {target_file_path}")
+            
+            doc_converter = DocumentConverter(
+            allowed_formats=[
+                InputFormat.PDF,
+                InputFormat.IMAGE,
+                InputFormat.DOCX,
+                InputFormat.HTML,
+                InputFormat.PPTX,
+                InputFormat.ASCIIDOC,
+                InputFormat.MD,
+            ],
+            format_options={InputFormat.MD: MarkdownFormatOption()},
+            )
+            
+            convert_result = doc_converter.convert(target_file_path)
 
-            for conv_result in res:
+            if convert_result == None:
+                app_inst.log_message(f"convert_result is None...")
+                continue
 
-                output_path = output_path_inst.joinpath(f"{conv_result.input.file.stem}.md")
-                output_file_abs_path_str = output_path.absolute()
+            output_path = output_path_inst.joinpath(f"{convert_result.input.file.stem}.md")
+            output_file_abs_path_str = output_path.absolute()
 
-                app_inst.log_message(f"for conv_result in res: --> [detail :: model dump json ->  {conv_result.model_dump_json()}, output_path(abs) -> {output_path.absolute()}]")
+            #app_inst.log_message(f"for convert_result in res: --> [detail :: model dump json ->  {convert_result.model_dump_json()}, output_path(abs) -> {output_path.absolute()}]")
                     
-                with output_path.open("w", encoding="utf-8", errors="replace") as fp:
-                    writed_bytes = fp.write(conv_result.document.export_to_markdown())
+            with output_path.open("w", encoding="utf-8", errors="replace") as fp:
+                writed_bytes = fp.write(convert_result.document.export_to_markdown())
 
-                    logger.info(f"{output_path} is writed {writed_bytes} bytes")
-                    app_inst.log_message(f"{output_path} is writed {writed_bytes} bytes")
+                logger.info(f"{output_path} is writed {writed_bytes} bytes")
+                app_inst.log_message(f"{output_path} is writed {writed_bytes} bytes")
 
-                results.append(output_path)
+            results.append(output_path)
                 
+
         except FileNotFoundError as e:
-            logger.error(f"File not found: {path} - error : {e}  output_file_abs_path : {output_file_abs_path_str}")
-            #app_inst.log_message(f"File not found: {path} - {e}  output_file_abs_path : {output_file_abs_path_str}")
+            logger.error(f"File not found: {target_file_path} - error : {e}  output_file_abs_path : {output_file_abs_path_str}")
+            #app_inst.log_message(f"File not found: {target_file_path} - {e}  output_file_abs_path : {output_file_abs_path_str}")
         except RuntimeError as e:
-            logger.error(f"PDF conversion error: {path} - error : {e}  output_file_abs_path : {output_file_abs_path_str}")
-            #app_inst.log_message(f"PDF conversion error: {path} - {e}  output_file_abs_path : {output_file_abs_path_str}")
+            logger.error(f"PDF conversion error: {target_file_path} - error : {e}  output_file_abs_path : {output_file_abs_path_str}")
+            #app_inst.log_message(f"PDF conversion error: {target_file_path} - {e}  output_file_abs_path : {output_file_abs_path_str}")
         except Exception as e:
-            logger.error(f"Unexpected error converting {path}: error : {e}, output_file_abs_path : {output_file_abs_path_str}")
-            #app_inst.log_message(f"Unexpected error converting {path}: {e}, output_file_abs_path : {output_file_abs_path_str}")
+            logger.error(f"Unexpected error converting {target_file_path}: error : {e}, output_file_abs_path : {output_file_abs_path_str}")
+            #app_inst.log_message(f"Unexpected error converting {target_file_path}: {e}, output_file_abs_path : {output_file_abs_path_str}")
         finally:
             update_progress_callback(idx + 1, len(file_paths))
     return results

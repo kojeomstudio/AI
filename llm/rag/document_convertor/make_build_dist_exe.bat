@@ -22,11 +22,18 @@ set SCRIPT_NAME=doc_convertor_main.py
 REM PyInstaller를 사용하여 단일 실행 파일로 빌드
 echo 프로그램을 빌드 중입니다...
 
+REM --add-data "my_doc_convert_venv\Lib\site-packages\pypdfium2_raw\pdfium.dll;pypdfium2_raw" ^
+REM --add-data "my_doc_convert_venv\Lib\site-packages\pypdfium2_raw\version.json;pypdfium2_raw" ^
+REM --add-data "my_doc_convert_venv\Lib\site-packages\pypdfium2\version.json;pypdfium2" ^
+
 
 REM pyinstaller --onefile --hidden-import=pypdfium2 --windowed %SCRIPT_NAME%
+REM --add-binary "my_doc_convert_venv\Lib\site-packages\pypdfium2_raw\pdfium.dll;pypdfium2_raw" ^
 REM pypdfium의 경우, dll 같은 라이브러리를 동적으로 로드하기 때문에 pyinstaller가 감지 못함.
+REM https://stackoverflow.com/questions/78197352/pdfium-library-is-not-working-when-compiling-my-code-in-python
 
 pyinstaller --onefile ^
+    --hidden-import=pypdfium2 ^
     --add-data "my_doc_convert_venv\Lib\site-packages\pypdfium2_raw\pdfium.dll;pypdfium2_raw" ^
     --add-data "my_doc_convert_venv\Lib\site-packages\pypdfium2_raw\version.json;pypdfium2_raw" ^
     --add-data "my_doc_convert_venv\Lib\site-packages\pypdfium2\version.json;pypdfium2" ^
