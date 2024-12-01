@@ -1,3 +1,7 @@
+# ifconfig 명령어를 찾지 못한다면 아래 명령어 실행.
+# sudo apt update
+# sudo apt install net-tools
+
 $remoteport = bash.exe -c "ifconfig eth0 | grep 'inet '"
 $found = $remoteport -match '\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}';
 
@@ -10,10 +14,7 @@ if( $found ){
 
 # [Ports]
 # All the ports you want to forward separated by comma
-# 7272, 7273, 7274 -> r2r
-# 3000 -> openwebui
-# 8888, 8000 -> custom
-$ports = @(3000, 8888, 8000, 7272, 7273, 7274);
+$ports = @(7000);
 
 # [Static IP]
 # You can change the addr to your IP config to listen to a specific address
