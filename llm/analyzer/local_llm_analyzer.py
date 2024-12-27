@@ -72,14 +72,9 @@ async def process_files():
             db_cursor.execute("INSERT INTO processed_files (filename) VALUES (?)", (file,))
             db_connection.commit()
 
-# 주기적 작업 설정
-scheduler = AsyncIOScheduler()
-scheduler.add_job(process_files, 'cron', day_of_week=','.join(CHECK_DAYS), hour=CHECK_TIME.split(':')[0], minute=CHECK_TIME.split(':')[1])
-scheduler.start()
-
 # 비동기적으로 디렉토리에서 파일 목록을 가져오기
 async def get_files_in_directory(directory):
-    return [os.path.join(directory, f) for f in os.listdir(directory) if os.path.isfile(os.path.join(directory, f))]
+    return [f for f in os.listdir(directory) if os.path.isfile(os.path.join(directory, f))]
 
 # 비동기적으로 텍스트 파일 로드하기
 async def load_text_file(filepath):
@@ -124,4 +119,12 @@ async def read_file(filename: str):
 
 # 웹서버 실행
 if __name__ == "__main__":
+
+    loop = asyncio.get_event_loop()
+
+    # 주기적 작업 설정
+    scheduler = AsyncIOScheduler()
+    scheduler.add_job(process_files, 'cron', day_of_week=','.join(CHECK_DAYS), hour=CHECK_TIME.split(':')[0], minute=CHECK_TIME.split(':')[1])
+    scheduler.start()
+
     uvicorn.run(app, host="0.0.0.0", port=8000)

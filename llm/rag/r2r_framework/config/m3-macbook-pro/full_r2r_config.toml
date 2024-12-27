@@ -1,6 +1,6 @@
 [agent]
 system_instruction_name = "rag_agent"
-tool_names = ["local_search"]
+tool_names = ["local_search", "web_search"]
 
   [agent.generation_config]
   model = "ollama/llama3.2-korean-bllossom-3b-q8:latest"
@@ -64,6 +64,11 @@ combine_under_n_chars = 128
 overlap = 20
 chunks_for_document_summary = 16
 document_summary_model = "ollama/llama3.2-korean-bllossom-3b-q8:latest"
+
+#
+#[prompt]
+#provider = "r2r"
+#
 
 #
 #[orchestration]
