@@ -1,3 +1,2 @@
 # AI
-ML, RL, DL, LLM and then something
-
+AI관련 내용을 학습하고 연구합니다.
