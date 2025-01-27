@@ -3,7 +3,7 @@
     "output_file_path": "./output_texts",
     "db_path" : "./processed_files.db", 
     "ollama_host_url" : "http://localhost:11434",
-    "ollama_model": "qwen2.5-cder:latest", 
+    "ollama_model": "qwen2.5-coder:latest", 
     "check_days": ["mon", "wed", "fri"], 
     "check_time": "07:00"
 }
