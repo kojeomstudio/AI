@@ -1,10 +1,9 @@
 import os
 import json
 import asyncio
-import aiofiles
-import sqlite3
+import aiosqlite
 from pathlib import Path
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, BackgroundTasks, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
@@ -12,119 +11,125 @@ from pydantic import BaseModel
 import uvicorn
 from datetime import datetime
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-
-# Ollama 라이브러리 사용
+from contextlib import asynccontextmanager
 import ollama  
 from ollama import Client
+import aiofiles
 
 # FastAPI 앱 인스턴스 생성
+scheduler = AsyncIOScheduler()
 app = FastAPI()
 
-# HTML 템플릿 경로 설정
-templates = Jinja2Templates(directory="templates")
+# 템플릿 및 정적 파일 설정
+BASE_DIR = Path(__file__).parent
+templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
+app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static"), html=True), name="static")
 
-# 정적 파일 경로 설정
-app.mount("/static", StaticFiles(directory="static"), name="static")
+# 현재 진행 중인 파일 개수 상태 변수
+processing_files = 0
 
-config_path = Path(f"config.json")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """ FastAPI의 lifespan 이벤트 핸들러 """
+    await create_directories([TEXT_FILE_PATH, OUTPUT_FILE_PATH])
+    scheduler.start()
+    print("📌 Scheduler Started")
+    yield
+    scheduler.shutdown()
+    print("📌 Scheduler Shutdown")
 
-# 설정 파일 로드
-with open(config_path.absolute()) as f:
-    config = json.load(f)
+app = FastAPI(lifespan=lifespan)
 
-# 주기적으로 체크할 파일 경로 및 설정값들
-TEXT_FILE_PATH = config["text_file_path"]
-OUTPUT_FILE_PATH = config["output_file_path"]
+# 설정 파일 로드 (동적 로딩 지원)
+def load_config():
+    config_path = Path(__file__).parent / "config.json"
+    with open(config_path) as f:
+        return json.load(f)
+
+config = load_config()
+
+TEXT_FILE_PATH = Path(__file__).parent / config["text_file_path"]
+OUTPUT_FILE_PATH = Path(__file__).parent / config["output_file_path"]
+DB_PATH = Path(__file__).parent / config["db_path"]
 OLLAMA_MODEL = config["ollama_model"]
 CHECK_DAYS = config["check_days"]
 CHECK_TIME = config["check_time"]
-DB_PATH = config["db_path"]
 OLLAMA_HOST_URL = config["ollama_host_url"]
 
-# SQLite 데이터베이스 연결
-db_connection = sqlite3.connect(DB_PATH)
-db_cursor = db_connection.cursor()
-
-# ollama client
 ollama_client = Client(host=OLLAMA_HOST_URL)
 
-# 이미 처리된 파일 테이블 생성
-db_cursor.execute("""
-CREATE TABLE IF NOT EXISTS processed_files (
-    filename TEXT PRIMARY KEY
-)
-""")
-db_connection.commit()
+async def create_directories(directories):
+    for directory in directories:
+        os.makedirs(directory, exist_ok=True)
 
-# 파일이 이미 처리되었는지 확인하는 함수
-def is_file_processed(filename):
-    db_cursor.execute("SELECT filename FROM processed_files WHERE filename = ?", (filename,))
-    return db_cursor.fetchone() is not None
+async def init_db():
+    async with aiosqlite.connect(DB_PATH) as db:
+        await db.execute("""
+        CREATE TABLE IF NOT EXISTS processed_files (
+            filename TEXT PRIMARY KEY
+        )
+        """)
+        await db.commit()
 
-# 파일 처리를 위한 비동기 작업
 async def process_files():
-    files = await get_files_in_directory(TEXT_FILE_PATH)
-    for file in files:
-        if not is_file_processed(file):
-            text_content = await load_text_file(file)
-            response = await query_ollama_model(text_content)
-            await save_output(file, response)
-            db_cursor.execute("INSERT INTO processed_files (filename) VALUES (?)", (file,))
-            db_connection.commit()
+    global processing_files
+    files = os.listdir(TEXT_FILE_PATH)
+    processing_files = len(files)  # 현재 처리 중인 파일 개수 설정
+    async with aiosqlite.connect(DB_PATH) as db:
+        for file in files:
+            file_path = TEXT_FILE_PATH / file
+            if not file_path.suffix in [".txt", ".md"]:
+                print(f"Skipping unsupported file: {file}")
+                continue
+            
+            async with aiofiles.open(file_path, "r", encoding="utf-8") as f:
+                content = await f.read()
+            if not content.strip():
+                continue
+            try:
+                result = ollama_client.generate(OLLAMA_MODEL, content)
+                output_path = OUTPUT_FILE_PATH / f"{file}.out"
+                async with aiofiles.open(output_path, "w", encoding="utf-8") as out_f:
+                    await out_f.write(result)
+                
+                await db.execute("INSERT INTO processed_files (filename) VALUES (?)", (file,))
+                await db.commit()
+            except Exception as e:
+                print(f"Error processing {file}: {e}")
+    processing_files = 0  # 모든 작업이 완료되면 0으로 설정
 
-# 비동기적으로 디렉토리에서 파일 목록을 가져오기
-async def get_files_in_directory(directory):
-    return [f for f in os.listdir(directory) if os.path.isfile(os.path.join(directory, f))]
-
-# 비동기적으로 텍스트 파일 로드하기
-async def load_text_file(filepath):
-    async with aiofiles.open(filepath, 'r') as file:
-        return await file.read()
-
-async def query_ollama_model(in_text_context):
-    # 프롬프트 엔지니어링을 통한 지시문 생성
-    engineered_prompt = (
-        f"Analyze the following text, focusing on identifying key issues, troubleshooting steps, "
-        f"and summarizing any relevant code or error details:\n\n{in_text_context}\n\n"
-        "Provide a concise summary of the analysis, highlighting critical information."
-    )
-    # Ollama 모델 호출
-    response = ollama.generate(model=OLLAMA_MODEL, prompt=engineered_prompt)
-    
-    # 응답 텍스트 반환
-    return response["text"]
-
-# 비동기적으로 응답 텍스트를 저장하기
-async def save_output(input_file, response_text):
-    output_filename = os.path.basename(input_file).replace(".txt", "_response.txt")
-    output_path = os.path.join(OUTPUT_FILE_PATH, output_filename)
-    async with aiofiles.open(output_path, 'w') as file:
-        await file.write(response_text)
-
-# 웹 페이지 UI를 표시하는 엔드포인트
 @app.get("/", response_class=HTMLResponse)
-async def read_root():
-    files = await get_files_in_directory(OUTPUT_FILE_PATH)
-    return templates.TemplateResponse("index.html", {"request": "request", "files": files})
+async def index(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
 
-# 개별 파일의 내용을 반환하는 엔드포인트
-@app.get("/file/{filename}", response_class=HTMLResponse)
-async def read_file(filename: str):
-    file_path = os.path.join(OUTPUT_FILE_PATH, filename)
-    if not os.path.exists(file_path):
-        raise HTTPException(status_code=404, detail="파일을 찾을 수 없습니다.")
-    async with aiofiles.open(file_path, 'r') as file:
-        content = await file.read()
-    return f"<html><body><pre>{content}</pre></body></html>"
+@app.get("/api/config/reload")
+async def reload_config():
+    global config, TEXT_FILE_PATH, OUTPUT_FILE_PATH, OLLAMA_MODEL
+    config = load_config()
+    TEXT_FILE_PATH = Path(__file__).parent / config["text_file_path"]
+    OUTPUT_FILE_PATH = Path(__file__).parent / config["output_file_path"]
+    OLLAMA_MODEL = config["ollama_model"]
+    return {"message": "Config reloaded successfully"}
 
-# 웹서버 실행
+@app.post("/api/process")
+async def trigger_processing(background_tasks: BackgroundTasks):
+    background_tasks.add_task(process_files)
+    return {"message": "Processing started in the background"}
+
+@app.get("/api/status")
+async def get_status():
+    async with aiosqlite.connect(DB_PATH) as db:
+        cursor = await db.execute("SELECT COUNT(*) FROM processed_files")
+        completed_files = await cursor.fetchone()
+    return {"processing": processing_files, "completed": completed_files[0]}
+
+@app.get("/debug/static-files")
+def debug_static_files():
+    static_path = Path(BASE_DIR / "static")
+    if static_path.exists():
+        files = os.listdir(static_path)
+        return {"static_exists": True, "files": files}
+    return {"static_exists": False, "message": "Static folder not found"}
+
 if __name__ == "__main__":
-
-    loop = asyncio.get_event_loop()
-
-    # 주기적 작업 설정
-    scheduler = AsyncIOScheduler()
-    scheduler.add_job(process_files, 'cron', day_of_week=','.join(CHECK_DAYS), hour=CHECK_TIME.split(':')[0], minute=CHECK_TIME.split(':')[1])
-    scheduler.start()
-
     uvicorn.run(app, host="0.0.0.0", port=8000)

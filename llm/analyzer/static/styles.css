@@ -1,26 +1,47 @@
+@font-face {
+    font-family: 'MainFont';
+    src: url('/static/fonts/main_font.otf') format('opentype');
+}
+
 body {
-    font-family: Arial, sans-serif;
-    margin: 20px;
+    font-family: 'MainFont', sans-serif;
+    background-color: #f8f9fa;
+    text-align: center;
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    max-width: 600px;
+    margin: 50px auto;
     padding: 20px;
+    background: white;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
 }
 
 h1 {
+    font-size: 24px;
     color: #333;
 }
 
-ul {
-    list-style-type: none;
+button {
+    background-color: #007bff;
+    color: white;
+    padding: 10px 15px;
+    margin: 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
 }
 
-li {
-    margin: 10px 0;
+button:hover {
+    background-color: #0056b3;
 }
 
-a {
-    text-decoration: none;
-    color: #007bff;
-}
-
-a:hover {
-    text-decoration: underline;
+#status {
+    margin-top: 20px;
+    font-size: 14px;
+    color: #666;
 }

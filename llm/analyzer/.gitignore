@@ -1,1 +1,4 @@
-processed_files.db
+
+/input_texts
+/output_texts
+*.db

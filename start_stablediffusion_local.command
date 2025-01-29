@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # 실행할 .sh 파일 경로를 변수에 저장
-SCRIPT_PATH="/kojeomstudio/stable-diffusion-webui/webui.sh"
+SCRIPT_PATH="/Users/kojeomstudio/stable-diffusion-webui/webui.sh"
 
 # 파일이 존재하는지 확인
 if [ -f "$SCRIPT_PATH" ]; then
