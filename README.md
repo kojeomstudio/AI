@@ -6,3 +6,5 @@ What to do?
 * AI 작업에 필요한 유틸 프로그램 제작
     * devops, vcs, etc...
 * RL에 필요한 게임 제작
+* 생성형 AI 연구 및 활용
+    * stable-diffusion web interface
