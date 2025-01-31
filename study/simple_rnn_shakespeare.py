@@ -14,6 +14,12 @@ def to_dataset(sequence, length,  shuffle=False, seed=None, batch_size=32):
         ds = ds.shuffle(buffer_size=100_000, seed=seed)
     ds = ds.batch(batch_size)
     return ds.map(lambda window: (window[:, :-1], window[:, 1:])).prefetch(1)
+
+def to_dataset_for_stateful_rnn(seqeunce, length):
+    ds = tf.data.Dataset.from_tensor_slices(seqeunce)
+    ds = ds.window(length + 1, shift=length, drop_remainder=True)
+    ds = ds.flat_map(lambda window: window.batch(length + 1)).batch(1)
+    return ds.map(lambda window: (window[:, :-1], window[:, 1:])).prefetch(1)   
 ##############################################################################
 
 shakespeare_url = "https://homl.info/shakespeare" #...
