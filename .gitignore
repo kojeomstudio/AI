@@ -9,3 +9,4 @@ __pycache__
 iris_tree.dot
 llama_local_storage
 *.keras
+processed_files.db
