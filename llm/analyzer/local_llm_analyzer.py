@@ -17,6 +17,8 @@ from ollama import Client
 import aiofiles
 from enum import Enum
 
+import prompt_helper
+
 # FastAPI 앱 인스턴스 생성
 scheduler = AsyncIOScheduler()
 
@@ -112,7 +114,7 @@ async def process_files():
             if not content.strip():
                 continue
             try:
-                result = ollama_client.generate(OLLAMA_MODEL, content)
+                result = ollama_client.generate(OLLAMA_MODEL, prompt_helper.OLLAMA_PROMPT.format(content=content))
                 output_path = OUTPUT_FILE_PATH / f"{file}.out"
                 async with aiofiles.open(output_path, "w", encoding="utf-8") as out_f:
                     await out_f.write(result)
