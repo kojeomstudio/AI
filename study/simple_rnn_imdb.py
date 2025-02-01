@@ -29,7 +29,7 @@ embed_size = 128
 tf.random.set_seed(42)
 model = keras.Sequential([
     text_vec_layer,
-    keras.layers.Embedding(vocab_size, embed_size),
+    keras.layers.Embedding(vocab_size, embed_size, mask_zero=True),
     keras.layers.GRU(128),
     keras.layers.Dense(1, activation="sigmoid")
 ])

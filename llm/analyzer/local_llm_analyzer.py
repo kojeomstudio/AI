@@ -11,8 +11,7 @@ from pydantic import BaseModel
 import uvicorn
 from datetime import datetime
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from contextlib import asynccontextmanager
-import ollama  
+from contextlib import asynccontextmanager  
 from ollama import Client
 import aiofiles
 from enum import Enum
