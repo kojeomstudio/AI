@@ -55,14 +55,22 @@ decoder_embedding_layer = keras.layers.Embedding(vocab_size, embed_size, mask_ze
 encoder_embeddings = encoder_embedding_layer(encoder_input_ids)
 decoder_embeddings = decoder_embedding_layer(decoder_input_ids)
 
-encoder = keras.layers.LSTM(512, return_state=True)
+# 양방향 rnn 
+encoder = keras.layers.Bidirectional(keras.layers.LSTM(256, return_sequences=True, return_state=True))
 encoder_outputs, *encoder_state = encoder(encoder_embeddings)
+
+encoder_state = [keras.layers.concatenate(encoder_state[::2], axis=-1), # 단기 상태
+                 keras.layers.concatenate(encoder_state[1::2], axis=-1)] # 장기 상태
 
 decoder = keras.layers.LSTM(512, return_sequences=True)
 decoder_outputs = decoder(decoder_embeddings, initial_state=encoder_state)
 
+# attention
+attention_layer = keras.layers.Attention()
+attetion_outputs = attention_layer([decoder_outputs, encoder_outputs])
+
 output_layer = keras.layers.Dense(vocab_size, activation='softmax')
-y_proba = output_layer(decoder_outputs)
+y_proba = output_layer(attetion_outputs)
 
 model = keras.models.Model(inputs=[encoder_inputs, decoder_inputs], outputs=[y_proba])
 model.compile(loss='sparse_categorical_crossentropy', optimizer='nadam',
