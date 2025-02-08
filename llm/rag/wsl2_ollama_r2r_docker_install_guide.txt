@@ -1,0 +1,117 @@
+
+※※※※※※※※ WSL2 설치 ※※※※※※※※
+
+1) 윈도우 설정 
+ - dism.exe /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux /all /norestart
+ - dism.exe /online /enable-feature /featurename:VirtualMachinePlatform /all /norestart
+
+2) wsl --install
+
+3) wsl --set-default-version 2
+
+4) wsl --install -d Ubuntu
+
+
+※ 기타 명령어.
+wsl --list --verbose
+wsl --status
+
+
+
+※※※※※※※※ 도커 설치 (WSL2) ※※※※※※※※
+
+1) 기본 설치 관리자 업데이트.
+    sudo apt update && sudo apt upgrade -y
+
+2) 도커 의존성 설치.
+    sudo apt install -y \
+        ca-certificates \
+        curl \
+        gnupg \
+        lsb-release
+
+3) 도커 공식 repo key 추가.
+    sudo mkdir -m 0755 -p /etc/apt/keyrings
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo tee /etc/apt/keyrings/docker.gpg > /dev/null
+
+4) 
+    echo \
+    "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+    $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+5)
+    sudo apt update
+    sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+6) 도커 서비스 등록(daemon)
+    sudo vim /etc/wsl.conf
+
+    아래 내용 추가 또는 수정.
+    [boot]
+    systemd=true
+
+    wsl 재실행.
+
+    sudo vim /etc/systemd/system/docker.service
+
+    아래 내용 추가.
+    [Unit]
+    Description=Docker Service
+    After=network.target
+
+    [Service]
+    ExecStart=/usr/bin/dockerd
+    Restart=always
+    RestartSec=5
+    StartLimitInterval=60s
+    StartLimitBurst=3
+
+    [Install]
+    WantedBy=default.target
+
+7)  서비스 등록 및 테스트.
+    sudo systemctl daemon-reload
+    sudo systemctl enable docker
+    sudo systemctl start docker
+
+    sudo systemctl status docker
+
+※※※※※※※※ Ollama 설치 ※※※※※※※※
+
+a) 도커 설치
+ -> https://hub.docker.com/r/ollama/ollama (도커허브 공식 이미지)
+ -> docker run -d -v ollama:/root/.ollama -p 11434:11434 --name ollama ollama/ollama
+
+b) 일반 설치
+ -> curl -fsSL https://ollama.com/install.sh | sh
+
+ (GPU 이용) NVIDIA - CUDA 설치
+ -> 도커 허브 공식 이미지에 세부 절차 있음.
+
+ (GPU 이용) AMD
+ -> docker run -d --device /dev/kfd --device /dev/dri -v ollama:/root/.ollama -p 11434:11434 --name ollama ollama/ollama:rocm
+
+※※※※※※※※ R2R 설치 ※※※※※※※※
+
+1) r2r 필수 python 패키지 설치.
+    
+    pip install 'r2r[core, ingestion-bundle, hatchet]'
+    -> full
+
+    pip install r2r
+    -> light and default
+    (디폴트로 설치 하면, 여러가지 module 부족에 대한 경고 메세지 발생)
+
+
+2) r2r cli 명령어.
+    r2r serve --docker --full --config-name=full_local_llm 
+    -> name
+
+    r2r serve --docker --full --config-path=/home/kojeomstudio/my_full_local_llm.toml
+    -> full
+
+    r2r serve --docker --config-path=/home/kojeomstudio/my_local_llm.toml
+    -> light(default)
+
+    r2r docker-down
+    -> close
