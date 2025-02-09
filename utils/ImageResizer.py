@@ -1,5 +1,5 @@
 import os
-from tkinter import Tk, filedialog, Label, Button, Entry, messagebox
+from tkinter import Tk, filedialog, Label, Button, Entry, messagebox, Listbox, Scrollbar, END
 import tkinter as tk
 from PIL import Image
 
@@ -37,7 +37,15 @@ def select_folder():
         update_file_list()
 
 def update_file_list():
+    listbox.delete(0, END)  # 기존 목록 초기화
+    for file in file_list:
+        listbox.insert(END, os.path.basename(file))
     file_label["text"] = f"Selected {len(file_list)} files."
+
+def clear_file_list():
+    """ 선택한 파일 목록 초기화 """
+    file_list.clear()
+    update_file_list()
 
 def start_resize():
     try:
@@ -52,6 +60,9 @@ def start_resize():
         if file_list:
             resize_images(file_list, output_folder, width, height, rename_files)
             messagebox.showinfo("Success", "Images resized successfully.")
+
+            # 변환 완료 후 목록 초기화
+            clear_file_list()
         else:
             messagebox.showwarning("No Files", "Please select files or folders first.")
     except ValueError:
@@ -68,6 +79,20 @@ Button(root, text="Select Folder", command=select_folder).pack(pady=5)
 file_list = []
 file_label = Label(root, text="No files selected.")
 file_label.pack(pady=5)
+
+# 리스트박스 및 스크롤바 추가
+frame = tk.Frame(root)
+frame.pack(pady=5)
+
+scrollbar = Scrollbar(frame)
+scrollbar.pack(side="right", fill="y")
+
+listbox = Listbox(frame, width=50, height=10, yscrollcommand=scrollbar.set)
+listbox.pack(side="left")
+
+scrollbar.config(command=listbox.yview)
+
+Button(root, text="Clear List", command=clear_file_list).pack(pady=5)
 
 Label(root, text="Enter new dimensions:").pack(pady=5)
 width_entry = Entry(root, width=10)
