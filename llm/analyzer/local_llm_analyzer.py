@@ -34,14 +34,14 @@ async def lifespan(webserver_app: FastAPI):
 webserver_app = FastAPI(lifespan=lifespan)
 
 # 템플릿 및 정적 파일 설정
+############################################################################################
 BASE_DIR = Path(__file__).parent
 local_static_folder_path = Path(BASE_DIR) / "static"
 local_template_folder_path = Path(BASE_DIR) / "templates"
 
 templates = Jinja2Templates(directory=local_template_folder_path)
 webserver_app.mount("/static", StaticFiles(directory=local_static_folder_path), name="static")
-
-print(f"TEST -> : {local_static_folder_path}, // {local_template_folder_path}")
+############################################################################################
 
 # 현재 진행 중인 파일 개수 상태 변수
 processing_files = 0
@@ -72,15 +72,15 @@ def load_config():
     with open(config_path) as f:
         return json.load(f)
 
-config = load_config()
+global_config = load_config()
 
-TEXT_FILE_PATH = Path(__file__).parent / config["text_file_path"]
-OUTPUT_FILE_PATH = Path(__file__).parent / config["output_file_path"]
-DB_PATH = Path(__file__).parent / config["db_path"]
-OLLAMA_MODEL = config["ollama_model"]
-CHECK_DAYS = config["check_days"]
-CHECK_TIME = config["check_time"]
-OLLAMA_HOST_URL = config["ollama_host_url"]
+TEXT_FILE_PATH = Path(__file__).parent / global_config["text_file_path"]
+OUTPUT_FILE_PATH = Path(__file__).parent / global_config["output_file_path"]
+DB_PATH = Path(__file__).parent / global_config["db_path"]
+OLLAMA_MODEL = global_config["ollama_model"]
+CHECK_DAYS = global_config["check_days"]
+CHECK_TIME = global_config["check_time"]
+OLLAMA_HOST_URL = global_config["ollama_host_url"]
 
 ollama_client = Client(host=OLLAMA_HOST_URL)
 
@@ -108,20 +108,30 @@ async def process_files():
                 SimpleLogger.Log(f"Skipping unsupported file: {file}", LogType.WARN)
                 continue
             
+            file_content = ""
             async with aiofiles.open(file_path, "r", encoding="utf-8") as f:
-                content = await f.read()
-            if not content.strip():
-                continue
+                file_content = await f.read()   
+                if not file_content.strip():
+                    continue
+            
+            SimpleLogger.Log(f"loaded file content : {file_content}", LogType.INFO)
+
             try:
-                result = ollama_client.generate(OLLAMA_MODEL, prompt_helper.OLLAMA_PROMPT.format(content=content))
+                result = ollama_client.generate(OLLAMA_MODEL, prompt_helper.OLLAMA_PROMPT.format(content=file_content))
+                SimpleLogger.Log(f"ollama result : {result}", LogType.INFO)
+
                 output_path = OUTPUT_FILE_PATH / f"{file}.out"
+                SimpleLogger.Log(f"result output path : {output_path}", LogType.INFO)
+
                 async with aiofiles.open(output_path, "w", encoding="utf-8") as out_f:
                     await out_f.write(result)
                 
                 await db.execute("INSERT INTO processed_files (filename) VALUES (?)", (file,))
                 await db.commit()
+
             except Exception as e:
                 SimpleLogger.Log(f"Error processing {file}: {e}", LogType.ERROR)
+
     processing_files = 0  # 모든 작업이 완료되면 0으로 설정
 
 @webserver_app.get("/", response_class=HTMLResponse)
@@ -130,11 +140,11 @@ async def index(request: Request):
 
 @webserver_app.get("/api/config/reload")
 async def reload_config():
-    global config, TEXT_FILE_PATH, OUTPUT_FILE_PATH, OLLAMA_MODEL
-    config = load_config()
-    TEXT_FILE_PATH = Path(__file__).parent / config["text_file_path"]
-    OUTPUT_FILE_PATH = Path(__file__).parent / config["output_file_path"]
-    OLLAMA_MODEL = config["ollama_model"]
+    global global_config, TEXT_FILE_PATH, OUTPUT_FILE_PATH, OLLAMA_MODEL
+    global_config = load_config()
+    TEXT_FILE_PATH = Path(__file__).parent / global_config["text_file_path"]
+    OUTPUT_FILE_PATH = Path(__file__).parent / global_config["output_file_path"]
+    OLLAMA_MODEL = global_config["ollama_model"]
 
     SimpleLogger.Log(f"input file path : {TEXT_FILE_PATH}, output file path : {OUTPUT_FILE_PATH}, ollama_model : {OLLAMA_MODEL}", LogType.INFO)
     SimpleLogger.Log(f"Config reloaded successfully!", LogType.INFO)
