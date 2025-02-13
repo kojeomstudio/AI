@@ -7,6 +7,7 @@ from fastapi import FastAPI, HTTPException, BackgroundTasks, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 import uvicorn
 from datetime import datetime
@@ -88,51 +89,83 @@ async def create_directories(directories):
     for directory in directories:
         os.makedirs(directory, exist_ok=True)
 
+import asyncio
+import os
+import aiofiles
+import aiosqlite
+from pathlib import Path
+
+# 전역 락 선언
+file_processing_lock = asyncio.Lock()
+
+async def process_files():
+    global processing_files
+    async with file_processing_lock:  # 여러 실행 방지
+        processing_files = 0
+        files = await asyncio.to_thread(os.listdir, TEXT_FILE_PATH)  # 블로킹 방지
+        async with aiosqlite.connect(DB_PATH) as db:
+            for file in files:
+                file_path = TEXT_FILE_PATH / file
+                if not file_path.suffix in [".txt", ".md"]:
+                    SimpleLogger.Log(f"Skipping unsupported file: {file}", LogType.WARN)
+                    continue
+
+                async with db.execute("SELECT filename FROM processed_files WHERE filename = ?", (file,)) as cursor:
+                    existing_file = await cursor.fetchone()
+                    if existing_file:
+                        SimpleLogger.Log(f"File {file} already processed, skipping.", LogType.INFO)
+                        continue
+
+                try:
+                    async with aiofiles.open(file_path, "r", encoding="utf-8") as f:
+                        file_content = await f.read()
+                        if not file_content.strip():
+                            continue
+
+                    #SimpleLogger.Log(f"Loaded file content: {file_content}", LogType.INFO)
+
+                    # LLM 모델 실행 시 예외 핸들링 및 재시도 로직 추가
+                    result = None
+                    for _ in range(3):  # 최대 3회 재시도
+                        try:
+                            result = ollama_client.generate(
+                                OLLAMA_MODEL,
+                                prompt_helper.OLLAMA_PROMPT.format(content=file_content)
+                            )
+                            break  # 성공 시 루프 탈출
+                        except Exception as e:
+                            SimpleLogger.Log(f"Error generating LLM output, retrying: {e}", LogType.WARN)
+                            await asyncio.sleep(1)  # 딜레이 추가 후 재시도
+
+                    if not result:
+                        SimpleLogger.Log(f"Failed to process file {file} after retries.", LogType.ERROR)
+                        continue
+
+                    output_path = OUTPUT_FILE_PATH / f"{file}.out"
+                    async with aiofiles.open(output_path, "w", encoding="utf-8") as out_f:
+                        await out_f.write(result)
+
+                    await db.execute("INSERT INTO processed_files (filename) VALUES (?)", (file,))
+                    await db.commit()
+
+                except Exception as e:
+                    SimpleLogger.Log(f"Error processing {file}: {e}", LogType.ERROR)
+
+        processing_files = 0  # 모든 작업 완료 후 리셋
+
+# 개선된 DB 초기화 함수
 async def init_db():
-    async with aiosqlite.connect(DB_PATH) as db:
-        await db.execute("""
+    global db_connection
+    if db_connection is None:  # 싱글톤 패턴 적용
+        db_connection = await aiosqlite.connect(DB_PATH)
+
+    async with db_connection:
+        await db_connection.execute("""
         CREATE TABLE IF NOT EXISTS processed_files (
             filename TEXT PRIMARY KEY
         )
         """)
-        await db.commit()
-
-async def process_files():
-    global processing_files
-    files = os.listdir(TEXT_FILE_PATH)
-    processing_files = len(files)  # 현재 처리 중인 파일 개수 설정
-    async with aiosqlite.connect(DB_PATH) as db:
-        for file in files:
-            file_path = TEXT_FILE_PATH / file
-            if not file_path.suffix in [".txt", ".md"]:
-                SimpleLogger.Log(f"Skipping unsupported file: {file}", LogType.WARN)
-                continue
-            
-            file_content = ""
-            async with aiofiles.open(file_path, "r", encoding="utf-8") as f:
-                file_content = await f.read()   
-                if not file_content.strip():
-                    continue
-            
-            SimpleLogger.Log(f"loaded file content : {file_content}", LogType.INFO)
-
-            try:
-                result = ollama_client.generate(OLLAMA_MODEL, prompt_helper.OLLAMA_PROMPT.format(content=file_content))
-                SimpleLogger.Log(f"ollama result : {result}", LogType.INFO)
-
-                output_path = OUTPUT_FILE_PATH / f"{file}.out"
-                SimpleLogger.Log(f"result output path : {output_path}", LogType.INFO)
-
-                async with aiofiles.open(output_path, "w", encoding="utf-8") as out_f:
-                    await out_f.write(result)
-                
-                await db.execute("INSERT INTO processed_files (filename) VALUES (?)", (file,))
-                await db.commit()
-
-            except Exception as e:
-                SimpleLogger.Log(f"Error processing {file}: {e}", LogType.ERROR)
-
-    processing_files = 0  # 모든 작업이 완료되면 0으로 설정
+        await db_connection.commit()
 
 @webserver_app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
@@ -159,11 +192,22 @@ async def trigger_processing(background_tasks: BackgroundTasks):
 
 @webserver_app.get("/api/status")
 async def get_status():
+    """ 현재 처리 중인 파일 목록 및 완료된 파일 개수 반환 """
     async with aiosqlite.connect(DB_PATH) as db:
-        cursor = await db.execute("SELECT COUNT(*) FROM processed_files")
-        completed_files = await cursor.fetchone()
-    SimpleLogger.Log(f"Processing.  files : {process_files}, completed : {completed_files}", LogType.INFO)
-    return {"processing": processing_files, "completed": completed_files[0]}
+        async with db.execute("SELECT COUNT(*) FROM processed_files") as cursor:
+            completed_count = (await cursor.fetchone())[0]
+    return JSONResponse({
+        "processing": len(processing_files),
+        "completed": completed_count,
+        "processing_files": processing_files  # 진행 중인 파일 목록 포함
+    })
+
+@webserver_app.get("/api/files")
+async def get_files():
+    """ 현재 input/output 디렉토리의 파일 목록을 반환 """
+    input_files = os.listdir(TEXT_FILE_PATH)
+    output_files = os.listdir(OUTPUT_FILE_PATH)
+    return JSONResponse({"input_files": input_files, "output_files": output_files})
 
 @webserver_app.get("/debug/static-files")
 def debug_static_files():

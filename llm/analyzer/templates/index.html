@@ -14,10 +14,23 @@
         <p>파일을 분석하고 AI를 활용하여 결과를 생성합니다.</p>
         <button onclick="reloadConfig()">🔄 설정 리로드</button>
         <button onclick="startProcessing()">📂 파일 분석 시작</button>
+
         <div id="status-box">
             <h2>📊 처리 상태</h2>
             <p>현재 처리 중: <span id="processing-count">0</span> 개</p>
             <p>완료된 파일: <span id="completed-count">0</span> 개</p>
+        </div>
+        
+        <div id="file-lists">
+            <h2>📂 파일 목록</h2>
+            <div class="file-section">
+                <h3>Input 폴더</h3>
+                <ul id="input-files"></ul>
+            </div>
+            <div class="file-section">
+                <h3>Output 폴더</h3>
+                <ul id="output-files"></ul>
+            </div>
         </div>
     </div>
     

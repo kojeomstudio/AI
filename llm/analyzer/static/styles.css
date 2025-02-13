@@ -34,10 +34,17 @@ button {
     border-radius: 5px;
     cursor: pointer;
     font-size: 16px;
+    transition: transform 0.2s ease, background-color 0.2s ease;
 }
 
 button:hover {
-    background-color: #0056b3;
+    transform: scale(1.1);
+    background-color: #4CAF50;
+    color: white;
+}
+button:active {
+    transform: scale(0.9);
+    background-color: #388E3C;
 }
 
 #status {
