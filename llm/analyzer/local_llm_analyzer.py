@@ -3,6 +3,7 @@ import json
 import asyncio
 import aiosqlite
 from pathlib import Path
+
 from fastapi import FastAPI, HTTPException, BackgroundTasks, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
@@ -14,6 +15,7 @@ from datetime import datetime
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from contextlib import asynccontextmanager  
 from ollama import Client
+from ollama import AsyncClient
 import aiofiles
 from enum import Enum
 
@@ -45,7 +47,7 @@ webserver_app.mount("/static", StaticFiles(directory=local_static_folder_path), 
 ############################################################################################
 
 # 현재 진행 중인 파일 개수 상태 변수
-processing_files = 0
+g_processing_files = 0
 
 class LogType(Enum):
     ERROR = 0
@@ -83,25 +85,21 @@ CHECK_DAYS = global_config["check_days"]
 CHECK_TIME = global_config["check_time"]
 OLLAMA_HOST_URL = global_config["ollama_host_url"]
 
-ollama_client = Client(host=OLLAMA_HOST_URL)
+#ollama_client = Client(host=OLLAMA_HOST_URL)
+ollama_client = AsyncClient(host=OLLAMA_HOST_URL)
 
 async def create_directories(directories):
     for directory in directories:
         os.makedirs(directory, exist_ok=True)
 
-import asyncio
-import os
-import aiofiles
-import aiosqlite
-from pathlib import Path
 
 # 전역 락 선언
-file_processing_lock = asyncio.Lock()
+g_file_processing_lock = asyncio.Lock()
 
 async def process_files():
-    global processing_files
-    async with file_processing_lock:  # 여러 실행 방지
-        processing_files = 0
+    global g_processing_files
+    async with g_file_processing_lock:  # 여러 실행 방지
+        g_processing_files = 0
         files = await asyncio.to_thread(os.listdir, TEXT_FILE_PATH)  # 블로킹 방지
         async with aiosqlite.connect(DB_PATH) as db:
             for file in files:
@@ -122,24 +120,23 @@ async def process_files():
                         if not file_content.strip():
                             continue
 
-                    #SimpleLogger.Log(f"Loaded file content: {file_content}", LogType.INFO)
-
-                    # LLM 모델 실행 시 예외 핸들링 및 재시도 로직 추가
                     result = None
-                    for _ in range(3):  # 최대 3회 재시도
-                        try:
-                            result = ollama_client.generate(
-                                OLLAMA_MODEL,
-                                prompt_helper.OLLAMA_PROMPT.format(content=file_content)
-                            )
-                            break  # 성공 시 루프 탈출
-                        except Exception as e:
-                            SimpleLogger.Log(f"Error generating LLM output, retrying: {e}", LogType.WARN)
-                            await asyncio.sleep(1)  # 딜레이 추가 후 재시도
+                    try:
+                        SimpleLogger.Log(f"ollama clinet start asnyc generate! target file : {file_path}", LogType.INFO)
+                        g_processing_files += 1
+                        result = await ollama_client.generate(
+                            model=OLLAMA_MODEL,
+                            prompt=prompt_helper.OLLAMA_PROMPT.format(content=file_content)
+                        )
+                        SimpleLogger.Log(f"ollama client finish async generate! target file : {file_path}", LogType.INFO)
+
+                    except Exception as e:
+                        SimpleLogger.Log(f"Error generating LLM output, retrying: {e}", LogType.WARN)
 
                     if not result:
                         SimpleLogger.Log(f"Failed to process file {file} after retries.", LogType.ERROR)
                         continue
+                        
 
                     output_path = OUTPUT_FILE_PATH / f"{file}.out"
                     async with aiofiles.open(output_path, "w", encoding="utf-8") as out_f:
@@ -151,7 +148,7 @@ async def process_files():
                 except Exception as e:
                     SimpleLogger.Log(f"Error processing {file}: {e}", LogType.ERROR)
 
-        processing_files = 0  # 모든 작업 완료 후 리셋
+        g_processing_files = 0  # 모든 작업 완료 후 리셋
 
 # 개선된 DB 초기화 함수
 async def init_db():
@@ -197,9 +194,9 @@ async def get_status():
         async with db.execute("SELECT COUNT(*) FROM processed_files") as cursor:
             completed_count = (await cursor.fetchone())[0]
     return JSONResponse({
-        "processing": len(processing_files),
+        "processing": g_processing_files,
         "completed": completed_count,
-        "processing_files": processing_files  # 진행 중인 파일 목록 포함
+        "processing_files": g_processing_files  # 진행 중인 파일 목록 포함
     })
 
 @webserver_app.get("/api/files")
@@ -218,12 +215,13 @@ def debug_static_files():
     
     return {"static_exists": False, "message": "Static folder not found"}
 
-@webserver_app.middleware("http")
-async def log_requests(request: Request, call_next):
-    SimpleLogger.Log(f"Request path: {request.url.path}", LogType.INFO)  # 요청된 경로 출력
-    response = await call_next(request)
-    return response
+# http debug...
+#@webserver_app.middleware("http")
+#async def log_requests(request: Request, call_next):
+#    SimpleLogger.Log(f"Request path: {request.url.path}", LogType.INFO)  # 요청된 경로 출력
+#    response = await call_next(request)
+#    return response
 
 if __name__ == "__main__":
-    uvicorn.run("local_llm_analyzer:webserver_app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("local_llm_analyzer:webserver_app", host="0.0.0.0", port=8000)
     #uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
