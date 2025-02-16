@@ -137,10 +137,11 @@ async def process_files():
                         SimpleLogger.Log(f"Failed to process file {file} after retries.", LogType.ERROR)
                         continue
                         
+                    file_name, file_extension = os.path.splitext(file)
 
-                    output_path = OUTPUT_FILE_PATH / f"{file}.out"
+                    output_path = OUTPUT_FILE_PATH / f"{file_name}_anlaysis.txt"
                     async with aiofiles.open(output_path, "w", encoding="utf-8") as out_f:
-                        await out_f.write(result)
+                        await out_f.write(result.response)
 
                     await db.execute("INSERT INTO processed_files (filename) VALUES (?)", (file,))
                     await db.commit()
