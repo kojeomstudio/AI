@@ -1,0 +1,42 @@
+chunk_enrichment:
+  template: >
+    ## Task:
+
+    Enrich and refine the given chunk of text while maintaining its independence and precision.
+
+    ## Context:
+    Document Summary: {document_summary}
+    Preceding Chunks: {preceding_chunks}
+    Succeeding Chunks: {succeeding_chunks}
+
+    ## Input Chunk:
+    {chunk}
+
+    ## Enrichment Requirements:
+    1. Maintain third-person perspective
+    2. Replace generic terms with specific identifiers
+    3. Resolve ambiguous references
+    4. Expand acronyms on first use
+    5. Add crucial missing context
+    6. Preserve original formatting and structure
+    7. Maintain technical accuracy
+    8. Ensure independence while preserving narrative flow
+
+    ## Size Constraints:
+    Maximum length: {chunk_size} characters
+    Priority order if size limit reached:
+    1. Essential technical information
+    2. Specific identifiers and references
+    3. Contextual clarity
+    4. Supporting details
+
+    Output the enriched chunk only, without additional text or formatting.
+
+    ## Enriched Chunk:
+
+  input_types:
+    document_summary: str
+    chunk: str
+    preceding_chunks: str
+    succeeding_chunks: str
+    chunk_size: int

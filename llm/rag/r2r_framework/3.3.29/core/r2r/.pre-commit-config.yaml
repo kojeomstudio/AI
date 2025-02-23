@@ -1,0 +1,51 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.3.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-added-large-files
+      - id: check-ast
+      - id: check-yaml
+
+  - repo: local
+    hooks:
+      - id: check-typing-imports
+        name: Check for Dict, List, or Union usage
+        entry: bash -c 'echo "Checking for typing imports..." && find . -name "*.py" | grep -v "/migrations/" | xargs grep -n "from typing.*import.*[^d]Dict\\|from typing.*import.*List\\|from typing.*import.*Union" || exit 0 && echo "⚠️  Please import dict instead of Dict, list instead of List, and the logical OR operator" && exit 1'
+        language: system
+        types: [python]
+        pass_filenames: false
+        exclude: ^py/migrations/
+
+  - repo: local
+    hooks:
+      - id: check-print-statements
+        name: Check for print statements
+        entry: bash -c 'echo "Checking for print statements..." && find . -name "*.py" ! -path "./py/cli/*" ! -path "./py/core/examples/*" ! -path "./py/migrations/*" ! -path "./py/tests/*" | xargs grep -n "print(" || exit 0 && echo "Found print statements!" && exit 1'
+        language: system
+        types: [python]
+        pass_filenames: false
+
+  - repo: local
+    hooks:
+      - id: isort
+        name: isort
+        entry: bash -c 'cd py && poetry run isort .'
+        language: system
+        types: [python]
+        pass_filenames: false
+
+      - id: black
+        name: black
+        entry: bash -c 'cd py && poetry run black .'
+        language: system
+        types: [python]
+        pass_filenames: false
+
+      - id: mypy
+        name: mypy
+        entry: bash -c 'cd py && poetry run mypy .'
+        language: system
+        types: [python]
+        pass_filenames: false
