@@ -4,7 +4,6 @@ import { useTheme } from 'next-themes';
 import { useEffect, useCallback } from 'react';
 
 import { ThemeProvider } from '@/components/ThemeProvider';
-import { brandingConfig } from '@/config/brandingConfig';
 import { UserProvider, useUserContext } from '@/context/UserContext';
 import '@/styles/globals.css';
 import { initializePostHog } from '@/lib/posthog-client';
@@ -15,7 +14,7 @@ function MyAppContent({ Component, pageProps }: AppProps) {
   const router = useRouter();
 
   useEffect(() => {
-    setTheme(brandingConfig.theme);
+    setTheme('dark');
     initializePostHog();
   }, []);
 

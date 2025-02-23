@@ -12,7 +12,6 @@ import {
   CardDescription,
   CardContent,
 } from '@/components/ui/card';
-import { brandingConfig } from '@/config/brandingConfig';
 
 import stateAbbrs from './us-abbr.json';
 import topology from './usa-topo.json';
@@ -131,8 +130,7 @@ export default function USMapCard() {
           <CardTitle className="text-xl">Users by Region: US</CardTitle>
         </div>
         <CardDescription>
-          Requests to your {brandingConfig.deploymentName} server over the past
-          24 hours.
+          Requests to your R2R server over the past 24 hours.
         </CardDescription>
       </CardHeader>
       <CardContent className="pt-0 flex-grow flex flex-col">

@@ -14,7 +14,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { brandingConfig } from '@/config/brandingConfig';
 import { useUserContext } from '@/context/UserContext';
 import { NavbarProps, NavItemsProps } from '@/types';
 
@@ -40,56 +39,20 @@ const NavItems: React.FC<NavItemsProps> = ({
   role,
   pathname,
 }) => {
-  const homeItem = {
-    path: '/',
-    label: 'Home',
-    show: brandingConfig.navbar.menuItems.home,
-  };
+  const homeItem = { path: '/', label: 'Home' };
 
   const commonItems = [
-    {
-      path: '/documents',
-      label: 'Documents',
-      show: brandingConfig.navbar.menuItems.documents,
-    },
-    {
-      path: '/collections',
-      label: 'Collections',
-      show: brandingConfig.navbar.menuItems.collections,
-    },
-    {
-      path: '/chat',
-      label: 'Chat',
-      show: brandingConfig.navbar.menuItems.chat,
-    },
-    {
-      path: '/search',
-      label: 'Search',
-      show: brandingConfig.navbar.menuItems.search,
-    },
+    { path: '/documents', label: 'Documents' },
+    { path: '/collections', label: 'Collections' },
+    { path: '/chat', label: 'Chat' },
+    { path: '/search', label: 'Search' },
   ];
 
   const adminItems = [
-    {
-      path: '/users',
-      label: 'Users',
-      show: brandingConfig.navbar.menuItems.users,
-    },
-    {
-      path: '/logs',
-      label: 'Logs',
-      show: brandingConfig.navbar.menuItems.logs,
-    },
-    {
-      path: '/analytics',
-      label: 'Analytics',
-      show: brandingConfig.navbar.menuItems.analytics,
-    },
-    {
-      path: '/settings',
-      label: 'Settings',
-      show: brandingConfig.navbar.menuItems.settings,
-    },
+    { path: '/users', label: 'Users' },
+    { path: '/logs', label: 'Logs' },
+    // { path: '/analytics', label: 'Analytics' },
+    { path: '/settings', label: 'Settings' },
   ];
 
   const items =
@@ -104,17 +67,15 @@ const NavItems: React.FC<NavItemsProps> = ({
   return (
     <nav>
       <div className="flex items-center space-x-2">
-        {items
-          .filter((item) => item.show)
-          .map((item) => (
-            <NavItem
-              key={item.path}
-              href={item.path}
-              isActive={pathname === item.path}
-            >
-              {item.label}
-            </NavItem>
-          ))}
+        {items.map((item) => (
+          <NavItem
+            key={item.path}
+            href={item.path}
+            isActive={pathname === item.path}
+          >
+            {item.label}
+          </NavItem>
+        ))}
       </div>
     </nav>
   );
@@ -160,7 +121,7 @@ export const Navbar = forwardRef<React.ElementRef<'nav'>, NavbarProps>(
               >
                 <Logo className="h-12 w-auto" />
                 <span className="ml-2 text-xl font-bold text-white">
-                  {brandingConfig.navbar.appName}
+                  SciPhi
                 </span>
               </Link>
               {isSignedIn && (
@@ -175,17 +136,15 @@ export const Navbar = forwardRef<React.ElementRef<'nav'>, NavbarProps>(
               )}
             </div>
             <div className="flex items-center space-x-4">
-              {brandingConfig.navbar.showDocsButton && (
-                <Button
-                  color="primary"
-                  shape="outline_wide"
-                  onClick={() =>
-                    window.open('https://r2r-docs.sciphi.ai', '_blank')
-                  }
-                >
-                  Docs
-                </Button>
-              )}
+              <Button
+                color="primary"
+                shape="outline_wide"
+                onClick={() =>
+                  window.open('https://r2r-docs.sciphi.ai', '_blank')
+                }
+              >
+                Docs
+              </Button>
 
               {isSignedIn && (
                 <DropdownMenu>

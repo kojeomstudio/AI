@@ -10,7 +10,6 @@ import {
   CardDescription,
   CardContent,
 } from '@/components/ui/card';
-import { brandingConfig } from '@/config/brandingConfig';
 
 import topology from './world-topo.json';
 
@@ -99,8 +98,7 @@ export default function WorldMapCard() {
           <CardTitle className="text-xl">Users by Region: World</CardTitle>
         </div>
         <CardDescription>
-          Requests to your {brandingConfig.deploymentName} server over the past
-          24 hours.
+          Requests to your R2R server over the past 24 hours.
         </CardDescription>
       </CardHeader>
       <CardContent className="pt-0 flex-grow flex flex-col">
