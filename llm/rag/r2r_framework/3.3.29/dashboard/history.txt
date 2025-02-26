@@ -1,3 +1,0 @@
-r2r-application
--> main branch 에서는 컴파일 에러 있음
--> commit 37b0606 기준으로 설정. ( 2025-02-23 )
