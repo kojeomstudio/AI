@@ -48,10 +48,6 @@ provider = "postgres"
   [database.graph_search_settings]
     generation_config = { model = "ollama/qwen2.5-coder:latest" }
 
-
-[orchestration]
-provider = "simple"
-
 [ingestion]
 chunks_for_document_summary = 16
 document_summary_model = "ollama/qwen2.5-coder:latest"
