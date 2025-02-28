@@ -5,7 +5,6 @@ volumes:
 services:
   postgres:
     image: pgvector/pgvector:pg16
-    profiles: [postgres]
     environment:
       - POSTGRES_USER=${R2R_POSTGRES_USER:-postgres}
       - POSTGRES_PASSWORD=${R2R_POSTGRES_PASSWORD:-postgres}
@@ -28,8 +27,7 @@ services:
       -c max_connections=${R2R_POSTGRES_MAX_CONNECTIONS:-1024}
 
   r2r:
-    # image: ${R2R_IMAGE:-ragtoriches/prod:latest}
-    image: r2r/testa
+    image: kojeomstudio/r2r-3.4.3-ks:v1
     ports:
       - "${R2R_PORT:-7272}:${R2R_PORT:-7272}"
     environment:
@@ -142,7 +140,7 @@ services:
       - host.docker.internal:host-gateway
 
   r2r-dashboard:
-    image: ${R2R_DASHBOARD_IMAGE:-emrgntcmplxty/r2r-dashboard:latest}
+    image: kojeomstudio/r2r-application-ks:v2
     environment:
       - NEXT_PUBLIC_R2R_DEPLOYMENT_URL=${R2R_DEPLOYMENT_URL:-http://localhost:7272}
     ports:
