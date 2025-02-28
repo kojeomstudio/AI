@@ -1,0 +1,48 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-added-large-files
+      - id: check-ast
+      - id: check-yaml
+
+  - repo: local
+    hooks:
+      - id: check-typing-imports
+        name: Check for Dict, List, or Union usage
+        entry: bash -c 'echo "Checking for typing imports..." && find . -name "*.py" | grep -v "/migrations/" | grep -v "/.venv/" | xargs grep -n "from typing.*import.*[^d]Dict\\|from typing.*import.*List\\|from typing.*import.*Union" || exit 0 && echo "⚠️  Please import dict instead of Dict, list instead of List, and the logical OR operator" && exit 1'
+        language: system
+        types: [python]
+        pass_filenames: false
+        exclude: ^py/migrations/
+
+  - repo: local
+    hooks:
+      - id: check-print-statements
+        name: Check for print statements
+        entry: bash -c 'echo "Checking for print statements..." && find . -name "*.py" ! -path "./py/.venv/*" ! -path "./py/core/examples/*" ! -path "./py/migrations/*" ! -path "./py/tests/*" | xargs grep -n "print(" || exit 0 && echo "Found print statements!" && exit 1'
+        language: system
+        types: [python]
+        pass_filenames: false
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.9.6
+    hooks:
+      - id: ruff
+        args: [--fix]
+        files: ^py/
+        exclude: ^py/tests/
+      - id: ruff-format
+        files: ^py/
+        exclude: ^py/tests/
+
+  - repo: local
+    hooks:
+      - id: mypy
+        name: mypy
+        entry: bash -c 'cd py && python -m mypy .'
+        language: system
+        types: [python]
+        pass_filenames: false

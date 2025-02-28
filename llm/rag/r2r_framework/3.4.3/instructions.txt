@@ -1,0 +1,13 @@
+
+pip install 'r2r[core,ingestion-bundle]==3.4.3'
+ - legacy
+
+1) export R2R_CONFIG_PATH=/Users/kojeomstudio/AI/llm/rag/r2r_framework/3.4.3/config/light_r2r_config.toml
+2) python -m r2r.serve
+
+
+// development mode...
+1) git clone https://github.com/SciPhi-AI/R2R.git
+2) cd R2R/py
+3) pip install -e .[core]
+4) python -m r2r.serve

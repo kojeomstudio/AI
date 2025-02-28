@@ -1,0 +1,44 @@
+[app]
+# LLM used for internal operations, like deriving conversation names
+fast_llm = "ollama/llama3.1"
+
+# LLM used for user-facing output, like RAG replies
+quality_llm = "ollama/llama3.1"
+
+# LLM used for ingesting visual inputs
+vlm = "ollama/llama3.2-vision" # TODO - Replace with viable candidate
+
+# LLM used for transcription
+audio_lm = "ollama/llama3.1" # TODO - Replace with viable candidate
+
+[embedding]
+provider = "ollama"
+base_model = "mxbai-embed-large"
+base_dimension = 1_024
+batch_size = 128
+add_title_as_prefix = true
+concurrent_request_limit = 2
+
+[completion_embedding]
+provider = "ollama"
+base_model = "mxbai-embed-large"
+base_dimension = 1_024
+batch_size = 128
+add_title_as_prefix = true
+concurrent_request_limit = 2
+
+[agent]
+tools = ["local_search"]
+
+  [agent.generation_config]
+  model = "ollama/llama3.1"
+
+[completion]
+provider = "litellm"
+concurrent_request_limit = 1
+
+  [completion.generation_config]
+  temperature = 0.1
+  top_p = 1
+  max_tokens_to_sample = 1_024
+  stream = false
