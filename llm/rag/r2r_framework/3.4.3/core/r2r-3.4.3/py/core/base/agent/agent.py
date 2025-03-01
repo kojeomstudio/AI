@@ -41,9 +41,18 @@ class Conversation:
 # TODO - Move agents to provider pattern
 class AgentConfig(BaseModel):
     agent_static_prompt: str = "static_rag_agent"
-    agent_dynamic_prompt: str = "dynamic_reasoning_rag_agent_prompted"
-    tools: list[str] = ["search"]
-    tool_names: Optional[list[str]] = None
+    # kojeostudio
+
+    # dynamic_rag_agent >> 해당 내용으로 수정.
+    # dynamic_reasoning_rag_agent_prompted >> 디폴트로 있던 프롬프트 템플릿.
+    agent_dynamic_prompt: str = "dynamic_rag_agent" 
+
+    # ~kojeomstudio
+
+    #kojeomstudio
+    tools: list[str] = ["content", "local_search"] # 디폴트값은 local_search.
+    tool_names: Optional[list[str]] = ["content", "local_search"] # 디폴트값은 None.
+    #~kojeomstudio
     stream: bool = False
     include_tools: bool = True
 

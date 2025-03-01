@@ -8,6 +8,10 @@ from datetime import datetime
 from typing import Any, Optional
 from uuid import UUID
 
+# kojeomstudio
+import traceback
+# ~kojeomstudio
+
 import tiktoken
 from fastapi import HTTPException
 
@@ -148,7 +152,7 @@ class RetrievalService(Service):
             config,
             providers,
         )
-
+ 
     @telemetry_event("Search")
     async def search(
         self,
@@ -162,6 +166,9 @@ class RetrievalService(Service):
 
         Does parallel vector + graph search, returning an aggregated result.
         """
+#kojeosmtudio
+        logger.debug(f"[kojeomstudio-debug] >> [search] Query='{query}' => Starting search...")
+#~kojeomstudio
 
         # 1) Start run manager / telemetry
         t0 = time.time()
@@ -469,6 +476,10 @@ class RetrievalService(Service):
         settings: SearchSettings,
         query_embedding: Optional[list[float]] = None,
     ) -> list[DocumentResponse]:
+        
+#kojeosmtudio
+        logger.debug(f"[kojeomstudio-debug] >> [search_documents] Query='{query}' => Starting...")
+#~kojeomstudio
         return (
             await self.providers.database.documents_handler.search_documents(
                 query_text=query,
@@ -485,6 +496,10 @@ class RetrievalService(Service):
         *args,
         **kwargs,
     ):
+#kojeomstudio
+        logger.debug(f"[kojeomstudio-debug] >> [completion] messages : {messages} => Starting...")
+#~kojeomstudio
+
         return await self.providers.llm.aget_completion(
             [message.to_dict() for message in messages],
             generation_config,
@@ -497,6 +512,10 @@ class RetrievalService(Service):
         self,
         text: str,
     ):
+        
+#kojeosmtudio
+        logger.debug(f"[kojeomstudio-debug] >> [embedding] text='{text}' => Starting...")
+#~kojeomstudio
         return await self.providers.completion_embedding.async_get_embedding(
             text=text
         )
@@ -519,6 +538,10 @@ class RetrievalService(Service):
           3) feed context + query + optional non-text data to LLM
           4) parse LLM output & return a RAGResponse with text + metadata
         """
+#kojeosmtudio
+        logger.debug(f"[kojeomstudio-debug] >> [rag] query='{query}' => Starting...")
+#~kojeomstudio
+
         # Convert any UUID filters to string
         for f, val in list(search_settings.filters.items()):
             if isinstance(val, UUID):
@@ -760,6 +783,14 @@ class RetrievalService(Service):
                 )
 
             current_message = messages[-1]
+
+# kojeomstudio
+            # content= 기준으로 분할 후, 첫 번째 작은따옴표(')와 마지막 작은따옴표(') 제거
+            #content_part = current_message.split("content=")[1].split("'", 2)[1]
+            logger.debug(f"[kojeomstudio-debug] content : {current_message.content}")
+            logger.debug(f"[kojeomstudio-debug] current_message : {current_message}")
+# ~kojeomstudio
+
             logger.info(
                 f"Running the agent with conversation_id = {conversation_id} and message = {current_message}"
             )
@@ -815,6 +846,14 @@ class RetrievalService(Service):
             agent_config = deepcopy(self.config.agent)
             agent_config.tools = override_tools or agent_config.tools
 
+#kojeommstudio
+            logger.debug(f"[kojeomstudio-debug] >> [agent] system_instruction : {system_instruction}")
+            logger.debug(f"[kojeomstudio-debug] >> [agent] agent_config.tools : {agent_config.tools}")
+            logger.debug(f"[kojeomstudio-debug] >> [agent] rag_generation_config.model : {rag_generation_config.model}")
+            logger.debug(f"[kojeomstudio-debug] >> [agent] rag_generation_config.stream : {rag_generation_config.stream}")
+            logger.debug(f"[kojeomstudio-debug] >> [agent] rag_generation_config.tools : {rag_generation_config.tools}")
+#~kojeomstudio
+
             if rag_generation_config.stream:
 
                 async def stream_response():
@@ -829,6 +868,7 @@ class RetrievalService(Service):
                                 max_tool_context_length=max_tool_context_length,
                                 local_search_method=self.search,
                                 content_method=self.get_context,
+                                # kojeomstudio >> 3.4.3기준 web_search 기능 불가..
                             )
                         else:
                             if (
@@ -883,6 +923,10 @@ class RetrievalService(Service):
                                     status_code=400,
                                     message=f"Reasoning agent not supported for this model {rag_generation_config.model}",
                                 )
+#kojeomstudio
+                        logger.debug(f"[kojeomstudio-debug] >> [agent] class >> {agent.__class__}")
+                        logger.debug(f"[kojeomstudio-debug] >> [agent] tools >> {agent.tools}")
+#~kojeomstudio
 
                         async for chunk in agent.arun(
                             messages=messages,
@@ -1033,6 +1077,11 @@ class RetrievalService(Service):
                         name=conversation_name or "",
                     )
 
+#kojeomstudio
+            logger.info(f"[kojeomstudio-debug] assistant_message : {assistant_message}")
+            logger.info(f"[kojeomstudio-debug] >>> content : {assistant_message.content}")
+#~kojeostudio
+
             return {
                 "messages": [
                     Message(
@@ -1053,6 +1102,12 @@ class RetrievalService(Service):
             }
 
         except Exception as e:
+
+            #kojeomstudio
+            error_trace = traceback.format_exc()
+            logger.error(f"[kojeomstudio-debug] Error in agent response: {str(e)}\n\n{error_trace}")
+            #~kojeomstudio
+
             logger.error(f"Error in agent response: {str(e)}")
             if "NoneType" in str(e):
                 raise HTTPException(

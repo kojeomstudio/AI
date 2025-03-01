@@ -1,105 +1,96 @@
+#
+# 기존 r2r.toml을 적절하게 수정한 버전.
+# - 디폴트 r2r.toml은 r2r-original.toml로 이름 수정.
+# - 모든 섹션에 대한 기록이 되어 있는 파일은 full-r2r.toml로 버전관리.
+#
+
 [app]
-# app settings are global available like `r2r_config.agent.app`
-# project_name = "r2r_default" # optional, can also set with `R2R_PROJECT_NAME` env var
-default_max_documents_per_user = 10_000
-default_max_chunks_per_user = 10_000_000
-default_max_collections_per_user = 5_000
-
-# Set the default max upload size to 200 GB for local testing
-default_max_upload_size = 214748364800
-
 # LLM used for internal operations, like deriving conversation names
-fast_llm = "openai/gpt-4o-mini"
+fast_llm = "ollama/qwen2.5-coder:latest"
 
 # LLM used for user-facing output, like RAG replies
-quality_llm = "openai/gpt-4o"
+quality_llm = "ollama/qwen2.5-coder:latest"
 
 # LLM used for ingesting visual inputs
-vlm = "openai/gpt-4o"
+vlm = "ollama/llama3.2-vision" # TODO - Replace with viable candidate
 
 # LLM used for transcription
-audio_lm = "openai/whisper-1"
+audio_lm = "ollama/qwen2.5-coder:latest" # TODO - Replace with viable candidate
+
+[embedding]
+provider = "ollama"
+base_model = "mxbai-embed-large"
+base_dimension = 1_024
+batch_size = 128
+add_title_as_prefix = true
+concurrent_request_limit = 2
+
+[completion_embedding]
+provider = "ollama"
+base_model = "mxbai-embed-large"
+base_dimension = 1_024
+batch_size = 128
+add_title_as_prefix = true
+concurrent_request_limit = 2
 
 [agent]
 agent_static_prompt = "static_rag_agent"
 agent_dynamic_prompt = "dynamic_rag_agent"
-# tools = ["local_search", "content", "web_search"]
-tools = ["local_search", "content"]
+tools = ["content", "local_search"]
+tool_names=["content", "local_search"]
 
-[auth]
-provider = "r2r"
-access_token_lifetime_in_minutes = 60000
-refresh_token_lifetime_in_days = 7
-require_authentication = false
-require_email_verification = false
-default_admin_email = "admin@example.com"
-default_admin_password = "change_me_immediately"
+  [agent.generation_config]
+  model = "ollama/qwen2.5-coder:latest"
 
 [completion]
-provider = "r2r"
-concurrent_request_limit = 64
+provider = "litellm"
+concurrent_request_limit = 1
 
   [completion.generation_config]
   temperature = 0.1
   top_p = 1
-  max_tokens_to_sample = 4_096
+  max_tokens_to_sample = 1_024
   stream = false
-  add_generation_kwargs = { }
+
+[ingestion]
+chunks_for_document_summary = 16
+document_summary_model = "ollama/qwen2.5-coder:latest"
+automatic_extraction = true
+
+[database]
+provider = "postgres"
+
+  [database.graph_creation_settings]
+    graph_entity_description_prompt = "graphrag_entity_description"
+    entity_types = [] # if empty, all entities are extracted
+    relation_types = [] # if empty, all relations are extracted
+    fragment_merge_count = 4 # number of fragments to merge into a single extraction
+    max_knowledge_relationships = 100
+    max_description_input_length = 65536
+    generation_config = { model = "ollama/qwen2.5-coder:latest" } # and other params, model used for relationshipt extraction
+    automatic_deduplication = false
+
+  [database.graph_enrichment_settings]
+    community_reports_prompt = "graphrag_community_reports"
+    max_summary_input_length = 65536
+    generation_config = { model = "ollama/qwen2.5-coder:latest" } # and other params, model used for node description and graph clustering
+    leiden_params = {}
+
+  [database.graph_search_settings]
+    generation_config = { model = "ollama/qwen2.5-coder:latest" }
+
+
+[auth]
+provider = "r2r"
+access_token_lifetime_in_minutes = 60
+refresh_token_lifetime_in_days = 7
+require_authentication = true
+require_email_verification = false
+default_admin_email = "admin@example.com"
+default_admin_password = "change_me_immediately"
 
 [crypto]
 provider = "bcrypt"
-
-[database]
-default_collection_name = "Default"
-default_collection_description = "Your default collection."
-collection_summary_prompt = "collection_summary"
-
-  [database.graph_creation_settings]
-    graph_entity_description_prompt = "graph_entity_description"
-    graph_extraction_prompt = "graph_extraction"
-    entity_types = [] # if empty, all entities are extracted
-    relation_types = [] # if empty, all relations are extracted
-    automatic_deduplication = true # enable automatic deduplication of entities
-
-  [database.graph_enrichment_settings]
-    graph_communities_prompt = "graph_communities"
-
-[embedding]
-provider = "litellm"
-# For basic applications, use `openai/text-embedding-3-small` with `base_dimension = 512`
-# For advanced applications, use `openai/text-embedding-3-large` with `base_dimension = 3072` and binary quantization
-base_model = "openai/text-embedding-3-small"
-base_dimension = 512
-# rerank_model = "huggingface/mixedbread-ai/mxbai-rerank-large-v1" # reranking model
-batch_size = 128
-add_title_as_prefix = false
-concurrent_request_limit = 256
-quantization_settings = { quantization_type = "FP32" }
-
-[completion_embedding]
-# Generally this should be the same as the embedding config, but advanced users may want to run with a different provider to reduce latency
-provider = "litellm"
-base_model = "openai/text-embedding-3-small"
-base_dimension = 512
-batch_size = 128
-add_title_as_prefix = false
-concurrent_request_limit = 256
-
-[ingestion]
-provider = "r2r"
-chunking_strategy = "recursive"
-chunk_size = 1_024
-chunk_overlap = 512
-excluded_parsers = ["mp4"]
-automatic_extraction = true # enable automatic extraction of entities and relations
-
-  [ingestion.chunk_enrichment_settings]
-    chunk_enrichment_prompt = "chunk_enrichment"
-    enable_chunk_enrichment = false # disabled by default
-    n_chunks = 2 # the number of chunks (both preceding and succeeding) to use in enrichment
-
-  [ingestion.extra_parsers]
-    pdf = "zerox"
 
 [logging]
 provider = "r2r"
@@ -109,5 +100,8 @@ log_info_table = "log_info"
 [orchestration]
 provider = "simple"
 
+[prompt]
+provider = "r2r"
+
 [email]
-provider = "console_mock" # `smtp` | `sendgrid` supported
+provider = "console_mock"

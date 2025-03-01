@@ -27,7 +27,7 @@ services:
       -c max_connections=${R2R_POSTGRES_MAX_CONNECTIONS:-1024}
 
   r2r:
-    image: kojeomstudio/r2r-3.4.3-ks:v1
+    image: kojeomstudio/r2r-3.4.3-ks:v2
     ports:
       - "${R2R_PORT:-7272}:${R2R_PORT:-7272}"
     environment:
@@ -36,8 +36,13 @@ services:
       - R2R_HOST=${R2R_HOST:-0.0.0.0}
 
       # R2R
-      - R2R_LOG_LEVEL=${R2R_LOG_LEVEL:-INFO}
-      - R2R_CONFIG_PATH=${R2R_CONFIG_PATH:-}
+#kojeostudio
+      - R2R_LOG_LEVEL=${R2R_LOG_LEVEL:-DEBUG} # -INFO 디폴트 / 디버깅 정보 출력을 위해 필터 수정.
+#~kojeostudio
+
+#kojeomstudio
+      - R2R_CONFIG_PATH=${R2R_CONFIG_PATH:-r2r/r2r.toml} # 디폴트는 비어있음, 임시로 r2r.toml 파일 경로 지정.
+#~kojeomstudio
       - R2R_PROJECT_NAME=${R2R_PROJECT_NAME:-r2r_default}
       - R2R_SECRET_KEY=${R2R_SECRET_KEY:-}
 
