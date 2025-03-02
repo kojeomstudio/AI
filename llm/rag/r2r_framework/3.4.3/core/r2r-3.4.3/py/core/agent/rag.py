@@ -108,6 +108,12 @@ class RAGAgentMixin:
         max_context_window_tokens=512_000,
         **kwargs,
     ):
+        
+#kojeomstudio
+        logger.debug(f"[kojeomstudio-debug] RAGAgentMixin __init__ >> local_search_method : {local_search_method}")
+        logger.debug(f"[kojeomstudio-debug] RAGAgentMixin __init__ >> content_method : {content_method}")
+#~kojeomstudio
+
         # Save references to the retrieval logic
         self.search_settings = search_settings
         self.local_search_method = local_search_method
@@ -452,6 +458,13 @@ class R2RStreamingRAGAgent(RAGAgentMixin, R2RStreamingAgent):
         content_method: Optional[Callable] = None,
         max_tool_context_length: int = 10_000,
     ):
+#kojeomstudio
+        logger.debug(f"[kojeomstudio-debug] R2RStreamingRAGAgent __init__ >> tools : {config.tools}")
+        logger.debug(f"[kojeomstudio-debug] R2RStreamingRAGAgent __init__ >> tool_names : {config.tool_names}")
+        logger.debug(f"[kojeomstudio-debug] R2RStreamingRAGAgent __init__ >> local_search_method : {local_search_method}")
+        logger.debug(f"[kojeomstudio-debug] R2RStreamingRAGAgent __init__ >> content_method : {content_method}")
+#~kojeomstudio
+
         # Force streaming on
         config.stream = True
 

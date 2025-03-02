@@ -863,13 +863,17 @@ class RetrievalService(Service):
                                 database_provider=self.providers.database,
                                 llm_provider=self.providers.llm,
                                 config=agent_config,
-                                search_settings=search_settings,
+                                search_settings=search_settings, 
                                 rag_generation_config=rag_generation_config,
                                 max_tool_context_length=max_tool_context_length,
                                 local_search_method=self.search,
                                 content_method=self.get_context,
                                 # kojeomstudio >> 3.4.3기준 web_search 기능 불가..
                             )
+#kojeomstudio
+                            #agent._tools = agent_config.tools
+                            agent._register_tools()
+#~kojeomstudio
                         else:
                             if (
                                 "gemini-2.0-flash-thinking-exp-01-21"
