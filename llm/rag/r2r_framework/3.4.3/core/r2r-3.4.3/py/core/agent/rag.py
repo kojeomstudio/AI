@@ -138,12 +138,20 @@ class RAGAgentMixin:
             elif tool_name == "multi_search":
                 self._tools.append(self.multi_search())
             else:
-                raise ValueError(f"Unsupported tool name: {tool_name}")
+                raise ValueError(f"Unsupported tool name: {tool_name}")       
+#kojeomstudio
+        logger.debug(f"[kojeomstudio-debug] RAGAgentMixin _register_tools invoked! >> ")
+#~kojeomstudio
 
     # Local Search Tool
     def local_search(self) -> Tool:
         """Tool to do a semantic/hybrid search on the local knowledge base
         using self.local_search_method."""
+
+#kojeomstudio
+        logger.debug(f"[kojeomstudio-debug] RAGAgentMixin local_search invoked! >>")
+#~kojeomstudio
+
         return Tool(
             name="local_search",
             description=(
@@ -236,6 +244,9 @@ class RAGAgentMixin:
             )
 
         else:
+#kojeomstudio
+            logger.debug(f"[kojeomstudio-debug] RAGAgentMixin content invoked! >> ")
+#~kojeomstudio
             tool = Tool(
                 name="content",
                 description=(
@@ -459,7 +470,7 @@ class R2RStreamingRAGAgent(RAGAgentMixin, R2RStreamingAgent):
         max_tool_context_length: int = 10_000,
     ):
 #kojeomstudio
-        logger.debug(f"[kojeomstudio-debug] R2RStreamingRAGAgent __init__ >> tools : {config.tools}")
+        #logger.debug(f"[kojeomstudio-debug] R2RStreamingRAGAgent __init__ >> tools : {config.tools}")
         logger.debug(f"[kojeomstudio-debug] R2RStreamingRAGAgent __init__ >> tool_names : {config.tool_names}")
         logger.debug(f"[kojeomstudio-debug] R2RStreamingRAGAgent __init__ >> local_search_method : {local_search_method}")
         logger.debug(f"[kojeomstudio-debug] R2RStreamingRAGAgent __init__ >> content_method : {content_method}")
@@ -946,6 +957,9 @@ class GeminiXMLToolsStreamingReasoningRAGAgent(
 
         # Build initial conversation context from all messages
         all_msgs = await self.conversation.get_messages()
+#kojeomstudio
+        logger.debug(f"[kojeomstudio-debug] GeminiXMLToolsStreamingReasoningRAGAgent arun invoked! >> all_msgs : {all_msgs}")
+#~kojeomstudio
         conversation_context = self._build_single_user_prompt(all_msgs)
 
         for step_i in range(self.max_steps):

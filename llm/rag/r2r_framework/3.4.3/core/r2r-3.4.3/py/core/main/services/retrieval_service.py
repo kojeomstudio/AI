@@ -848,10 +848,10 @@ class RetrievalService(Service):
 
 #kojeommstudio
             logger.debug(f"[kojeomstudio-debug] >> [agent] system_instruction : {system_instruction}")
-            logger.debug(f"[kojeomstudio-debug] >> [agent] agent_config.tools : {agent_config.tools}")
+            logger.debug(f"[kojeomstudio-debug] >> [agent] agent_config.tools_names : {agent_config.tool_names}")
             logger.debug(f"[kojeomstudio-debug] >> [agent] rag_generation_config.model : {rag_generation_config.model}")
             logger.debug(f"[kojeomstudio-debug] >> [agent] rag_generation_config.stream : {rag_generation_config.stream}")
-            logger.debug(f"[kojeomstudio-debug] >> [agent] rag_generation_config.tools : {rag_generation_config.tools}")
+            #logger.debug(f"[kojeomstudio-debug] >> [agent] rag_generation_config.tools : {rag_generation_config.tools}")
 #~kojeomstudio
 
             if rag_generation_config.stream:
@@ -872,6 +872,7 @@ class RetrievalService(Service):
                             )
 #kojeomstudio
                             #agent._tools = agent_config.tools
+                            logger.debug(f"[kojeomstudio-debug] >> [agent] try tools register.")
                             agent._register_tools()
 #~kojeomstudio
                         else:
@@ -929,7 +930,7 @@ class RetrievalService(Service):
                                 )
 #kojeomstudio
                         logger.debug(f"[kojeomstudio-debug] >> [agent] class >> {agent.__class__}")
-                        logger.debug(f"[kojeomstudio-debug] >> [agent] tools >> {agent.tools}")
+                        logger.debug(f"[kojeomstudio-debug] >> [agent] tools >> {agent._tools}")
 #~kojeomstudio
 
                         async for chunk in agent.arun(
@@ -946,8 +947,15 @@ class RetrievalService(Service):
                             msg.to_dict()
                             for msg in agent.conversation.messages
                         ]
+#kojeomstudo
+                        logger.debug(f"[kojeomstudio-debug] >> [agent] finally and mesages : {msgs}")
+#~kojeomstudio
                         input_tokens = num_tokens_from_messages(msgs[:-1])
                         output_tokens = num_tokens_from_messages([msgs[-1]])
+#kojeomstudo
+                        logger.debug(f"[kojeomstudio-debug] >> [agent] input tokens : {input_tokens}")
+                        logger.debug(f"[kojeomstudio-debug] >> [agent] output tokens : {output_tokens}")
+#~kojeomstudio
                         await self.providers.database.conversations_handler.add_message(
                             conversation_id=conversation_id,
                             content=agent.conversation.messages[-1],

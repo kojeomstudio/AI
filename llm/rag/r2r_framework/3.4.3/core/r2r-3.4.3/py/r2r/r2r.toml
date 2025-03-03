@@ -59,6 +59,9 @@ automatic_extraction = true
 
 [database]
 provider = "postgres"
+default_collection_name = "Default"
+default_collection_description = "Your default collection."
+collection_summary_prompt = "collection_summary"
 
   [database.graph_creation_settings]
     graph_entity_description_prompt = "graphrag_entity_description"
