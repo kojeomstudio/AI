@@ -55,6 +55,9 @@ class R2RAgent(Agent, metaclass=CombinedMeta):
         self._reset()
         await self._setup(system_instruction)
 
+#kojeomstudio
+        logger.debug(f"[kojeomstudio-debug] R2RAgent async >> messages: {messages}")
+#~kojeomstudio
         if messages:
             for message in messages:
                 await self.conversation.add_message(message)
@@ -72,6 +75,10 @@ class R2RAgent(Agent, metaclass=CombinedMeta):
         all_messages: list[dict] = await self.conversation.get_messages()
         all_messages.reverse()
 
+#kojeomstudio
+        logger.debug(f"[kojeomstudio-debug] R2RAgent async >> all_messages: {all_messages}")
+#~kojeomstudio
+
         output_messages = []
         for message_2 in all_messages:
             if (
@@ -82,6 +89,10 @@ class R2RAgent(Agent, metaclass=CombinedMeta):
             else:
                 break
         output_messages.reverse()
+
+#kojeomstudio
+        logger.debug(f"[kojeomstudio-debug] R2RAgent async >> output_messages: {output_messages}")
+#~kojeomstudio
 
         return output_messages
 
@@ -126,12 +137,21 @@ class R2RStreamingAgent(R2RAgent):
         *args,
         **kwargs,
     ) -> AsyncGenerator[str, None]:
+        
+#kojeomstudio
+        logger.debug(f"[kojeomstudio-debug] R2RStreamingAgent arun >> system_instruction: {system_instruction}")
+        logger.debug(f"[kojeomstudio-debug] R2RStreamingAgent arun >> messages: {messages}")
+#~kojeomstudio
         self._reset()
         await self._setup(system_instruction)
 
         if messages:
             for message in messages:
                 await self.conversation.add_message(message)
+#kojeomstudio
+        if len(self.conversation.messages) > 0:
+            logger.debug(f"[kojeomstudio-debug] R2RStreamingAgent arun >> conversation messages : {self.conversation.messages}")
+#~kojeosmtudio
 
         while not self._completed:
             messages_list = await self.conversation.get_messages()

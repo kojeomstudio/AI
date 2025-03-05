@@ -857,6 +857,9 @@ class RetrievalService(Service):
             if rag_generation_config.stream:
 
                 async def stream_response():
+#kojeomstudio
+                    logger.debug(f"[kojeomstudio-debug] >> stream_response >> Is reasoning_agent ? : {reasoning_agent}")
+#~kojeomstudio
                     try:
                         if not reasoning_agent:
                             agent = R2RStreamingRAGAgent(
@@ -872,8 +875,8 @@ class RetrievalService(Service):
                             )
 #kojeomstudio
                             #agent._tools = agent_config.tools
-                            logger.debug(f"[kojeomstudio-debug] >> [agent] try tools register.")
-                            agent._register_tools()
+                            #logger.debug(f"[kojeomstudio-debug] >> [agent] try tools register.")
+                            #agent._register_tools()
 #~kojeomstudio
                         else:
                             if (
@@ -930,7 +933,7 @@ class RetrievalService(Service):
                                 )
 #kojeomstudio
                         logger.debug(f"[kojeomstudio-debug] >> [agent] class >> {agent.__class__}")
-                        logger.debug(f"[kojeomstudio-debug] >> [agent] tools >> {agent._tools}")
+                        #logger.debug(f"[kojeomstudio-debug] >> [agent] tools >> {agent._tools}")
 #~kojeomstudio
 
                         async for chunk in agent.arun(
@@ -994,7 +997,9 @@ class RetrievalService(Service):
                                 logger.error(
                                     f"Error generating conversation name: {e}"
                                 )
-
+#kojeomstudio
+                logger.debug(f"[kojeomstudio-debug] >> return stream_response to fastapi...")
+#~kojeomstudio
                 return stream_response()
 
             agent = R2RRAGAgent(
@@ -1115,10 +1120,10 @@ class RetrievalService(Service):
 
         except Exception as e:
 
-            #kojeomstudio
+#kojeomstudio
             error_trace = traceback.format_exc()
             logger.error(f"[kojeomstudio-debug] Error in agent response: {str(e)}\n\n{error_trace}")
-            #~kojeomstudio
+#~kojeomstudio
 
             logger.error(f"Error in agent response: {str(e)}")
             if "NoneType" in str(e):

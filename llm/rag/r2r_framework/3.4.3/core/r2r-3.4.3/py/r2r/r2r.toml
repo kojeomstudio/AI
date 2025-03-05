@@ -38,7 +38,6 @@ agent_static_prompt = "static_rag_agent"
 agent_dynamic_prompt = "dynamic_rag_agent"
 tools = ["content", "local_search"]
 tool_names=["content", "local_search"]
-
   [agent.generation_config]
   model = "ollama/qwen2.5-coder:latest"
 

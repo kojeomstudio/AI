@@ -149,7 +149,7 @@ class RAGAgentMixin:
         using self.local_search_method."""
 
 #kojeomstudio
-        logger.debug(f"[kojeomstudio-debug] RAGAgentMixin local_search invoked! >>")
+        logger.debug(f"[kojeomstudio-debug] RAGAgentMixin local_search make tool instance... >>")
 #~kojeomstudio
 
         return Tool(
@@ -193,6 +193,10 @@ class RAGAgentMixin:
             query=query, search_settings=self.search_settings
         )
 
+#kojeomstudio
+        logger.debug(f"[kojeomstudio-debug] RAGAgentMixin _local_search_function >> raw_response : {raw_response}")
+#~kojeomstudio
+
         if isinstance(raw_response, AggregateSearchResult):
             agg = raw_response
         else:
@@ -207,6 +211,11 @@ class RAGAgentMixin:
 
         # 1) Store them so that we can do final citations later
         self.search_results_collector.add_aggregate_result(agg)
+
+#kojeomstudio
+        logger.debug(f"[kojeomstudio-debug] RAGAgentMixin _local_search_function >> aggregate_result : {agg}")
+#~kojeomstudio
+
         return agg
 
     # 2) Local Context
@@ -245,7 +254,7 @@ class RAGAgentMixin:
 
         else:
 #kojeomstudio
-            logger.debug(f"[kojeomstudio-debug] RAGAgentMixin content invoked! >> ")
+            logger.debug(f"[kojeomstudio-debug] RAGAgentMixin content >> make Tool instance...")
 #~kojeomstudio
             tool = Tool(
                 name="content",
@@ -334,6 +343,9 @@ class RAGAgentMixin:
             context_document_results=context_document_results,
         )
         self.search_results_collector.add_aggregate_result(agg)
+#kojeomstudio
+        logger.debug(f"[kojeomstudio-debug] RAGAgentMixin _content_function >> aggregate_result : {agg}")
+#~kojeomstudio
         return agg
 
     # Web Search Tool
