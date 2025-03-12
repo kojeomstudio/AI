@@ -1,0 +1,3 @@
+[submodule "llm/agent"]
+	path = llm/agent
+	url = git@github.com:kojeomstudio/open-manus.git
