@@ -1,0 +1,16 @@
+services:
+  openmanus:
+    image: kojeomstudio/open-manus:v1
+    container_name: openmanus-c
+    ports:
+      - "5172:5172"
+    restart: always
+    environment:
+      - PYTHONUNBUFFERED=1
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    #networks:
+    #  - shared_network
+#networks:
+#  shared_network:
+#    external: true

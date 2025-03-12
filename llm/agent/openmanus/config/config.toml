@@ -1,0 +1,15 @@
+# Global LLM configuration
+# api 주소에 v1 접미사는 꼭 붙여야함...
+
+[llm]
+model = "qwen2.5-coder:latest"
+base_url = "https://127.0.0.1:11434/v1"
+api_key = "ollama"
+max_tokens = 4096
+temperature = 0.0
+
+# Optional configuration for specific LLM models
+[llm.vision]
+model = "qwen2.5-coder:latest"
+base_url = "https://127.0.0.1:11434/v1"
+api_key = "ollama"
