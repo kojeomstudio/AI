@@ -2,6 +2,7 @@ import os
 import json
 import asyncio
 import aiosqlite
+import logging
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, BackgroundTasks, Request
@@ -23,6 +24,10 @@ import prompt_helper
 
 # FastAPI 앱 인스턴스 생성
 scheduler = AsyncIOScheduler()
+
+# logger 설정
+logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)
 
 @asynccontextmanager
 async def lifespan(webserver_app: FastAPI):
@@ -49,26 +54,6 @@ webserver_app.mount("/static", StaticFiles(directory=local_static_folder_path), 
 # 현재 진행 중인 파일 개수 상태 변수
 g_processing_files = 0
 
-class LogType(Enum):
-    ERROR = 0
-    WARN = 1
-    INFO = 2
-
-class SimpleLogger:
-    @staticmethod
-    def Log(msg : str, log_type : LogType):
-
-        prefix = ""
-        if log_type == LogType.ERROR:
-            prefix = "[ERROR]"
-        elif log_type == LogType.WARN:
-            prefix = "[WARN]"
-        elif log_type == LogType.INFO:
-            prefix = "[INFO]"
-            
-        print(f"{prefix} {msg}")
-    
-
 # 설정 파일 로드 (동적 로딩 지원)
 def load_config():
     config_path = Path(__file__).parent / "config.json"
@@ -85,7 +70,6 @@ CHECK_DAYS = global_config["check_days"]
 CHECK_TIME = global_config["check_time"]
 OLLAMA_HOST_URL = global_config["ollama_host_url"]
 
-#ollama_client = Client(host=OLLAMA_HOST_URL)
 ollama_client = AsyncClient(host=OLLAMA_HOST_URL)
 
 async def create_directories(directories):
@@ -105,13 +89,13 @@ async def process_files():
             for file in files:
                 file_path = TEXT_FILE_PATH / file
                 if not file_path.suffix in [".txt", ".md"]:
-                    SimpleLogger.Log(f"Skipping unsupported file: {file}", LogType.WARN)
+                    logger.debug(f"Skipping unsupported file: {file}")
                     continue
 
                 async with db.execute("SELECT filename FROM processed_files WHERE filename = ?", (file,)) as cursor:
                     existing_file = await cursor.fetchone()
                     if existing_file:
-                        SimpleLogger.Log(f"File {file} already processed, skipping.", LogType.INFO)
+                        logger.debug(f"File {file} already processed, skipping.")
                         continue
 
                 try:
@@ -122,19 +106,19 @@ async def process_files():
 
                     result = None
                     try:
-                        SimpleLogger.Log(f"ollama clinet start asnyc generate! target file : {file_path}", LogType.INFO)
+                        logger.debug(f"ollama clinet start asnyc generate! target file : {file_path}")
                         g_processing_files += 1
                         result = await ollama_client.generate(
                             model=OLLAMA_MODEL,
                             prompt=prompt_helper.OLLAMA_PROMPT.format(content=file_content)
                         )
-                        SimpleLogger.Log(f"ollama client finish async generate! target file : {file_path}", LogType.INFO)
+                        logger.debug(f"ollama client finish async generate! target file : {file_path}")
 
                     except Exception as e:
-                        SimpleLogger.Log(f"Error generating LLM output, retrying: {e}", LogType.WARN)
+                        logger.debug(f"Error generating LLM output, retrying: {e}")
 
                     if not result:
-                        SimpleLogger.Log(f"Failed to process file {file} after retries.", LogType.ERROR)
+                        logger.debug(f"Failed to process file {file} after retries.")
                         continue
                         
                     file_name, file_extension = os.path.splitext(file)
@@ -147,7 +131,7 @@ async def process_files():
                     await db.commit()
 
                 except Exception as e:
-                    SimpleLogger.Log(f"Error processing {file}: {e}", LogType.ERROR)
+                    logger.debug(f"Error processing {file}: {e}")
 
         g_processing_files = 0  # 모든 작업 완료 후 리셋
 
@@ -171,21 +155,24 @@ async def index(request: Request):
 
 @webserver_app.get("/api/config/reload")
 async def reload_config():
-    global global_config, TEXT_FILE_PATH, OUTPUT_FILE_PATH, OLLAMA_MODEL
+    global global_config, TEXT_FILE_PATH, OUTPUT_FILE_PATH, OLLAMA_MODEL, HOST, PORT
+
     global_config = load_config()
     TEXT_FILE_PATH = Path(__file__).parent / global_config["text_file_path"]
     OUTPUT_FILE_PATH = Path(__file__).parent / global_config["output_file_path"]
     OLLAMA_MODEL = global_config["ollama_model"]
+    HOST = global_config["host"]
+    PORT = global_config["port"]
 
-    SimpleLogger.Log(f"input file path : {TEXT_FILE_PATH}, output file path : {OUTPUT_FILE_PATH}, ollama_model : {OLLAMA_MODEL}", LogType.INFO)
-    SimpleLogger.Log(f"Config reloaded successfully!", LogType.INFO)
+    logger.debug(f"input file path : {TEXT_FILE_PATH}, output file path : {OUTPUT_FILE_PATH}, ollama_model : {OLLAMA_MODEL}")
+    logger.debug(f"Config reloaded successfully!")
 
     return {"message": "Config reloaded successfully"}
 
 @webserver_app.post("/api/process")
 async def trigger_processing(background_tasks: BackgroundTasks):
     background_tasks.add_task(process_files)
-    SimpleLogger.Log(f"Processing started in the background", LogType.INFO)
+    logger.debug(f"Processing started in the background")
     return {"message": "Processing started in the background"}
 
 @webserver_app.get("/api/status")
@@ -224,5 +211,5 @@ def debug_static_files():
 #    return response
 
 if __name__ == "__main__":
-    uvicorn.run("local_llm_analyzer:webserver_app", host="0.0.0.0", port=8000)
+    uvicorn.run("local_llm_analyzer:webserver_app", host=HOST, port=PORT)
     #uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)

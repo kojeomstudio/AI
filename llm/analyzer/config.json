@@ -5,5 +5,7 @@
     "ollama_host_url" : "http://localhost:11434",
     "ollama_model": "qwen2.5-coder", 
     "check_days": ["mon", "wed", "fri"], 
-    "check_time": "07:00"
+    "check_time": "07:00",
+    "host": "0.0.0.0",
+    "port": 8080
 }
