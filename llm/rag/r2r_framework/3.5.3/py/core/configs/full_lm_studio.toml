@@ -1,0 +1,57 @@
+[app]
+# LLM used for internal operations, like deriving conversation names
+fast_llm = "lm_studio/llama-3.2-3b-instruct"
+
+# LLM used for user-facing output, like RAG replies
+quality_llm = "lm_studio/llama-3.2-3b-instruct"
+
+# LLM used for ingesting visual inputs
+vlm = "lm_studio/llama3.2-vision" # TODO - Replace with viable candidate
+
+# LLM used for transcription
+audio_lm = "lm_studio/llama-3.2-3b-instruct" # TODO - Replace with viable candidate
+
+[embedding]
+provider = "litellm"
+base_model = "lm_studio/text-embedding-nomic-embed-text-v1.5"
+base_dimension = nan
+batch_size = 128
+add_title_as_prefix = true
+concurrent_request_limit = 2
+
+[completion_embedding]
+# Generally this should be the same as the embedding config, but advanced users may want to run with a different provider to reduce latency
+provider = "litellm"
+base_model = "lm_studio/text-embedding-nomic-embed-text-v1.5"
+base_dimension = nan
+batch_size = 128
+add_title_as_prefix = true
+concurrent_request_limit = 2
+
+[agent]
+tools = ["search_file_knowledge"]
+
+[completion]
+provider = "litellm"
+concurrent_request_limit = 1
+
+  [completion.generation_config]
+  temperature = 0.1
+  top_p = 1
+  max_tokens_to_sample = 1_024
+  stream = false
+
+[ingestion]
+provider = "unstructured_local"
+strategy = "auto"
+chunking_strategy = "by_title"
+new_after_n_chars = 512
+max_characters = 1_024
+combine_under_n_chars = 128
+overlap = 20
+chunks_for_document_summary = 16
+document_summary_model = "lm_studio/llama-3.2-3b-instruct"
+automatic_extraction = false
+
+[orchestration]
+provider = "hatchet"

@@ -1,0 +1,29 @@
+rag:
+  template: >
+    ## Task:
+
+    Answer the query given immediately below given the context which follows later. Use line item references to like [c910e2e], [b12cd2f], ... refer to provided search results.
+
+
+    ### Query:
+
+    {query}
+
+
+    ### Context:
+
+    {context}
+
+
+    ### Query:
+
+    {query}
+
+
+    REMINDER - Use line item references to like [c910e2e], [b12cd2f], to refer to the specific search result IDs returned in the provided context.
+
+    ## Response:
+  input_types:
+    query: str
+    context: str
+  overwrite_on_diff: true
