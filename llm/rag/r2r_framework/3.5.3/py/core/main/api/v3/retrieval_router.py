@@ -293,6 +293,10 @@ class RetrievalRouter(BaseRouterV3):
             ```
             """
 
+            #kojeomstudio
+            #rag_generation_config.stream = False
+            #~kojeomstudio
+
             if "model" not in rag_generation_config.__fields_set__:
                 rag_generation_config.model = self.config.app.quality_llm
 
@@ -319,15 +323,29 @@ class RetrievalRouter(BaseRouterV3):
                                     yield chunk[i : i + 1024]
                             else:
                                 yield chunk
-                    except GeneratorExit:
+                    except GeneratorExit as e:
+                        logger.debug(f"[kojeomstudio] GeneraterExit >> {e}")
                         # Clean up if needed, then return
                         return
 
-                return StreamingResponse(
-                    stream_generator(), media_type="text/event-stream"
-                )  # type: ignore
+                
+                #kojeomstudio
+                res = None
+                try:
+                    res = StreamingResponse(
+                        stream_generator(), media_type="text/event-stream"
+                    )  # type: ignore
+
+                except Exception as e:
+                    logger.error(f"[kojeomstudio] Error in rag_app: {e}")
+                #~kojeomstudio
+
+                return res
             else:
                 # ========== Non-streaming path ==========
+                #kojeomstudio
+                logger.debug(f"[kojeomstudio] rag_app response: {response}")
+                #~kojeomstudio
                 return response
 
         @self.router.post(
@@ -501,6 +519,10 @@ class RetrievalRouter(BaseRouterV3):
                 )
                 rag_tools = tools  # type: ignore
 
+            #kojeomstudio
+            #rag_generation_config.stream = False
+            #~kojeomstudio
+
             # Determine effective generation config
             effective_generation_config = rag_generation_config
             if mode == "research" and research_generation_config:
@@ -537,14 +559,27 @@ class RetrievalRouter(BaseRouterV3):
                                         yield chunk[i : i + 1024]
                                 else:
                                     yield chunk
-                        except GeneratorExit:
+                        except GeneratorExit as e:
+                            logger.debug(f"[kojeomstudio] GeneraterExit >> {e}")
                             # Clean up if needed, then return
                             return
 
-                    return StreamingResponse(  # type: ignore
-                        stream_generator(), media_type="text/event-stream"
-                    )
+                    #kojeomstudio
+                    res = None
+                    try:
+                        res = StreamingResponse(
+                            stream_generator(), media_type="text/event-stream"
+                        )  # type: ignore
+
+                    except Exception as e:
+                        logger.error(f"[kojeomstudio] Error in agent_app: {e}")
+                    #~kojeomstudio
+
+                    return res
                 else:
+                    #kojeomstudio
+                    logger.debug(f"[kojeomstudio] agent_app response: {response}")
+                    #~kojeomstudio
                     return response
             except Exception as e:
                 logger.error(f"Error in agent_app: {e}")

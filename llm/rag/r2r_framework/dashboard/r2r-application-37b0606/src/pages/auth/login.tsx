@@ -6,18 +6,19 @@ import React, { useState, useEffect, useCallback } from 'react';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/input';
-import { brandingConfig } from '@/config/brandingConfig';
 import { useUserContext } from '@/context/UserContext';
 import debounce from '@/lib/debounce';
 import { supabase } from '@/lib/supabase';
 
+const DEFAULT_DEPLOYMENT_URL = 'http://localhost:7272';
+
 const LoginPage: React.FC = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('admin@example.com');
+  const [password, setPassword] = useState('change_me_immediately');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [serverHealth, setServerHealth] = useState(true);
+  const [serverHealth, setServerHealth] = useState(true); // Default to true since we're not checking initially
   const [loginSuccess, setLoginSuccess] = useState(false);
   const { login, loginWithToken, authState } = useUserContext();
   const router = useRouter();
@@ -36,53 +37,15 @@ const LoginPage: React.FC = () => {
     ) {
       return window.__RUNTIME_CONFIG__.NEXT_PUBLIC_R2R_DEPLOYMENT_URL;
     }
-    return '';
+    return DEFAULT_DEPLOYMENT_URL;
   };
 
+  // Initialize deployment URL on component mount
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const url = getDeploymentUrl();
       setRawDeploymentUrl(url);
       setSanitizedDeploymentUrl(url);
-
-      // kojeomstudio
-      const runtime = window.__RUNTIME_CONFIG__;
-
-      const email = runtime?.NEXT_PUBLIC_R2R_DEFAULT_EMAIL;
-      const password = runtime?.NEXT_PUBLIC_R2R_DEFAULT_PASSWORD;
-
-      if (email && !email.includes('__NEXT_PUBLIC_R2R_DEFAULT_EMAIL__')) {
-        setEmail(email);
-      }
-
-      if (password && !password.includes('__NEXT_PUBLIC_R2R_DEFAULT_PASSWORD__')) {
-        setPassword(password);
-      }
-      // ~kojeomstudio
-
-      /*
-      if (window.__RUNTIME_CONFIG__) {
-        if (
-          window.__RUNTIME_CONFIG__.NEXT_PUBLIC_R2R_DEFAULT_EMAIL &&
-          !window.__RUNTIME_CONFIG__.NEXT_PUBLIC_R2R_DEFAULT_EMAIL.includes(
-            '__NEXT_PUBLIC_R2R_DEFAULT_EMAIL__'
-          )
-        ) {
-          setEmail(window.__RUNTIME_CONFIG__.NEXT_PUBLIC_R2R_DEFAULT_EMAIL);
-        }
-
-        if (
-          window.__RUNTIME_CONFIG__.NEXT_PUBLIC_R2R_DEFAULT_PASSWORD &&
-          !window.__RUNTIME_CONFIG__.NEXT_PUBLIC_R2R_DEFAULT_PASSWORD.includes(
-            '__NEXT_PUBLIC_R2R_DEFAULT_PASSWORD__'
-          )
-        ) {
-          setPassword(
-            window.__RUNTIME_CONFIG__.NEXT_PUBLIC_R2R_DEFAULT_PASSWORD
-          );
-        }
-      }
-        */
     }
   }, []);
 
@@ -125,7 +88,7 @@ const LoginPage: React.FC = () => {
       // Provide appropriate error message based on server health
       const serverStatusMessage = isServerHealthy
         ? 'The server appears to be running correctly. Please check your credentials and try again.'
-        : 'Unable to communicate with the server. Please verify the server is running at the specified URL.';
+        : 'Unable to communicate with the server. Please verify the R2R server is running at the specified URL.';
 
       alert(`Login failed. ${serverStatusMessage}\n\nError: ${errorMessage}`);
     } finally {
@@ -191,7 +154,7 @@ const LoginPage: React.FC = () => {
     }
 
     if (!url || url === 'http://' || url === 'https://') {
-      return '';
+      return DEFAULT_DEPLOYMENT_URL;
     }
 
     let sanitized = url.trim();
@@ -225,7 +188,7 @@ const LoginPage: React.FC = () => {
                 className="block text-gray-700 dark:text-gray-200 text-sm font-bold mb-2"
                 htmlFor="sanitizedDeploymentUrl"
               >
-                {brandingConfig.deploymentName} Deployment URL
+                R2R Deployment URL
               </label>
               {serverHealth === false && (
                 <span className="text-red-400 text-sm font-bold mb-2 block">
@@ -237,7 +200,7 @@ const LoginPage: React.FC = () => {
                 id="deploymentUrl"
                 name="deploymentUrl"
                 type="text"
-                placeholder="Deployment URL"
+                placeholder="R2R Deployment URL"
                 value={rawDeploymentUrl}
                 onChange={(e) => setRawDeploymentUrl(e.target.value)}
                 autoComplete="url"
