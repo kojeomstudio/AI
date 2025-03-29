@@ -1,0 +1,10 @@
+{
+    "rag_generation_config": {
+      "model": "ollama/gemma3:1b",
+      "temperature": 0.1,
+      "top_p": 1.0,
+      "max_tokens_to_sample": 1024,
+      "stream": false
+    },
+    "server_url": "http://localhost:7272"
+  }

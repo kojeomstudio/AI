@@ -139,14 +139,15 @@ const Index: React.FC = () => {
       }
     });
 
-    // Apply search query
-    if (searchQuery.trim()) {
+    // Apply search query with improved handling
+    if (searchQuery && searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(
-        (doc) =>
-          doc.title?.toLowerCase().includes(query) ||
-          doc.id.toLowerCase().includes(query)
-      );
+      filtered = filtered.filter((doc) => {
+        // Ensure title and id are strings before using toLowerCase
+        const title = doc.title ? String(doc.title).toLowerCase() : '';
+        const id = doc.id ? String(doc.id).toLowerCase() : '';
+        return title.includes(query) || id.includes(query);
+      });
     }
 
     return filtered;
@@ -177,10 +178,12 @@ const Index: React.FC = () => {
   /*** Handle Filters and Search ***/
   const handleFiltersChange = (newFilters: Record<string, any>) => {
     setFilters(newFilters);
+    setCurrentPage(1); // Reset to page 1 when filters change
   };
 
   const handleSearchQueryChange = (query: string) => {
     setSearchQuery(query);
+    setCurrentPage(1); // Reset to page 1 when search changes
   };
 
   /*** Handle Column Visibility ***/
@@ -195,13 +198,18 @@ const Index: React.FC = () => {
     setCurrentPage(page);
   };
 
+  // Direct search input handler
+  const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    handleSearchQueryChange(e.target.value);
+  };
+
   return (
     <Layout pageTitle="Documents" includeFooter={false}>
       <main className="w-full flex flex-col container h-screen-[calc(100%-4rem)]">
         <div className="relative flex-grow bg-zinc-900 mt-[4rem] sm:mt-[4rem]">
           <div className="mx-auto max-w-6xl mb-12 mt-4 p-4 h-full">
             <DocumentsTable
-              documents={documents}
+              documents={filteredDocuments}
               loading={loading}
               onRefresh={refetchDocuments}
               pendingDocuments={pendingDocuments}
@@ -211,7 +219,7 @@ const Index: React.FC = () => {
               selectedItems={selectedDocumentIds}
               visibleColumns={visibleColumns}
               onToggleColumn={handleToggleColumn}
-              totalEntries={totalEntries}
+              totalEntries={filteredDocuments.length}
               currentPage={currentPage}
               onPageChange={handlePageChange}
               itemsPerPage={ITEMS_PER_PAGE}
@@ -219,6 +227,18 @@ const Index: React.FC = () => {
               onFiltersChange={handleFiltersChange}
               searchQuery={searchQuery}
               onSearchQueryChange={handleSearchQueryChange}
+              // pass search bar to format correctly
+              middleContent={
+                <div className="w-full px-2">
+                  <input
+                    type="text"
+                    placeholder="Search by Title or Document ID"
+                    value={searchQuery}
+                    onChange={handleSearchInputChange}
+                    className="w-full bg-black border border-zinc-800 text-white rounded-md px-4 py-2 focus:outline-none"
+                  />
+                </div>
+              }
             />
           </div>
         </div>

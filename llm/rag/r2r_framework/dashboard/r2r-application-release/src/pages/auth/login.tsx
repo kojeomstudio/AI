@@ -45,22 +45,13 @@ const LoginPage: React.FC = () => {
       setRawDeploymentUrl(url);
       setSanitizedDeploymentUrl(url);
 
-      // kojeomstudio
-      const runtime = window.__RUNTIME_CONFIG__;
+      //kojeomstudio
+      setEmail(window.__RUNTIME_CONFIG__.NEXT_PUBLIC_R2R_DEFAULT_EMAIL);
+      setPassword(
+        window.__RUNTIME_CONFIG__.NEXT_PUBLIC_R2R_DEFAULT_PASSWORD
+      );
+      //~kojeomstudio
 
-      const email = runtime?.NEXT_PUBLIC_R2R_DEFAULT_EMAIL;
-      const password = runtime?.NEXT_PUBLIC_R2R_DEFAULT_PASSWORD;
-
-      if (email && !email.includes('__NEXT_PUBLIC_R2R_DEFAULT_EMAIL__')) {
-        setEmail(email);
-      }
-
-      if (password && !password.includes('__NEXT_PUBLIC_R2R_DEFAULT_PASSWORD__')) {
-        setPassword(password);
-      }
-      // ~kojeomstudio
-
-      /*
       if (window.__RUNTIME_CONFIG__) {
         if (
           window.__RUNTIME_CONFIG__.NEXT_PUBLIC_R2R_DEFAULT_EMAIL &&
@@ -82,7 +73,6 @@ const LoginPage: React.FC = () => {
           );
         }
       }
-        */
     }
   }, []);
 
