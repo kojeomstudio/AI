@@ -49,7 +49,7 @@ services:
       - host.docker.internal:host-gateway
 
   r2r-dashboard:
-    image: kojeomstudio/r2r-dashboard-37b0606:v1
+    image: kojeomstudio/r2r-dashboard-ks:v1
     env_file:
       - ./env/r2r-dashboard.env
     ports:
