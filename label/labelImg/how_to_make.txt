@@ -1,0 +1,12 @@
+
+0) 가상환경 생성.
+
+1) pip install pyqt5 lxml
+
+2) pyqt5, pyrcc5 -o libs/resources.py resources.qrc
+ -> 또는 파이인스톨러로 바이너리 생성.
+
+Install pyinstaller and execute:
+
+pip install pyinstaller
+pyinstaller --hidden-import=pyqt5 --hidden-import=lxml -F -n "labelImg" -c labelImg.py -p ./libs -p ./
