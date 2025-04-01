@@ -257,10 +257,10 @@ class RetrievalRouter(BaseRouterV3):
             Fine-tune the language model's behavior with `rag_generation_config`:
             ```json
             {
-            "model": "openai/gpt-4o-mini",  // Model to use
-            "temperature": 0.7,              // Control randomness (0-1)
-            "max_tokens": 1500,              // Maximum output length
-            "stream": true                   // Enable token streaming
+                "model": "openai/gpt-4o-mini",  // Model to use
+                "temperature": 0.7,              // Control randomness (0-1)
+                "max_tokens": 1500,              // Maximum output length
+                "stream": true                   // Enable token streaming
             }
             ```
 
@@ -293,10 +293,6 @@ class RetrievalRouter(BaseRouterV3):
             ```
             """
 
-            #kojeomstudio
-            #rag_generation_config.stream = False
-            #~kojeomstudio
-
             if "model" not in rag_generation_config.__fields_set__:
                 rag_generation_config.model = self.config.app.quality_llm
 
@@ -323,29 +319,15 @@ class RetrievalRouter(BaseRouterV3):
                                     yield chunk[i : i + 1024]
                             else:
                                 yield chunk
-                    except GeneratorExit as e:
-                        logger.debug(f"[kojeomstudio] GeneraterExit >> {e}")
+                    except GeneratorExit:
                         # Clean up if needed, then return
                         return
 
-                
-                #kojeomstudio
-                res = None
-                try:
-                    res = StreamingResponse(
-                        stream_generator(), media_type="text/event-stream"
-                    )  # type: ignore
-
-                except Exception as e:
-                    logger.error(f"[kojeomstudio] Error in rag_app: {e}")
-                #~kojeomstudio
-
-                return res
+                return StreamingResponse(
+                    stream_generator(), media_type="text/event-stream"
+                )  # type: ignore
             else:
                 # ========== Non-streaming path ==========
-                #kojeomstudio
-                logger.debug(f"[kojeomstudio] rag_app response: {response}")
-                #~kojeomstudio
                 return response
 
         @self.router.post(
@@ -442,6 +424,10 @@ class RetrievalRouter(BaseRouterV3):
                 default="rag",
                 description="Mode to use for generation: 'rag' for standard retrieval or 'research' for deep analysis with reasoning capabilities",
             ),
+            needs_initial_conversation_name: Optional[bool] = Body(
+                default=None,
+                description="If true, the system will automatically assign a conversation name if not already specified previously.",
+            ),
             auth_user=Depends(self.providers.auth.auth_wrapper()),
         ) -> WrappedAgentResponse:
             """
@@ -496,6 +482,7 @@ class RetrievalRouter(BaseRouterV3):
 
             Maintain context across multiple turns by including `conversation_id` in each request.
             After your first call, store the returned `conversation_id` and include it in subsequent calls.
+            If no conversation name has already been set for the conversation, the system will automatically assign one.
 
             """
             # Handle backward compatibility for task_prompt
@@ -518,10 +505,6 @@ class RetrievalRouter(BaseRouterV3):
                     "The 'tools' parameter is deprecated. Use 'rag_tools' or 'research_tools' based on mode."
                 )
                 rag_tools = tools  # type: ignore
-
-            #kojeomstudio
-            #rag_generation_config.stream = False
-            #~kojeomstudio
 
             # Determine effective generation config
             effective_generation_config = rag_generation_config
@@ -547,6 +530,7 @@ class RetrievalRouter(BaseRouterV3):
                     rag_tools=rag_tools,  # type: ignore
                     research_tools=research_tools,  # type: ignore
                     mode=mode,
+                    needs_initial_conversation_name=needs_initial_conversation_name,
                 )
 
                 if effective_generation_config.stream:
@@ -559,27 +543,14 @@ class RetrievalRouter(BaseRouterV3):
                                         yield chunk[i : i + 1024]
                                 else:
                                     yield chunk
-                        except GeneratorExit as e:
-                            logger.debug(f"[kojeomstudio] GeneraterExit >> {e}")
+                        except GeneratorExit:
                             # Clean up if needed, then return
                             return
 
-                    #kojeomstudio
-                    res = None
-                    try:
-                        res = StreamingResponse(
-                            stream_generator(), media_type="text/event-stream"
-                        )  # type: ignore
-
-                    except Exception as e:
-                        logger.error(f"[kojeomstudio] Error in agent_app: {e}")
-                    #~kojeomstudio
-
-                    return res
+                    return StreamingResponse(  # type: ignore
+                        stream_generator(), media_type="text/event-stream"
+                    )
                 else:
-                    #kojeomstudio
-                    logger.debug(f"[kojeomstudio] agent_app response: {response}")
-                    #~kojeomstudio
                     return response
             except Exception as e:
                 logger.error(f"Error in agent_app: {e}")

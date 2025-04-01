@@ -13,19 +13,24 @@ from core.base import (
     EmbeddingConfig,
     EmbeddingProvider,
     IngestionConfig,
+    OCRConfig,
     OrchestrationConfig,
+    SchedulerConfig,
 )
 from core.providers import (
     AnthropicCompletionProvider,
+    APSchedulerProvider,
     AsyncSMTPEmailProvider,
     BcryptCryptoConfig,
     BCryptCryptoProvider,
+    ClerkAuthProvider,
     ConsoleMockEmailProvider,
     HatchetOrchestrationProvider,
     JwtAuthProvider,
     LiteLLMCompletionProvider,
     LiteLLMEmbeddingProvider,
     MailerSendEmailProvider,
+    MistralOCRProvider,
     NaClCryptoConfig,
     NaClCryptoProvider,
     OllamaEmbeddingProvider,
@@ -66,7 +71,12 @@ class R2RProviderFactory:
         ),
         *args,
         **kwargs,
-    ) -> R2RAuthProvider | SupabaseAuthProvider | JwtAuthProvider:
+    ) -> (
+        R2RAuthProvider
+        | SupabaseAuthProvider
+        | JwtAuthProvider
+        | ClerkAuthProvider
+    ):
         if auth_config.provider == "r2r":
             r2r_auth = R2RAuthProvider(
                 auth_config, crypto_provider, database_provider, email_provider
@@ -79,6 +89,10 @@ class R2RProviderFactory:
             )
         elif auth_config.provider == "jwt":
             return JwtAuthProvider(
+                auth_config, crypto_provider, database_provider, email_provider
+            )
+        elif auth_config.provider == "clerk":
+            return ClerkAuthProvider(
                 auth_config, crypto_provider, database_provider, email_provider
             )
         else:
@@ -104,6 +118,18 @@ class R2RProviderFactory:
             )
 
     @staticmethod
+    def create_ocr_provider(
+        config: OCRConfig | dict, *args, **kwargs
+    ) -> MistralOCRProvider:
+        if isinstance(config, dict):
+            config = OCRConfig(**config)
+
+        if config.provider == "mistral":
+            return MistralOCRProvider(config)
+        else:
+            raise ValueError(f"OCR provider {config.provider} not supported")
+
+    @staticmethod
     def create_ingestion_provider(
         ingestion_config: IngestionConfig,
         database_provider: PostgresDatabaseProvider,
@@ -113,6 +139,7 @@ class R2RProviderFactory:
             | OpenAICompletionProvider
             | R2RCompletionProvider
         ),
+        ocr_provider: MistralOCRProvider,
         *args,
         **kwargs,
     ) -> R2RIngestionProvider | UnstructuredIngestionProvider:
@@ -129,7 +156,10 @@ class R2RProviderFactory:
                 **config_dict, **extra_fields
             )
             return R2RIngestionProvider(
-                r2r_ingestion_config, database_provider, llm_provider
+                config=r2r_ingestion_config,
+                database_provider=database_provider,
+                llm_provider=llm_provider,
+                ocr_provider=ocr_provider,
             )
         elif config_dict["provider"] in [
             "unstructured_local",
@@ -140,7 +170,10 @@ class R2RProviderFactory:
             )
 
             return UnstructuredIngestionProvider(
-                unstructured_ingestion_config, database_provider, llm_provider
+                config=unstructured_ingestion_config,
+                database_provider=database_provider,
+                llm_provider=llm_provider,
+                ocr_provider=ocr_provider,
             )
         else:
             raise ValueError(
@@ -284,6 +317,18 @@ class R2RProviderFactory:
                 f"Email provider {email_config.provider} not supported."
             )
 
+    @staticmethod
+    async def create_scheduler_provider(
+        scheduler_config: SchedulerConfig, *args, **kwargs
+    ) -> APSchedulerProvider:
+        """Creates a scheduler provider based on configuration."""
+        if scheduler_config.provider == "apscheduler":
+            return APSchedulerProvider(scheduler_config)
+        else:
+            raise ValueError(
+                f"Scheduler provider {scheduler_config.provider} not supported."
+            )
+
     async def create_providers(
         self,
         auth_provider_override: Optional[
@@ -313,7 +358,9 @@ class R2RProviderFactory:
             | LiteLLMCompletionProvider
             | R2RCompletionProvider
         ] = None,
+        ocr_provider_override: Optional[MistralOCRProvider] = None,
         orchestration_provider_override: Optional[Any] = None,
+        scheduler_provider_override: Optional[APSchedulerProvider] = None,
         *args,
         **kwargs,
     ) -> R2RProviders:
@@ -360,12 +407,17 @@ class R2RProviderFactory:
             )
         )
 
+        ocr_provider = ocr_provider_override or self.create_ocr_provider(
+            self.config.ocr
+        )
+
         ingestion_provider = (
             ingestion_provider_override
             or self.create_ingestion_provider(
                 self.config.ingestion,
                 database_provider,
                 llm_provider,
+                ocr_provider,
                 *args,
                 **kwargs,
             )
@@ -395,6 +447,11 @@ class R2RProviderFactory:
             or self.create_orchestration_provider(self.config.orchestration)
         )
 
+        scheduler_provider = (
+            scheduler_provider_override
+            or await self.create_scheduler_provider(self.config.scheduler)
+        )
+
         return R2RProviders(
             auth=auth_provider,
             database=database_provider,
@@ -403,5 +460,7 @@ class R2RProviderFactory:
             ingestion=ingestion_provider,
             llm=llm_provider,
             email=email_provider,
+            ocr=ocr_provider,
             orchestration=orchestration_provider,
+            scheduler=scheduler_provider,
         )

@@ -1,17 +1,22 @@
 import numpy as np
 
 prob_of_random_action = 0.25
+prob_of_state = 1.0
 discount_factor = 1.0
-epoch = 1
+epoch = 3
 reward_value = -1.0
 
 row = 4
 col = 4
 
-def get_reward_value(i, j, grid):
+def get_state_value(i, j, grid):
+
+    grid_value = 1
     if i < 0 or i >= row or j < 0 or j >= col:
-        return 0
-    return discount_factor * prob_of_random_action *reward_value
+        grid_value = 0
+    else:
+        grid_value = grid[i, j]
+    return  prob_of_random_action * (reward_value + (discount_factor * grid_value * prob_of_state))
 
 # 초기 상태값
 grid_world = np.full((row, col), 0)
@@ -20,6 +25,9 @@ print(f"{grid_world.shape[0]}x{grid_world.shape[1]} grid world.")
 
 for e in range(epoch):
 
+    target_grid = np.copy(grid_world)
+    update_grid = np.zeros((row, col))
+
     for i in range(row):
         for j in range(col):
             if i == 3 and j == 3:
@@ -27,13 +35,16 @@ for e in range(epoch):
                 continue
 
             four_dir_sum = (
-                get_reward_value(i+1, j, grid_world) +
-                get_reward_value(i-1, j, grid_world) +
-                get_reward_value(i, j+1, grid_world) +
-                get_reward_value(i, j-1, grid_world)
+                get_state_value(i+1, j, target_grid) +
+                get_state_value(i-1, j, target_grid) +
+                get_state_value(i, j+1, target_grid) +
+                get_state_value(i, j-1, target_grid)
             )
-            grid_world[i, j] = four_dir_sum
-            #print(f"grid_world[{i}, {j}] updated to: {new_grid[i, j]}")
+            update_grid[i, j] = four_dir_sum
+
+    grid_world = update_grid
+    print(f"Epoch >>> {e} grid_world")
+    print(grid_world)
 
 print("Final grid_world")
 print(grid_world)
