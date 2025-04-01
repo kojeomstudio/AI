@@ -1,0 +1,228 @@
+[2025-04-01 20:37:52,855] INFO: [START] 매크로 실행 중...
+[2025-04-01 20:37:52,952] DEBUG: [MATCH] 석탄 광맥 [0] scale 1.0 score: 0.1942
+[2025-04-01 20:37:52,966] DEBUG: [MATCH] 석탄 광맥 [0] scale 0.9 score: 0.2415
+[2025-04-01 20:37:52,984] DEBUG: [MATCH] 석탄 광맥 [0] scale 1.1 score: 0.1809
+[2025-04-01 20:37:52,996] DEBUG: [MATCH] 석탄 광맥 [1] scale 1.0 score: 0.2037
+[2025-04-01 20:37:53,010] DEBUG: [MATCH] 석탄 광맥 [1] scale 0.9 score: 0.2498
+[2025-04-01 20:37:53,023] DEBUG: [MATCH] 석탄 광맥 [1] scale 1.1 score: 0.2003
+[2025-04-01 20:37:53,040] DEBUG: [MATCH] 석탄 광맥 [2] scale 1.0 score: 0.1213
+[2025-04-01 20:37:53,051] DEBUG: [MATCH] 석탄 광맥 [2] scale 0.9 score: 0.1691
+[2025-04-01 20:37:53,066] DEBUG: [MATCH] 석탄 광맥 [2] scale 1.1 score: 0.1310
+[2025-04-01 20:37:53,078] DEBUG: [MATCH] 석탄 광맥 [3] scale 1.0 score: 0.2700
+[2025-04-01 20:37:53,089] DEBUG: [MATCH] 석탄 광맥 [3] scale 0.9 score: 0.3242
+[2025-04-01 20:37:53,101] DEBUG: [MATCH] 석탄 광맥 [3] scale 1.1 score: 0.2685
+[2025-04-01 20:37:53,114] DEBUG: [MATCH] 석탄 광맥 [4] scale 1.0 score: 0.2551
+[2025-04-01 20:37:53,128] DEBUG: [MATCH] 석탄 광맥 [4] scale 0.9 score: 0.2953
+[2025-04-01 20:37:53,137] DEBUG: [MATCH] 석탄 광맥 [4] scale 1.1 score: 0.2422
+[2025-04-01 20:37:53,150] DEBUG: [MATCH] 석탄 광맥 [5] scale 1.0 score: 0.2598
+[2025-04-01 20:37:53,161] DEBUG: [MATCH] 석탄 광맥 [5] scale 0.9 score: 0.3112
+[2025-04-01 20:37:53,174] DEBUG: [MATCH] 석탄 광맥 [5] scale 1.1 score: 0.2160
+[2025-04-01 20:37:53,185] DEBUG: [MATCH] 석탄 광맥 [6] scale 1.0 score: 0.3316
+[2025-04-01 20:37:53,200] DEBUG: [MATCH] 석탄 광맥 [6] scale 0.9 score: 0.3662
+[2025-04-01 20:37:53,210] DEBUG: [MATCH] 석탄 광맥 [6] scale 1.1 score: 0.3140
+[2025-04-01 20:37:53,211] DEBUG: [MATCH] 석탄 광맥 best: 0.3662, avg: 0.2450
+[2025-04-01 20:37:54,982] DEBUG: [OCR] 석탄 광맥 텍스트: 
+[2025-04-01 20:37:54,994] DEBUG: [MATCH] 철 광맥 [0] scale 1.0 score: 0.1791
+[2025-04-01 20:37:55,008] DEBUG: [MATCH] 철 광맥 [0] scale 0.9 score: 0.1941
+[2025-04-01 20:37:55,021] DEBUG: [MATCH] 철 광맥 [0] scale 1.1 score: 0.1922
+[2025-04-01 20:37:55,035] DEBUG: [MATCH] 철 광맥 [1] scale 1.0 score: 0.2384
+[2025-04-01 20:37:55,051] DEBUG: [MATCH] 철 광맥 [1] scale 0.9 score: 0.2584
+[2025-04-01 20:37:55,064] DEBUG: [MATCH] 철 광맥 [1] scale 1.1 score: 0.2439
+[2025-04-01 20:37:55,081] DEBUG: [MATCH] 철 광맥 [2] scale 1.0 score: 0.3063
+[2025-04-01 20:37:55,094] DEBUG: [MATCH] 철 광맥 [2] scale 0.9 score: 0.3388
+[2025-04-01 20:37:55,110] DEBUG: [MATCH] 철 광맥 [2] scale 1.1 score: 0.3232
+[2025-04-01 20:37:55,111] DEBUG: [MATCH] 철 광맥 best: 0.3388, avg: 0.2527
+[2025-04-01 20:37:56,850] DEBUG: [OCR] 철 광맥 텍스트: 
+[2025-04-01 20:37:57,436] DEBUG: [MATCH] 석탄 광맥 [0] scale 1.0 score: 0.2015
+[2025-04-01 20:37:57,447] DEBUG: [MATCH] 석탄 광맥 [0] scale 0.9 score: 0.2404
+[2025-04-01 20:37:57,460] DEBUG: [MATCH] 석탄 광맥 [0] scale 1.1 score: 0.2002
+[2025-04-01 20:37:57,471] DEBUG: [MATCH] 석탄 광맥 [1] scale 1.0 score: 0.2094
+[2025-04-01 20:37:57,487] DEBUG: [MATCH] 석탄 광맥 [1] scale 0.9 score: 0.2541
+[2025-04-01 20:37:57,499] DEBUG: [MATCH] 석탄 광맥 [1] scale 1.1 score: 0.2242
+[2025-04-01 20:37:57,513] DEBUG: [MATCH] 석탄 광맥 [2] scale 1.0 score: 0.2017
+[2025-04-01 20:37:57,528] DEBUG: [MATCH] 석탄 광맥 [2] scale 0.9 score: 0.2376
+[2025-04-01 20:37:57,538] DEBUG: [MATCH] 석탄 광맥 [2] scale 1.1 score: 0.2029
+[2025-04-01 20:37:57,555] DEBUG: [MATCH] 석탄 광맥 [3] scale 1.0 score: 0.2623
+[2025-04-01 20:37:57,564] DEBUG: [MATCH] 석탄 광맥 [3] scale 0.9 score: 0.2789
+[2025-04-01 20:37:57,579] DEBUG: [MATCH] 석탄 광맥 [3] scale 1.1 score: 0.2624
+[2025-04-01 20:37:57,590] DEBUG: [MATCH] 석탄 광맥 [4] scale 1.0 score: 0.2161
+[2025-04-01 20:37:57,606] DEBUG: [MATCH] 석탄 광맥 [4] scale 0.9 score: 0.2449
+[2025-04-01 20:37:57,617] DEBUG: [MATCH] 석탄 광맥 [4] scale 1.1 score: 0.2085
+[2025-04-01 20:37:57,634] DEBUG: [MATCH] 석탄 광맥 [5] scale 1.0 score: 0.2076
+[2025-04-01 20:37:57,645] DEBUG: [MATCH] 석탄 광맥 [5] scale 0.9 score: 0.2388
+[2025-04-01 20:37:57,660] DEBUG: [MATCH] 석탄 광맥 [5] scale 1.1 score: 0.1990
+[2025-04-01 20:37:57,671] DEBUG: [MATCH] 석탄 광맥 [6] scale 1.0 score: 0.2149
+[2025-04-01 20:37:57,688] DEBUG: [MATCH] 석탄 광맥 [6] scale 0.9 score: 0.2358
+[2025-04-01 20:37:57,698] DEBUG: [MATCH] 석탄 광맥 [6] scale 1.1 score: 0.2203
+[2025-04-01 20:37:57,699] DEBUG: [MATCH] 석탄 광맥 best: 0.2789, avg: 0.2267
+[2025-04-01 20:37:59,337] DEBUG: [OCR] 석탄 광맥 텍스트: 
+[2025-04-01 20:37:59,349] DEBUG: [MATCH] 철 광맥 [0] scale 1.0 score: 0.1385
+[2025-04-01 20:37:59,364] DEBUG: [MATCH] 철 광맥 [0] scale 0.9 score: 0.1741
+[2025-04-01 20:37:59,376] DEBUG: [MATCH] 철 광맥 [0] scale 1.1 score: 0.1331
+[2025-04-01 20:37:59,393] DEBUG: [MATCH] 철 광맥 [1] scale 1.0 score: 0.1550
+[2025-04-01 20:37:59,408] DEBUG: [MATCH] 철 광맥 [1] scale 0.9 score: 0.1830
+[2025-04-01 20:37:59,423] DEBUG: [MATCH] 철 광맥 [1] scale 1.1 score: 0.1678
+[2025-04-01 20:37:59,439] DEBUG: [MATCH] 철 광맥 [2] scale 1.0 score: 0.1685
+[2025-04-01 20:37:59,453] DEBUG: [MATCH] 철 광맥 [2] scale 0.9 score: 0.2109
+[2025-04-01 20:37:59,468] DEBUG: [MATCH] 철 광맥 [2] scale 1.1 score: 0.1553
+[2025-04-01 20:37:59,468] DEBUG: [MATCH] 철 광맥 best: 0.2109, avg: 0.1651
+[2025-04-01 20:38:01,046] DEBUG: [OCR] 철 광맥 텍스트: 
+[2025-04-01 20:38:01,620] DEBUG: [MATCH] 석탄 광맥 [0] scale 1.0 score: 0.1799
+[2025-04-01 20:38:01,631] DEBUG: [MATCH] 석탄 광맥 [0] scale 0.9 score: 0.2122
+[2025-04-01 20:38:01,647] DEBUG: [MATCH] 석탄 광맥 [0] scale 1.1 score: 0.1897
+[2025-04-01 20:38:01,658] DEBUG: [MATCH] 석탄 광맥 [1] scale 1.0 score: 0.1970
+[2025-04-01 20:38:01,673] DEBUG: [MATCH] 석탄 광맥 [1] scale 0.9 score: 0.2307
+[2025-04-01 20:38:01,685] DEBUG: [MATCH] 석탄 광맥 [1] scale 1.1 score: 0.2142
+[2025-04-01 20:38:01,697] DEBUG: [MATCH] 석탄 광맥 [2] scale 1.0 score: 0.1683
+[2025-04-01 20:38:01,711] DEBUG: [MATCH] 석탄 광맥 [2] scale 0.9 score: 0.2043
+[2025-04-01 20:38:01,720] DEBUG: [MATCH] 석탄 광맥 [2] scale 1.1 score: 0.1665
+[2025-04-01 20:38:01,732] DEBUG: [MATCH] 석탄 광맥 [3] scale 1.0 score: 0.2341
+[2025-04-01 20:38:01,740] DEBUG: [MATCH] 석탄 광맥 [3] scale 0.9 score: 0.2284
+[2025-04-01 20:38:01,751] DEBUG: [MATCH] 석탄 광맥 [3] scale 1.1 score: 0.2253
+[2025-04-01 20:38:01,762] DEBUG: [MATCH] 석탄 광맥 [4] scale 1.0 score: 0.1838
+[2025-04-01 20:38:01,777] DEBUG: [MATCH] 석탄 광맥 [4] scale 0.9 score: 0.2072
+[2025-04-01 20:38:01,788] DEBUG: [MATCH] 석탄 광맥 [4] scale 1.1 score: 0.1698
+[2025-04-01 20:38:01,803] DEBUG: [MATCH] 석탄 광맥 [5] scale 1.0 score: 0.1971
+[2025-04-01 20:38:01,815] DEBUG: [MATCH] 석탄 광맥 [5] scale 0.9 score: 0.2016
+[2025-04-01 20:38:01,828] DEBUG: [MATCH] 석탄 광맥 [5] scale 1.1 score: 0.1834
+[2025-04-01 20:38:01,839] DEBUG: [MATCH] 석탄 광맥 [6] scale 1.0 score: 0.1726
+[2025-04-01 20:38:01,854] DEBUG: [MATCH] 석탄 광맥 [6] scale 0.9 score: 0.1992
+[2025-04-01 20:38:01,866] DEBUG: [MATCH] 석탄 광맥 [6] scale 1.1 score: 0.1590
+[2025-04-01 20:38:01,866] DEBUG: [MATCH] 석탄 광맥 best: 0.2341, avg: 0.1964
+[2025-04-01 20:38:03,542] DEBUG: [OCR] 석탄 광맥 텍스트: 
+[2025-04-01 20:38:03,558] DEBUG: [MATCH] 철 광맥 [0] scale 1.0 score: 0.1532
+[2025-04-01 20:38:03,571] DEBUG: [MATCH] 철 광맥 [0] scale 0.9 score: 0.1826
+[2025-04-01 20:38:03,589] DEBUG: [MATCH] 철 광맥 [0] scale 1.1 score: 0.1471
+[2025-04-01 20:38:03,602] DEBUG: [MATCH] 철 광맥 [1] scale 1.0 score: 0.1522
+[2025-04-01 20:38:03,620] DEBUG: [MATCH] 철 광맥 [1] scale 0.9 score: 0.1779
+[2025-04-01 20:38:03,637] DEBUG: [MATCH] 철 광맥 [1] scale 1.1 score: 0.1572
+[2025-04-01 20:38:03,651] DEBUG: [MATCH] 철 광맥 [2] scale 1.0 score: 0.1563
+[2025-04-01 20:38:03,668] DEBUG: [MATCH] 철 광맥 [2] scale 0.9 score: 0.2071
+[2025-04-01 20:38:03,683] DEBUG: [MATCH] 철 광맥 [2] scale 1.1 score: 0.1390
+[2025-04-01 20:38:03,683] DEBUG: [MATCH] 철 광맥 best: 0.2071, avg: 0.1636
+[2025-04-01 20:38:05,268] DEBUG: [OCR] 철 광맥 텍스트: 
+[2025-04-01 20:38:05,860] DEBUG: [MATCH] 석탄 광맥 [0] scale 1.0 score: 0.1799
+[2025-04-01 20:38:05,871] DEBUG: [MATCH] 석탄 광맥 [0] scale 0.9 score: 0.2122
+[2025-04-01 20:38:05,886] DEBUG: [MATCH] 석탄 광맥 [0] scale 1.1 score: 0.1897
+[2025-04-01 20:38:05,899] DEBUG: [MATCH] 석탄 광맥 [1] scale 1.0 score: 0.1970
+[2025-04-01 20:38:05,914] DEBUG: [MATCH] 석탄 광맥 [1] scale 0.9 score: 0.2307
+[2025-04-01 20:38:05,924] DEBUG: [MATCH] 석탄 광맥 [1] scale 1.1 score: 0.2142
+[2025-04-01 20:38:05,939] DEBUG: [MATCH] 석탄 광맥 [2] scale 1.0 score: 0.1683
+[2025-04-01 20:38:05,951] DEBUG: [MATCH] 석탄 광맥 [2] scale 0.9 score: 0.2043
+[2025-04-01 20:38:05,965] DEBUG: [MATCH] 석탄 광맥 [2] scale 1.1 score: 0.1665
+[2025-04-01 20:38:05,977] DEBUG: [MATCH] 석탄 광맥 [3] scale 1.0 score: 0.2341
+[2025-04-01 20:38:05,989] DEBUG: [MATCH] 석탄 광맥 [3] scale 0.9 score: 0.2284
+[2025-04-01 20:38:06,000] DEBUG: [MATCH] 석탄 광맥 [3] scale 1.1 score: 0.2253
+[2025-04-01 20:38:06,012] DEBUG: [MATCH] 석탄 광맥 [4] scale 1.0 score: 0.1838
+[2025-04-01 20:38:06,026] DEBUG: [MATCH] 석탄 광맥 [4] scale 0.9 score: 0.2072
+[2025-04-01 20:38:06,037] DEBUG: [MATCH] 석탄 광맥 [4] scale 1.1 score: 0.1698
+[2025-04-01 20:38:06,052] DEBUG: [MATCH] 석탄 광맥 [5] scale 1.0 score: 0.1971
+[2025-04-01 20:38:06,064] DEBUG: [MATCH] 석탄 광맥 [5] scale 0.9 score: 0.2016
+[2025-04-01 20:38:06,077] DEBUG: [MATCH] 석탄 광맥 [5] scale 1.1 score: 0.1834
+[2025-04-01 20:38:06,090] DEBUG: [MATCH] 석탄 광맥 [6] scale 1.0 score: 0.1726
+[2025-04-01 20:38:06,105] DEBUG: [MATCH] 석탄 광맥 [6] scale 0.9 score: 0.1992
+[2025-04-01 20:38:06,116] DEBUG: [MATCH] 석탄 광맥 [6] scale 1.1 score: 0.1590
+[2025-04-01 20:38:06,116] DEBUG: [MATCH] 석탄 광맥 best: 0.2341, avg: 0.1964
+[2025-04-01 20:38:07,853] DEBUG: [OCR] 석탄 광맥 텍스트: 
+[2025-04-01 20:38:07,867] DEBUG: [MATCH] 철 광맥 [0] scale 1.0 score: 0.1532
+[2025-04-01 20:38:07,880] DEBUG: [MATCH] 철 광맥 [0] scale 0.9 score: 0.1826
+[2025-04-01 20:38:07,892] DEBUG: [MATCH] 철 광맥 [0] scale 1.1 score: 0.1471
+[2025-04-01 20:38:07,907] DEBUG: [MATCH] 철 광맥 [1] scale 1.0 score: 0.1522
+[2025-04-01 20:38:07,919] DEBUG: [MATCH] 철 광맥 [1] scale 0.9 score: 0.1779
+[2025-04-01 20:38:07,936] DEBUG: [MATCH] 철 광맥 [1] scale 1.1 score: 0.1572
+[2025-04-01 20:38:07,949] DEBUG: [MATCH] 철 광맥 [2] scale 1.0 score: 0.1563
+[2025-04-01 20:38:07,963] DEBUG: [MATCH] 철 광맥 [2] scale 0.9 score: 0.2071
+[2025-04-01 20:38:07,975] DEBUG: [MATCH] 철 광맥 [2] scale 1.1 score: 0.1390
+[2025-04-01 20:38:07,976] DEBUG: [MATCH] 철 광맥 best: 0.2071, avg: 0.1636
+[2025-04-01 20:38:09,620] DEBUG: [OCR] 철 광맥 텍스트: 
+[2025-04-01 20:38:10,217] DEBUG: [MATCH] 석탄 광맥 [0] scale 1.0 score: 0.1799
+[2025-04-01 20:38:10,229] DEBUG: [MATCH] 석탄 광맥 [0] scale 0.9 score: 0.2122
+[2025-04-01 20:38:10,240] DEBUG: [MATCH] 석탄 광맥 [0] scale 1.1 score: 0.1897
+[2025-04-01 20:38:10,253] DEBUG: [MATCH] 석탄 광맥 [1] scale 1.0 score: 0.1970
+[2025-04-01 20:38:10,264] DEBUG: [MATCH] 석탄 광맥 [1] scale 0.9 score: 0.2307
+[2025-04-01 20:38:10,275] DEBUG: [MATCH] 석탄 광맥 [1] scale 1.1 score: 0.2142
+[2025-04-01 20:38:10,287] DEBUG: [MATCH] 석탄 광맥 [2] scale 1.0 score: 0.1683
+[2025-04-01 20:38:10,297] DEBUG: [MATCH] 석탄 광맥 [2] scale 0.9 score: 0.2043
+[2025-04-01 20:38:10,309] DEBUG: [MATCH] 석탄 광맥 [2] scale 1.1 score: 0.1665
+[2025-04-01 20:38:10,319] DEBUG: [MATCH] 석탄 광맥 [3] scale 1.0 score: 0.2341
+[2025-04-01 20:38:10,328] DEBUG: [MATCH] 석탄 광맥 [3] scale 0.9 score: 0.2284
+[2025-04-01 20:38:10,342] DEBUG: [MATCH] 석탄 광맥 [3] scale 1.1 score: 0.2253
+[2025-04-01 20:38:10,356] DEBUG: [MATCH] 석탄 광맥 [4] scale 1.0 score: 0.1838
+[2025-04-01 20:38:10,368] DEBUG: [MATCH] 석탄 광맥 [4] scale 0.9 score: 0.2072
+[2025-04-01 20:38:10,379] DEBUG: [MATCH] 석탄 광맥 [4] scale 1.1 score: 0.1698
+[2025-04-01 20:38:10,392] DEBUG: [MATCH] 석탄 광맥 [5] scale 1.0 score: 0.1971
+[2025-04-01 20:38:10,402] DEBUG: [MATCH] 석탄 광맥 [5] scale 0.9 score: 0.2016
+[2025-04-01 20:38:10,416] DEBUG: [MATCH] 석탄 광맥 [5] scale 1.1 score: 0.1834
+[2025-04-01 20:38:10,426] DEBUG: [MATCH] 석탄 광맥 [6] scale 1.0 score: 0.1726
+[2025-04-01 20:38:10,439] DEBUG: [MATCH] 석탄 광맥 [6] scale 0.9 score: 0.1992
+[2025-04-01 20:38:10,449] DEBUG: [MATCH] 석탄 광맥 [6] scale 1.1 score: 0.1590
+[2025-04-01 20:38:10,450] DEBUG: [MATCH] 석탄 광맥 best: 0.2341, avg: 0.1964
+[2025-04-01 20:38:12,046] DEBUG: [OCR] 석탄 광맥 텍스트: 
+[2025-04-01 20:38:12,060] DEBUG: [MATCH] 철 광맥 [0] scale 1.0 score: 0.1532
+[2025-04-01 20:38:12,076] DEBUG: [MATCH] 철 광맥 [0] scale 0.9 score: 0.1826
+[2025-04-01 20:38:12,090] DEBUG: [MATCH] 철 광맥 [0] scale 1.1 score: 0.1471
+[2025-04-01 20:38:12,106] DEBUG: [MATCH] 철 광맥 [1] scale 1.0 score: 0.1522
+[2025-04-01 20:38:12,123] DEBUG: [MATCH] 철 광맥 [1] scale 0.9 score: 0.1779
+[2025-04-01 20:38:12,137] DEBUG: [MATCH] 철 광맥 [1] scale 1.1 score: 0.1572
+[2025-04-01 20:38:12,152] DEBUG: [MATCH] 철 광맥 [2] scale 1.0 score: 0.1563
+[2025-04-01 20:38:12,166] DEBUG: [MATCH] 철 광맥 [2] scale 0.9 score: 0.2071
+[2025-04-01 20:38:12,180] DEBUG: [MATCH] 철 광맥 [2] scale 1.1 score: 0.1390
+[2025-04-01 20:38:12,181] DEBUG: [MATCH] 철 광맥 best: 0.2071, avg: 0.1636
+[2025-04-01 20:38:13,688] DEBUG: [OCR] 철 광맥 텍스트: 
+[2025-04-01 20:38:14,276] DEBUG: [MATCH] 석탄 광맥 [0] scale 1.0 score: 0.1799
+[2025-04-01 20:38:14,290] DEBUG: [MATCH] 석탄 광맥 [0] scale 0.9 score: 0.2122
+[2025-04-01 20:38:14,301] DEBUG: [MATCH] 석탄 광맥 [0] scale 1.1 score: 0.1897
+[2025-04-01 20:38:14,316] DEBUG: [MATCH] 석탄 광맥 [1] scale 1.0 score: 0.1970
+[2025-04-01 20:38:14,329] DEBUG: [MATCH] 석탄 광맥 [1] scale 0.9 score: 0.2307
+[2025-04-01 20:38:14,340] DEBUG: [MATCH] 석탄 광맥 [1] scale 1.1 score: 0.2142
+[2025-04-01 20:38:14,354] DEBUG: [MATCH] 석탄 광맥 [2] scale 1.0 score: 0.1683
+[2025-04-01 20:38:14,364] DEBUG: [MATCH] 석탄 광맥 [2] scale 0.9 score: 0.2043
+[2025-04-01 20:38:14,380] DEBUG: [MATCH] 석탄 광맥 [2] scale 1.1 score: 0.1665
+[2025-04-01 20:38:14,390] DEBUG: [MATCH] 석탄 광맥 [3] scale 1.0 score: 0.2341
+[2025-04-01 20:38:14,402] DEBUG: [MATCH] 석탄 광맥 [3] scale 0.9 score: 0.2284
+[2025-04-01 20:38:14,412] DEBUG: [MATCH] 석탄 광맥 [3] scale 1.1 score: 0.2253
+[2025-04-01 20:38:14,423] DEBUG: [MATCH] 석탄 광맥 [4] scale 1.0 score: 0.1838
+[2025-04-01 20:38:14,439] DEBUG: [MATCH] 석탄 광맥 [4] scale 0.9 score: 0.2072
+[2025-04-01 20:38:14,450] DEBUG: [MATCH] 석탄 광맥 [4] scale 1.1 score: 0.1698
+[2025-04-01 20:38:14,465] DEBUG: [MATCH] 석탄 광맥 [5] scale 1.0 score: 0.1971
+[2025-04-01 20:38:14,476] DEBUG: [MATCH] 석탄 광맥 [5] scale 0.9 score: 0.2016
+[2025-04-01 20:38:14,490] DEBUG: [MATCH] 석탄 광맥 [5] scale 1.1 score: 0.1834
+[2025-04-01 20:38:14,502] DEBUG: [MATCH] 석탄 광맥 [6] scale 1.0 score: 0.1726
+[2025-04-01 20:38:14,516] DEBUG: [MATCH] 석탄 광맥 [6] scale 0.9 score: 0.1992
+[2025-04-01 20:38:14,526] DEBUG: [MATCH] 석탄 광맥 [6] scale 1.1 score: 0.1590
+[2025-04-01 20:38:14,526] DEBUG: [MATCH] 석탄 광맥 best: 0.2341, avg: 0.1964
+[2025-04-01 20:38:16,253] DEBUG: [OCR] 석탄 광맥 텍스트: 
+[2025-04-01 20:38:16,269] DEBUG: [MATCH] 철 광맥 [0] scale 1.0 score: 0.1532
+[2025-04-01 20:38:16,282] DEBUG: [MATCH] 철 광맥 [0] scale 0.9 score: 0.1826
+[2025-04-01 20:38:16,295] DEBUG: [MATCH] 철 광맥 [0] scale 1.1 score: 0.1471
+[2025-04-01 20:38:16,309] DEBUG: [MATCH] 철 광맥 [1] scale 1.0 score: 0.1522
+[2025-04-01 20:38:16,323] DEBUG: [MATCH] 철 광맥 [1] scale 0.9 score: 0.1779
+[2025-04-01 20:38:16,335] DEBUG: [MATCH] 철 광맥 [1] scale 1.1 score: 0.1572
+[2025-04-01 20:38:16,352] DEBUG: [MATCH] 철 광맥 [2] scale 1.0 score: 0.1563
+[2025-04-01 20:38:16,371] DEBUG: [MATCH] 철 광맥 [2] scale 0.9 score: 0.2071
+[2025-04-01 20:38:16,392] DEBUG: [MATCH] 철 광맥 [2] scale 1.1 score: 0.1390
+[2025-04-01 20:38:16,392] DEBUG: [MATCH] 철 광맥 best: 0.2071, avg: 0.1636
+[2025-04-01 20:38:17,960] DEBUG: [OCR] 철 광맥 텍스트: 
+[2025-04-01 20:38:18,548] DEBUG: [MATCH] 석탄 광맥 [0] scale 1.0 score: 0.1799
+[2025-04-01 20:38:18,562] DEBUG: [MATCH] 석탄 광맥 [0] scale 0.9 score: 0.2122
+[2025-04-01 20:38:18,577] DEBUG: [MATCH] 석탄 광맥 [0] scale 1.1 score: 0.1897
+[2025-04-01 20:38:18,595] DEBUG: [MATCH] 석탄 광맥 [1] scale 1.0 score: 0.1970
+[2025-04-01 20:38:18,610] DEBUG: [MATCH] 석탄 광맥 [1] scale 0.9 score: 0.2307
+[2025-04-01 20:38:18,624] DEBUG: [MATCH] 석탄 광맥 [1] scale 1.1 score: 0.2142
+[2025-04-01 20:38:18,636] DEBUG: [MATCH] 석탄 광맥 [2] scale 1.0 score: 0.1683
+[2025-04-01 20:38:18,650] DEBUG: [MATCH] 석탄 광맥 [2] scale 0.9 score: 0.2043
+[2025-04-01 20:38:18,662] DEBUG: [MATCH] 석탄 광맥 [2] scale 1.1 score: 0.1665
+[2025-04-01 20:38:18,678] DEBUG: [MATCH] 석탄 광맥 [3] scale 1.0 score: 0.2341
+[2025-04-01 20:38:18,687] DEBUG: [MATCH] 석탄 광맥 [3] scale 0.9 score: 0.2284
+[2025-04-01 20:38:18,698] DEBUG: [MATCH] 석탄 광맥 [3] scale 1.1 score: 0.2253
+[2025-04-01 20:38:18,712] DEBUG: [MATCH] 석탄 광맥 [4] scale 1.0 score: 0.1838
+[2025-04-01 20:38:18,724] DEBUG: [MATCH] 석탄 광맥 [4] scale 0.9 score: 0.2072
+[2025-04-01 20:38:18,737] DEBUG: [MATCH] 석탄 광맥 [4] scale 1.1 score: 0.1698
+[2025-04-01 20:38:18,749] DEBUG: [MATCH] 석탄 광맥 [5] scale 1.0 score: 0.1971
+[2025-04-01 20:38:18,762] DEBUG: [MATCH] 석탄 광맥 [5] scale 0.9 score: 0.2016
+[2025-04-01 20:38:18,774] DEBUG: [MATCH] 석탄 광맥 [5] scale 1.1 score: 0.1834
+[2025-04-01 20:38:18,789] DEBUG: [MATCH] 석탄 광맥 [6] scale 1.0 score: 0.1726
+[2025-04-01 20:38:18,800] DEBUG: [MATCH] 석탄 광맥 [6] scale 0.9 score: 0.1992
+[2025-04-01 20:38:18,816] DEBUG: [MATCH] 석탄 광맥 [6] scale 1.1 score: 0.1590
+[2025-04-01 20:38:18,817] DEBUG: [MATCH] 석탄 광맥 best: 0.2341, avg: 0.1964
+[2025-04-01 20:38:19,057] INFO: [EXIT] 매크로 종료됨
