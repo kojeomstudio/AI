@@ -1,0 +1,117 @@
+[app]
+### NOTE - RECOMMENDED TO USE `openai` with `api_base = "http://localhost:11434/v1"` for best results. 
+### otherwise `ollama` with `litellm` is acceptable
+
+# LLM used for internal operations, like deriving conversation names
+fast_llm = "ollama/qwen2.5-coder"
+
+# LLM used for user-facing output, like RAG replies
+quality_llm = "ollama/qwen2.5-coder"
+
+# LLM used for ingesting visual inputs
+vlm = "ollama/qwen2.5-coder"
+
+# LLM used for transcription
+audio_lm = "ollama/qwen2.5-coder"
+
+# Reasoning model, used for `research` agent
+reasoning_llm = "ollama/deepseek-r1"
+# Planning model, used for `research` agent
+planning_llm = "ollama/qwen2.5-coder"
+
+[agent]
+rag_agent_static_prompt = "static_rag_agent"
+rag_agent_dynamic_prompt = "dynamic_rag_agent"
+# The following tools are available to the `rag` agent
+rag_tools = ["search_file_descriptions", "search_file_knowledge", "get_file_content"] # can add  "web_search" | "web_scrape"
+# The following tools are available to the `research` agent
+research_tools = ["rag", "reasoning", "critique", "python_executor"]
+
+[auth]
+provider = "r2r"
+access_token_lifetime_in_minutes = 60000
+refresh_token_lifetime_in_days = 7
+require_authentication = false
+require_email_verification = false
+default_admin_email = "admin@example.com"
+default_admin_password = "change_me_immediately"
+
+[crypto]
+provider = "bcrypt"
+
+[database]
+default_collection_name = "Default"
+default_collection_description = "Your default collection."
+collection_summary_prompt = "collection_summary"
+
+  [database.graph_creation_settings]
+    graph_entity_description_prompt = "graph_entity_description"
+    graph_extraction_prompt = "graph_extraction"
+    entity_types = [] # if empty, all entities are extracted
+    relation_types = [] # if empty, all relations are extracted
+    automatic_deduplication = true # enable automatic deduplication of entities
+
+  [database.graph_enrichment_settings]
+    graph_communities_prompt = "graph_communities"
+
+[embedding]
+provider = "ollama"
+base_model = "mxbai-embed-large"
+base_dimension = 1_024
+batch_size = 128
+add_title_as_prefix = true
+concurrent_request_limit = 2
+
+[completion_embedding]
+provider = "ollama"
+base_model = "mxbai-embed-large"
+base_dimension = 1_024
+batch_size = 128
+add_title_as_prefix = true
+concurrent_request_limit = 2
+
+[completion]
+provider = "litellm"
+concurrent_request_limit = 1
+
+  [completion.generation_config]
+  temperature = 0.1
+  top_p = 1
+  max_tokens_to_sample = 1_024
+  stream = false
+  api_base = "http://host.docker.internal:11434"
+
+[ingestion]
+provider = "r2r"
+chunking_strategy = "recursive"
+chunk_size = 1_024
+chunk_overlap = 512
+excluded_parsers = ["mp4"]
+automatic_extraction = true # enable automatic extraction of entities and relations
+document_summary_model = "ollama/gemma3"
+
+  [ingestion.chunk_enrichment_settings]
+    chunk_enrichment_prompt = "chunk_enrichment"
+    enable_chunk_enrichment = false # disabled by default
+    n_chunks = 2 # the number of chunks (both preceding and succeeding) to use in enrichment
+
+  [ingestion.extra_parsers]
+    pdf = ["zerox", "ocr"]
+
+[logging]
+provider = "r2r"
+log_table = "logs"
+log_info_table = "log_info"
+
+[ocr]
+provider = "mistral"
+model = "mistral-ocr-latest"
+
+[orchestration]
+provider = "simple"
+
+[email]
+provider = "console_mock" # `smtp` | `sendgrid` supported
+
+[scheduler]
+provider = "apscheduler"
