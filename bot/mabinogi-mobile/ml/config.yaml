@@ -1,7 +1,8 @@
-path: ./datasets
+# config.yaml
+path: C:/Workspaces/AI/bot/mabinogi-mobile/ml/datasets
 
 train: images/train
 val: images/val
 
-nc: 3
-names: ['coal_vein', 'iron_vein', 'complete_text']
+nc: 2
+names: ['coal_vein', 'iron_vein']

@@ -1,13 +1,20 @@
 from ultralytics import YOLO
-import cv2
+from pathlib import Path
 
-model = YOLO("runs/detect/train/weights/best.pt")
-img = cv2.imread("test_screen.png")
-results = model(img)
+def main():
+    model = YOLO("yolov8n.pt")
 
-for box in results[0].boxes.data:
-    x1, y1, x2, y2, conf, cls_id = box
-    label = results[0].names[int(cls_id)]
-    cx = int((x1 + x2) / 2)
-    cy = int((y1 + y2) / 2)
-    print(f"[{label}] at ({cx}, {cy}) conf={conf:.2f}")
+    root_dir = Path(__file__).resolve().parent
+    project_dir = root_dir / "training_output"
+
+    model.train(
+        data=str(root_dir / "config.yaml"),
+        epochs=10,
+        imgsz=320,
+        project=str(project_dir),  # 절대 경로로 전달
+        name="vein_model",
+        exist_ok=True
+    )
+
+if __name__ == "__main__":
+    main()
