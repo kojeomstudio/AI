@@ -5,7 +5,7 @@ import os
 
 from ultralytics import YOLO
 
-from ui.element import YoloElement
+from ui.vein import CoalNode, IronNode
 from logger_helper import get_logger
 from capture import *
 
@@ -45,15 +45,15 @@ def main_loop(model, elements, tick=0.5):
 
 if __name__ == "__main__":
     config = load_config(get_file_path("./config/config.json"))
-
+    
     # 학습된 YOLO 모델 경로
     model_path = get_file_path("ml/training_output/vein_model/weights/best.pt")
     model = YOLO(model_path)
 
     # 클래스 ID에 따라 요소 정의 (YOLO 모델의 class 순서와 매핑)
     elements = [
-        YoloElement("석탄 광맥", class_id=0),
-        YoloElement("철 광맥", class_id=1)
+        CoalNode("석탄 광맥", class_id=0),
+        IronNode("철 광맥", class_id=1)
     ]
 
     logger.info("[START] YOLO 매크로 실행 중...")

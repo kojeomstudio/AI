@@ -2,3 +2,4 @@
 *.spec
 mabinogi-mobile/logs
 *.log
+macro.log

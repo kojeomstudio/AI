@@ -3,7 +3,7 @@ import pyautogui
 
 logger = get_logger()
 
-class YoloElement:
+class UIElement:
     def __init__(self, name, class_id):
         self.name = name
         self.class_id = class_id
