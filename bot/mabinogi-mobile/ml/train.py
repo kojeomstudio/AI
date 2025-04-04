@@ -9,8 +9,8 @@ def main():
 
     model.train(
         data=str(root_dir / "config.yaml"),
-        epochs=10,
-        imgsz=320,
+        epochs=30,
+        imgsz=640,
         project=str(project_dir),  # 절대 경로로 전달
         name="vein_model",
         exist_ok=True

@@ -1,3 +1,4 @@
 /build
 *.spec
-/logs
+mabinogi-mobile/logs
+*.log

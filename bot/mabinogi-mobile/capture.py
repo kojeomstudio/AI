@@ -30,14 +30,15 @@ def capture_window(hwnd, rect):
     bmpinfo = saveBitmap.GetInfo()
     bmpstr = saveBitmap.GetBitmapBits(True)
     img = np.frombuffer(bmpstr, dtype='uint8').reshape((bmpinfo['bmHeight'], bmpinfo['bmWidth'], 4))
-    img_gray = cv2.cvtColor(img, cv2.COLOR_BGRA2GRAY)
+    img_bgr = cv2.cvtColor(img, cv2.COLOR_BGRA2BGR)  # ✅ YOLO는 컬러(BGR) 이미지를 기대
 
     win32gui.DeleteObject(saveBitmap.GetHandle())
     saveDC.DeleteDC()
     mfcDC.DeleteDC()
     win32gui.ReleaseDC(hwnd, hwndDC)
 
-    return img_gray
+    return img_bgr
+
 
 def get_game_window_image(window_title: str):
     hwnd, rect = get_window_rect(window_title)

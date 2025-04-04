@@ -2,3 +2,4 @@
 /build
 /doc_convertor_main.spec
 /converted_files
+*.exe

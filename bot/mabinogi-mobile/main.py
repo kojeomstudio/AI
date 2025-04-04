@@ -1,71 +1,42 @@
 import time
-import numpy as np
-import sys, os
-from pathlib import Path
-import cv2
-from PIL import ImageGrab
+import json
+import sys
+import os
 
-from macro_uitls import get_path
+from ultralytics import YOLO
 
+from ui.element import YoloElement
 from logger_helper import get_logger
-from capture import get_game_window_image
-from config_loader import load_config
-from ui.vein import CoalNode, IronNode
+from capture import *
 
 logger = get_logger()
+config = None
 
-CLASS_MAP = {
-    "CoalNode": CoalNode,
-    "IronNode": IronNode
-}
+def get_file_path(in_origin):
+    """실행 환경에 따라 상대 경로 처리"""
+    if getattr(sys, 'frozen', False):  # PyInstaller 실행 환경
+        dir = os.path.dirname(sys.executable)
+    else:  # 개발 중
+        dir = os.path.dirname(os.path.abspath(__file__))
+    return os.path.join(dir, str(in_origin))
 
-def collect_templates_from_dir(dir_path: str) -> list:
-    dir = Path(dir_path)
-    if not dir.exists():
-        raise FileNotFoundError(f"템플릿 폴더가 존재하지 않음: {dir_path}")
-    return [str(p) for p in sorted(dir.glob("*.png"))]
+def load_config(path="config.json"):
+    with open(path, "r", encoding="utf-8") as f:
+        return json.load(f)
 
-def build_ui_elements(config):
-    elements = []
-    window_title = config.get("window_title")
-    roi_config = config.get("roi_config")
 
-    for el in config["elements"]:
-        cls = CLASS_MAP.get(el["type"])
-        if not cls:
-            logger.warning(f"[SKIP] 알 수 없는 타입: {el['type']}")
-            continue
-
-        template_paths = collect_templates_from_dir(get_path(el["template_dir"]))
-        element = cls(
-            name=el["name"],
-            template_paths=template_paths,
-            threshold=el.get("threshold", 0.85),
-            offset=tuple(el.get("offset", [10, 10])),
-            window_title=window_title,
-            roi_config=roi_config,
-            required_text=el.get("required_text", [])
-        )
-        elements.append(element)
-    return elements
-
-def main_loop(ui_elements, config):
-    tick = config.get("tick_interval", 0.5)
-    delay = config.get("action_delay", 2.0)
-
+def main_loop(model, elements, tick=0.5):
     try:
         while True:
-            # ✅ 컬러 스크린샷
-            screenshot = np.array(ImageGrab.grab())
-            screen_color = cv2.cvtColor(screenshot, cv2.COLOR_RGB2BGR)
-            screen_gray = cv2.cvtColor(screen_color, cv2.COLOR_BGR2GRAY)
+            screen_np = get_game_window_image(config["window_title"])
 
-            for element in ui_elements:
-                matched, pos = element.match(screen_gray, screen_color)
+            results = model.predict(screen_np, conf=0.5, verbose=False)
+
+            for element in elements:
+                matched, pos = element.match(results)
                 if matched:
-                    logger.info(f"[MATCHED] {element.name} at {pos}")
                     element.action(pos)
-                    time.sleep(delay)
+                    time.sleep(2)
                     break
 
             time.sleep(tick)
@@ -73,7 +44,17 @@ def main_loop(ui_elements, config):
         logger.info("[EXIT] 매크로 종료됨")
 
 if __name__ == "__main__":
-    config = load_config(get_path("./config/config.json"))
-    elements = build_ui_elements(config)
-    logger.info("[START] 매크로 실행 중...")
-    main_loop(elements, config)
+    config = load_config(get_file_path("./config/config.json"))
+
+    # 학습된 YOLO 모델 경로
+    model_path = get_file_path("ml/training_output/vein_model/weights/best.pt")
+    model = YOLO(model_path)
+
+    # 클래스 ID에 따라 요소 정의 (YOLO 모델의 class 순서와 매핑)
+    elements = [
+        YoloElement("석탄 광맥", class_id=0),
+        YoloElement("철 광맥", class_id=1)
+    ]
+
+    logger.info("[START] YOLO 매크로 실행 중...")
+    main_loop(model, elements, tick=config.get("tick", 1.0))

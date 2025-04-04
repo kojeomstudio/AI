@@ -12,4 +12,3 @@ llama_local_storage
 *.keras
 processed_files.db
 /RL/rl_venv
-*.exe

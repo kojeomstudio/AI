@@ -1,10 +1,33 @@
+from logger_helper import get_logger
+import pyautogui
+
+logger = get_logger()
+
+class YoloElement:
+    def __init__(self, name, class_id):
+        self.name = name
+        self.class_id = class_id
+
+    def match(self, results):
+        for r in results:
+            for box in r.boxes:
+                if int(box.cls[0]) == self.class_id:
+                    return True, box.xyxy[0].tolist()
+        return False, None
+
+    def action(self, pos):
+        x1, y1, x2, y2 = pos
+        center_x = int((x1 + x2) / 2)
+        center_y = int((y1 + y2) / 2)
+        pyautogui.click(center_x, center_y)
+        logger.debug(f"[ACTION] {self.name} 클릭: ({center_x}, {center_y})")
+
+'''
 import cv2
 import time
 from capture import get_window_rect
 from logger_helper import get_logger
 from ocr_helper import extract_text_from_image
-
-logger = get_logger()
 
 class UIElement:
     def __init__(self, name, template_paths, threshold=0.85, offset=(10, 10),
@@ -81,3 +104,4 @@ class UIElement:
 
         cv2.imwrite(f"logs/fail_{self.name}_{int(time.time())}.png", screen_gray)
         return False, None
+'''
