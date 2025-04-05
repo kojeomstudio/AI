@@ -1,11 +1,20 @@
 from logger_helper import get_logger
 import pyautogui
+from enum import Enum
 
 logger = get_logger()
 
+class UIElementType(Enum):
+    IRON_VEIN = 0
+    COAL_VEIN = 1
+    FELLING = 2
+    MINING = 3
+    WAIT = 4
+    WORKING = 5
+
 class UIElement:
-    def __init__(self, name, class_id):
-        self.name = name
+    def __init__(self, type : UIElementType, class_id):
+        self.type = type
         self.class_id = class_id
 
     def match(self, results):
@@ -20,8 +29,10 @@ class UIElement:
         center_x = int((x1 + x2) / 2)
         center_y = int((y1 + y2) / 2)
         pyautogui.click(center_x, center_y)
-        logger.debug(f"[ACTION] {self.name} 클릭: ({center_x}, {center_y})")
+        logger.debug(f"[ACTION] {self.type.name} 클릭: ({center_x}, {center_y})")
 
+    def get_type(self):
+        return self.type
 '''
 import cv2
 import time

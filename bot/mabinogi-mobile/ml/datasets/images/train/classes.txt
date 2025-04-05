@@ -1,2 +1,6 @@
 iron_vein
 coal_vein
+ui_felling
+ui_mining
+ui_wait
+ui_working

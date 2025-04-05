@@ -46,17 +46,32 @@ def ensure_output_dir(path: Path):
     path.mkdir(parents=True, exist_ok=True)
 
 def capture_and_save():
-    global capture_count
+    global capture_count, prev_prefix
+
     hwnd, rect = get_window_rect(window_title)
     if hwnd is None:
         log(f"[오류] 창 '{window_title}' 을(를) 찾을 수 없습니다.")
         return
 
+    # 현재 접두사 가져오기 (공백이면 기본값 사용)
+    current_prefix = entry_prefix.get().strip() or "screenshot"
+
+    # 접두사가 변경되었으면 시작 번호를 재설정
+    if current_prefix != prev_prefix:
+        try:
+            capture_count = int(entry_start_number.get())
+            log(f"[초기화] 접두사 변경 감지 → 넘버링을 {capture_count}부터 시작합니다.")
+        except ValueError:
+            log("[오류] 시작 번호가 유효하지 않습니다. 0부터 시작합니다.")
+            capture_count = 0
+        prev_prefix = current_prefix  # 변경된 접두사를 저장
+
+    # 캡처 및 저장
     img = capture_window(hwnd, rect)
-    capture_count += 1
-    filename = f"screenshot_{capture_count:03}.png"
+    filename = f"{current_prefix}_{capture_count:03}.png"
     cv2.imwrite(str(output_dir / filename), img)
     log(f"[{capture_count}] 저장됨: {filename}")
+    capture_count += 1
 
 # ----------------------------
 # 전역 단축키 리스너
@@ -76,12 +91,27 @@ def start_hotkey_listener():
 # ----------------------------
 
 def create_gui():
+    global entry_prefix, entry_start_number
+
     root.title("스크린샷 수집기")
-    root.geometry("400x160")
+    root.geometry("400x220")
     root.resizable(False, False)
 
     tk.Label(root, text="🎯 [F8] 키를 누르면 게임 창을 캡처합니다.", font=("Arial", 12)).pack(pady=10)
-    tk.Label(root, text=f"📁 저장 경로: {output_dir.resolve()}", fg="gray").pack()
+
+    frame_input = tk.Frame(root)
+    frame_input.pack(pady=5)
+
+    tk.Label(frame_input, text="접두사:").grid(row=0, column=0, sticky="e")
+    entry_prefix = tk.Entry(frame_input)
+    entry_prefix.grid(row=0, column=1, padx=5)
+
+    tk.Label(frame_input, text="시작 번호:").grid(row=1, column=0, sticky="e")
+    entry_start_number = tk.Entry(frame_input)
+    entry_start_number.grid(row=1, column=1, padx=5)
+    entry_start_number.insert(0, "0")
+
+    tk.Label(root, text=f"📁 저장 경로: {output_dir.resolve()}", fg="gray").pack(pady=5)
     tk.Label(root, textvariable=log_var, fg="blue").pack(pady=10)
 
     root.mainloop()
@@ -97,7 +127,10 @@ if __name__ == "__main__":
     output_dir = Path(get_file_path(OUTPUT_DIR_NAME))
     ensure_output_dir(output_dir)
 
+    # 전역 변수 초기화
     capture_count = 0
+    prev_prefix = None
+
     root = tk.Tk()
     log_var = tk.StringVar()
 

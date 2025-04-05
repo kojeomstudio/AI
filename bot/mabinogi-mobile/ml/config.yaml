@@ -4,5 +4,5 @@ path: C:/Workspaces/AI/bot/mabinogi-mobile/ml/datasets
 train: images/train
 val: images/val
 
-nc: 2
-names: ['coal_vein', 'iron_vein']
+nc: 6
+names: ['coal_vein', 'iron_vein', 'ui_felling', 'ui_mining', 'ui_wait', 'ui_working']

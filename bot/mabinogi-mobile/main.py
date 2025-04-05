@@ -5,7 +5,9 @@ import os
 
 from ultralytics import YOLO
 
-from ui.vein import CoalNode, IronNode
+from ui.vein import *
+from ui.action import *
+from ui.base.element import *
 from logger_helper import get_logger
 from capture import *
 
@@ -52,8 +54,12 @@ if __name__ == "__main__":
 
     # 클래스 ID에 따라 요소 정의 (YOLO 모델의 class 순서와 매핑)
     elements = [
-        CoalNode("석탄 광맥", class_id=0),
-        IronNode("철 광맥", class_id=1)
+        CoalNode(UIElementType.COAL_VEIN, class_id=0),
+        IronNode(UIElementType.IRON_VEIN, class_id=1),
+        UI_Felling(UIElementType.FELLING, class_id=2),
+        UI_Mining(UIElementType.MINING, class_id=3),
+        UI_Wait(UIElementType.WAIT, class_id=4),
+        UI_Working(UIElementType.WORKING, class_id=5)
     ]
 
     logger.info("[START] YOLO 매크로 실행 중...")
