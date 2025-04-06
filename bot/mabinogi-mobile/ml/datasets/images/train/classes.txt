@@ -1,6 +1,14 @@
-iron_vein
 coal_vein
-ui_felling
+ui_attack
+ui_inventory
+ui_riding
 ui_mining
-ui_wait
+ui_craft
+ui_compass
+iron_vein
+normal_vein
+tree
 ui_working
+ui_riding_out
+ui_felling
+ui_wing

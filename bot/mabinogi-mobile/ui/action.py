@@ -17,7 +17,7 @@ class UI_Mining(UIElement):
     def action(self, position):
         logging.debug(f"[ACTION] {self.type.name}")
 
-class UI_Wait(UIElement):
+class UI_Compass(UIElement):
     def action(self, position):
         logging.debug(f"[ACTION] {self.type.name}")
 

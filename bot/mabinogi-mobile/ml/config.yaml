@@ -5,4 +5,18 @@ train: images/train
 val: images/val
 
 nc: 6
-names: ['coal_vein', 'iron_vein', 'ui_felling', 'ui_mining', 'ui_wait', 'ui_working']
+names: [
+  'coal_vein', 
+  'iron_vein',
+  'normal_vein',
+  'tree',
+  'ui_attack',
+  'ui_inventory',
+  'ui_felling',
+  'ui_mining',
+  'ui_compass',
+  'ui_working',
+  'ui_craft',
+  'ui_riding',
+  'ui_riding_out',
+  'ui_wing']

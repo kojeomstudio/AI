@@ -34,8 +34,8 @@ def match_elements(results, elements):
 
 def process_logic(matched):
     """매칭된 요소 기반 동작 처리"""
-    # WAIT 또는 WORKING 상태면 아무것도 하지 않음
-    if UIElementType.WAIT in matched or UIElementType.WORKING in matched:
+    # COMPASS 또는 WORKING 상태면 아무것도 하지 않음
+    if UIElementType.COMPASS in matched or UIElementType.WORKING in matched:
         logger.debug("대기 상태 또는 작업 중 상태이므로 동작하지 않음")
         return False
 
@@ -87,7 +87,7 @@ if __name__ == "__main__":
         IronNode(UIElementType.IRON_VEIN, class_id=1),
         UI_Felling(UIElementType.FELLING, class_id=2),
         UI_Mining(UIElementType.MINING, class_id=3),
-        UI_Wait(UIElementType.WAIT, class_id=4),
+        UI_Compass(UIElementType.COMPASS, class_id=4),
         UI_Working(UIElementType.WORKING, class_id=5),
     ]
 

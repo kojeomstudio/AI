@@ -9,7 +9,7 @@ class UIElementType(Enum):
     COAL_VEIN = 1
     FELLING = 2
     MINING = 3
-    WAIT = 4
+    COMPASS = 4
     WORKING = 5
 
 class UIElement:
