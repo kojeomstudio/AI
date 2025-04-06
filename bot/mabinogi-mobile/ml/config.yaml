@@ -1,10 +1,15 @@
 # config.yaml
-path: C:/Workspaces/AI/bot/mabinogi-mobile/ml/datasets
+
+# windows
+#path: C:/Workspaces/AI/bot/mabinogi-mobile/ml/datasets 
+
+# mac os
+path: /Users/kojeomstudio/AI/bot/mabinogi-mobile/ml/datasets
 
 train: images/train
 val: images/val
 
-nc: 6
+nc: 14
 names: [
   'coal_vein', 
   'iron_vein',

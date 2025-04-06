@@ -2,4 +2,5 @@
 *.spec
 mabinogi-mobile/logs
 *.log
-screenshots
+screenshot
+mabinogi-mobile/my_macro_ml_venv
