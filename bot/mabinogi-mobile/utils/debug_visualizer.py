@@ -15,7 +15,7 @@ def get_file_path(in_origin):
     return os.path.join(dir, str(in_origin))
 
 def visualize_prediction(model, screen_img, window_name="YOLO 디버그"):
-    results = model.predict(screen_img, conf=0.5, verbose=False)
+    results = model.predict(screen_img, conf=0.35, verbose=False)
     result = results[0]
 
     print(f"[INFO] 총 {len(result.boxes)}개의 객체 탐지됨")
