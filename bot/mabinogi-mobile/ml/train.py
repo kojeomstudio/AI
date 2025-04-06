@@ -12,7 +12,7 @@ def main():
         epochs=30,
         imgsz=640,
         project=str(project_dir),  # 절대 경로로 전달
-        name="mabi_model",
+        name="mabinogi_model",
         exist_ok=True
     )
 

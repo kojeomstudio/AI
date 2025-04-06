@@ -11,17 +11,17 @@ val: images/val
 
 nc: 14
 names: [
-  'coal_vein', 
+  'coal_vein',
+  'ui_attack',
+  'ui_inventory',
+  'ui_riding',
+  'ui_mining',
+  'ui_craft',
+  'ui_compass',
   'iron_vein',
   'normal_vein',
   'tree',
-  'ui_attack',
-  'ui_inventory',
-  'ui_felling',
-  'ui_mining',
-  'ui_compass',
   'ui_working',
-  'ui_craft',
-  'ui_riding',
   'ui_riding_out',
+  'ui_felling',
   'ui_wing']

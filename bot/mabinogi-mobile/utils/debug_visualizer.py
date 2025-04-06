@@ -57,7 +57,7 @@ def load_config(path="config.json"):
 def main():
     config = load_config(get_file_path("../config/config.json"))
 
-    model = YOLO(get_file_path("../ml/training_output/vein_model/weights/best.pt"))
+    model = YOLO(get_file_path("../ml/training_output/mabinogi_model/weights/best.pt"))
     screen_img = get_game_window_image(config["window_title"])  # 게임 창 스크린샷
 
     if screen_img is None:

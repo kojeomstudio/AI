@@ -6,18 +6,18 @@ logger = get_logger()
 
 class UIElementType(Enum):
     COAL_VEIN = 0
-    IRON_VEIN = 1
-    NORMAL_VEIN = 2
-    TREE = 3
-    UI_ATTACK = 4
-    UI_INVENTORY = 5
-    UI_FELLING = 6
-    UI_MINING = 7
-    UI_COMPASS = 8
-    UI_WORKING = 9
-    UI_CRAFT = 10
-    UI_RIDING = 11
-    UI_RIDING_OUT = 12
+    UI_ATTACK = 1
+    UI_INVENTORY = 2
+    UI_RIDING = 3
+    UI_MINING = 4
+    UI_CRAFT = 5
+    UI_COMPASS = 6
+    IRON_VEIN = 7
+    NORMAL_VEIN = 8
+    TREE = 9
+    UI_WORKING = 10
+    UI_RIDING_OUT = 11
+    UI_FELLING = 12
     UI_WING = 13
 
 class UIElement:
