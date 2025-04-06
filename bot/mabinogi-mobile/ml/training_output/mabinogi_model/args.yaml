@@ -13,7 +13,7 @@ cache: false
 device: null
 workers: 8
 project: /Users/kojeomstudio/AI/bot/mabinogi-mobile/ml/training_output
-name: mabi_model
+name: mabinogi_model
 exist_ok: true
 pretrained: true
 optimizer: auto
@@ -103,4 +103,4 @@ erasing: 0.4
 crop_fraction: 1.0
 cfg: null
 tracker: botsort.yaml
-save_dir: /Users/kojeomstudio/AI/bot/mabinogi-mobile/ml/training_output/mabi_model
+save_dir: /Users/kojeomstudio/AI/bot/mabinogi-mobile/ml/training_output/mabinogi_model
