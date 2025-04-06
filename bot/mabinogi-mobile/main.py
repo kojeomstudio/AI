@@ -35,14 +35,14 @@ def match_elements(results, elements):
 def process_logic(matched):
     """매칭된 요소 기반 동작 처리"""
     # COMPASS 또는 WORKING 상태면 아무것도 하지 않음
-    if UIElementType.COMPASS in matched or UIElementType.WORKING in matched:
+    if UIElementType.UI_COMPASS in matched or UIElementType.UI_WORKING in matched:
         logger.debug("대기 상태 또는 작업 중 상태이므로 동작하지 않음")
         return False
 
     # 채굴 조건: 채굴 UI + 광맥 중 하나
-    if UIElementType.MINING in matched:
+    if UIElementType.UI_MINING in matched:
         if UIElementType.COAL_VEIN in matched or UIElementType.IRON_VEIN in matched:
-            element, pos = matched[UIElementType.MINING]
+            element, pos = matched[UIElementType.UI_MINING]
             logger.info("→ 채굴 조건 만족, 채굴 실행")
             element.action(pos)
             return True
@@ -50,9 +50,9 @@ def process_logic(matched):
             logger.debug("채굴 UI 감지됨, 그러나 광맥 없음")
 
     # 벌채 조건: 벌채 UI (추후 나무 노드 존재 여부도 체크 가능)
-    elif UIElementType.FELLING in matched:
+    elif UIElementType.UI_FELLING in matched:
         # TODO: 나무 노드(TreeNode 등) 존재할 때만 실행하도록 조건 강화 예정
-        element, pos = matched[UIElementType.FELLING]
+        element, pos = matched[UIElementType.UI_FELLING]
         logger.info("→ 벌채 조건 만족 (조건 검증 생략), 벌채 실행")
         element.action(pos)
         return True
@@ -85,10 +85,10 @@ if __name__ == "__main__":
     elements = [
         CoalNode(UIElementType.COAL_VEIN, class_id=0),
         IronNode(UIElementType.IRON_VEIN, class_id=1),
-        UI_Felling(UIElementType.FELLING, class_id=2),
-        UI_Mining(UIElementType.MINING, class_id=3),
-        UI_Compass(UIElementType.COMPASS, class_id=4),
-        UI_Working(UIElementType.WORKING, class_id=5),
+        UI_Felling(UIElementType.UI_FELLING, class_id=2),
+        UI_Mining(UIElementType.UI_MINING, class_id=3),
+        UI_Compass(UIElementType.UI_COMPASS, class_id=4),
+        UI_Working(UIElementType.UI_WORKING, class_id=5),
     ]
 
     logger.info("[START] YOLO 매크로 실행 중...")

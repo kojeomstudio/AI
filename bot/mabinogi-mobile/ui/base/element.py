@@ -5,12 +5,20 @@ from enum import Enum
 logger = get_logger()
 
 class UIElementType(Enum):
-    IRON_VEIN = 0
-    COAL_VEIN = 1
-    FELLING = 2
-    MINING = 3
-    COMPASS = 4
-    WORKING = 5
+    COAL_VEIN = 0
+    IRON_VEIN = 1
+    NORMAL_VEIN = 2
+    TREE = 3
+    UI_ATTACK = 4
+    UI_INVENTORY = 5
+    UI_FELLING = 6
+    UI_MINING = 7
+    UI_COMPASS = 8
+    UI_WORKING = 9
+    UI_CRAFT = 10
+    UI_RIDING = 11
+    UI_RIDING_OUT = 12
+    UI_WING = 13
 
 class UIElement:
     def __init__(self, type : UIElementType, class_id):
