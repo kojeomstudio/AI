@@ -79,7 +79,7 @@ def main_loop(model, elements, tick=0.5):
 if __name__ == "__main__":
     config = load_config(get_file_path("./config/config.json"))
 
-    model_path = get_file_path("ml/training_output/vein_model/weights/best.pt")
+    model_path = get_file_path("ml/training_output/mabi_model/weights/best.pt")
     model = YOLO(model_path)
 
     elements = [
