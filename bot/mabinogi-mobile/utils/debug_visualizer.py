@@ -30,7 +30,7 @@ def visualize_prediction(model, screen_img, window_name="YOLO 디버그"):
         cy = int((y1 + y2) / 2)
 
         # 콘솔 출력
-        print(f" - 클래스: {label} | 신뢰도: {conf:.2f} | 위치: ({cx}, {cy})")
+        print(f" - 클래스 이름: {label} | 클래스 Id : {class_id} | 신뢰도: {conf:.2f} | 위치: ({cx}, {cy})")
 
         # 바운딩 박스 그리기
         cv2.rectangle(screen_img, (int(x1), int(y1)), (int(x2), int(y2)), (0, 255, 0), 2)
