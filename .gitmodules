@@ -1,3 +1,6 @@
 [submodule "llm/agent/open-manus"]
 	path = llm/agent/open-manus
 	url = /Users/kojeomstudio/AI/llm/agent/open-manus
+[submodule "llm/rag/r2r"]
+	path = llm/rag/r2r
+	url = git@github.com:kojeomstudio/R2R.git
