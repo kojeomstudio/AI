@@ -4,3 +4,6 @@
 [submodule "llm/rag/r2r"]
 	path = llm/rag/r2r
 	url = git@github.com:kojeomstudio/R2R.git
+[submodule "llm/rag/r2r-dashboard"]
+	path = llm/rag/r2r-dashboard
+	url = git@github.com:kojeomstudio/R2R-Application.git
