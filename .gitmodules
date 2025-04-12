@@ -7,3 +7,6 @@
 [submodule "llm/rag/r2r-dashboard"]
 	path = llm/rag/r2r-dashboard
 	url = git@github.com:kojeomstudio/R2R-Application.git
+[submodule "llm/tools/browser-use"]
+	path = llm/tools/browser-use
+	url = git@github.com:kojeomstudio/browser-use.git
