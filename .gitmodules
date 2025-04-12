@@ -10,3 +10,6 @@
 [submodule "llm/tools/browser-use"]
 	path = llm/tools/browser-use
 	url = git@github.com:kojeomstudio/browser-use.git
+[submodule "llm/search/local-deep-research"]
+	path = llm/search/local-deep-research
+	url = git@github.com:kojeomstudio/local-deep-research.git
