@@ -4,7 +4,7 @@ from enum import Enum
 
 logger = get_logger()
 
-class UIElementType(Enum):
+class ElementType(Enum):
     COAL_VEIN = 0
     UI_ATTACK = 1
     UI_INVENTORY = 2
@@ -21,7 +21,7 @@ class UIElementType(Enum):
     UI_WING = 13
 
 class UIElement:
-    def __init__(self, type : UIElementType, class_id):
+    def __init__(self, type : ElementType, class_id):
         self.type = type
         self.class_id = class_id
 

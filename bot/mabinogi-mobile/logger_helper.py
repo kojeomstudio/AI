@@ -1,6 +1,6 @@
 import logging
 from pathlib import Path
-from utils.macro_uitls import get_path
+from utils.macro.macro_uitls import get_path
 
 _logger_instance = None
 
