@@ -1,3 +1,15 @@
 [submodule "llm/agent/open-manus"]
 	path = llm/agent/open-manus
-	url = git@github.com:kojeomstudio/open-manus.git
+	url = /Users/kojeomstudio/AI/llm/agent/open-manus
+[submodule "llm/rag/r2r"]
+	path = llm/rag/r2r
+	url = git@github.com:kojeomstudio/R2R.git
+[submodule "llm/rag/r2r-dashboard"]
+	path = llm/rag/r2r-dashboard
+	url = git@github.com:kojeomstudio/R2R-Application.git
+[submodule "llm/tools/browser-use"]
+	path = llm/tools/browser-use
+	url = git@github.com:kojeomstudio/browser-use.git
+[submodule "llm/search/local-deep-research"]
+	path = llm/search/local-deep-research
+	url = git@github.com:kojeomstudio/local-deep-research.git
