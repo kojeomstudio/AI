@@ -3,8 +3,8 @@
 
 1) pip install pyqt5 lxml
 
-2) pyqt5, pyrcc5 -o libs/resources.py resources.qrc
- -> 또는 파이인스톨러로 바이너리 생성.
+2) pyrcc5 -o libs/resources.py resources.qrc
+ -> pyqt5를 이용해 qt 파일을 파이선 파일로 변환.
 
 Install pyinstaller and execute:
 

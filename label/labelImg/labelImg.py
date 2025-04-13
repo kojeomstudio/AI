@@ -113,7 +113,7 @@ class MainWindow(QMainWindow, WindowMixin):
         if self.label_hist:
             self.default_label = self.label_hist[0]
         else:
-            print("Not find:/data/predefined_classes.txt (optional)")
+            print("[Warn] Not find:/data/predefined_classes.txt (optional)")
 
         # Main widgets and related state.
         self.label_dialog = LabelDialog(parent=self, list_item=self.label_hist)
@@ -1681,7 +1681,6 @@ def read(filename, default=None):
     except:
         return default
 
-
 def get_main_app(argv=None):
     """
     Standard boilerplate Qt application code.
@@ -1704,6 +1703,13 @@ def get_main_app(argv=None):
     args.image_dir = args.image_dir and os.path.normpath(args.image_dir)
     args.class_file = args.class_file and os.path.normpath(args.class_file)
     args.save_dir = args.save_dir and os.path.normpath(args.save_dir)
+
+    # kojeomstudio
+    if os.path.exists(args.class_file) == False:
+        from common.utility import get_path
+        args.class_file = os.path.normpath(get_path(".\\data\\predefined_classes.txt"))
+        print(f"args.class_file is invalid, so reassign to : {args.class_file}")
+    # ~kojeomstudio
 
     # Usage : labelImg.py image classFile saveDir
     win = MainWindow(args.image_dir,

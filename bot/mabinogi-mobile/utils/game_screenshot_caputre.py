@@ -7,15 +7,15 @@ from datetime import datetime
 from pynput import keyboard
 from pynput.keyboard import Key
 
-from capture import get_window_rect, capture_window  # 사용자 정의 캡처 함수
-from macro_uitls import get_path
+from capture import get_window_rect, capture_window
+from macro.macro_uitls import get_path
 
 # ----------------------------
 # 설정 및 상수
 # ----------------------------
 
-CONFIG_PATH = "../config/config.json"
-OUTPUT_DIR_NAME = "screenshots"
+CONFIG_PATH = "../../config/config.json"
+OUTPUT_DIR_NAME = "./screenshots"
 HOTKEY = Key.f8  # 전역 단축키
 WINDOW_TITLE_DEFAULT = "마비노기모바일"  # fallback
 
