@@ -1,0 +1,5 @@
+*.spec
+build
+dist
+my_doc_convert_venv
+converted_files

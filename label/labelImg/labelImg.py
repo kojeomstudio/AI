@@ -1706,7 +1706,15 @@ def get_main_app(argv=None):
 
     # kojeomstudio
     if os.path.exists(args.class_file) == False:
+
         from common.utility import get_path
+        import shutil
+
+        src_path = get_path("..\\..\\..\\bot\\mabinogi-mobile\\ml\\datasets\\images\\train\\classes.txt")
+        dst_path = get_path(".\\data\\predefined_classes.txt")
+        result = shutil.copy(src_path, dst_path)
+        print(f"{src_path} file copy to : {result}")
+
         args.class_file = os.path.normpath(get_path(".\\data\\predefined_classes.txt"))
         print(f"args.class_file is invalid, so reassign to : {args.class_file}")
     # ~kojeomstudio
