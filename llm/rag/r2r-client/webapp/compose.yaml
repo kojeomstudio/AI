@@ -1,0 +1,10 @@
+services:
+  app:
+    image: kojeomstudio/r2r-chat-app:v1
+    container_name: r2r-chat-app-c
+    ports:
+      - "9000:9000"  
+    environment:
+      - HOST=0.0.0.0
+      - PORT=9000
+    restart: always
