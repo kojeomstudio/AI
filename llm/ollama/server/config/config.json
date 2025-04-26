@@ -1,0 +1,8 @@
+{
+    "ollama_base_url": "http://localhost:11434",
+    "model_name": "gemma3:1b",
+    "server_host": "0.0.0.0",
+    "server_port": 8000,
+    "prompt_template": "You are a helpful assistant. Answer the following question carefully:\n\n{query}\n\nAnswer:"
+  }
+  
