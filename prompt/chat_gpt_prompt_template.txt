@@ -1,0 +1,17 @@
+{
+  "role": "당신은 [역할]입니다.",
+  "objective": "다음 목표를 달성하는 코드를 작성하세요: [구체적 목표]",
+  "instructions": [
+    "코드 스타일은 [예: PEP8, Unity Style Guide] 준수",
+    "주요 함수 및 블록에 주석 추가",
+    "특정 라이브러리 [예: FastAPI, PyGame] 사용",
+    "코드를 간결하고 명확하게 작성"
+  ],
+  "input_format": "[사용자 입력 형식 예: JSON, 파일, 텍스트]",
+  "output_format": "[출력 형식 예: JSON, 콘솔 출력]",
+  "optional_requirements": [
+    "예외 처리를 반드시 포함할 것",
+    "샘플 실행 예제를 제공할 것",
+    "단위 테스트 코드 작성(필요 시)"
+  ]
+}
