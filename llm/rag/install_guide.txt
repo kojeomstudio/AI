@@ -36,7 +36,7 @@ wsl --unregister <배포판_이름>
 sudo (super user do)
 
 
-※※※※※※※※ 도커 설치 (WSL2) ※※※※※※※※
+※※※※※※※※ 도커 설치 (WSL2 - ubuntu 기반) ※※※※※※※※
 
 (1) 기본 설치 관리자 업데이트.
     sudo apt update && sudo apt upgrade -y
