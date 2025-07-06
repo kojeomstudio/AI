@@ -1,0 +1,120 @@
+{
+  "input_method": "postmessage",
+  "default_delay": 0.5,
+  "actions": {
+    "COAL_VEIN": {
+      "type": "key",
+      "key": "space",
+      "description": "석탄 광맥 채굴",
+      "delay": 1.0,
+      "conditions": ["UI_MINING"]
+    },
+    "IRON_VEIN": {
+      "type": "key", 
+      "key": "space",
+      "description": "철 광맥 채굴",
+      "delay": 1.0,
+      "conditions": ["UI_MINING"]
+    },
+    "NORMAL_VEIN": {
+      "type": "key",
+      "key": "space", 
+      "description": "일반 광맥 채굴",
+      "delay": 1.0,
+      "conditions": ["UI_MINING"]
+    },
+    "TREE": {
+      "type": "key",
+      "key": "space",
+      "description": "나무 벌채", 
+      "delay": 1.0,
+      "conditions": ["UI_FELLING"]
+    },
+    "UI_MINING": {
+      "type": "click",
+      "description": "채굴 UI 클릭",
+      "delay": 0.5,
+      "conditions": []
+    },
+    "UI_FELLING": {
+      "type": "click",
+      "description": "벌채 UI 클릭",
+      "delay": 0.5,
+      "conditions": []
+    },
+    "UI_ATTACK": {
+      "type": "click",
+      "description": "공격 UI 클릭",
+      "delay": 0.3,
+      "conditions": []
+    },
+    "UI_INVENTORY": {
+      "type": "click",
+      "description": "인벤토리 UI 클릭",
+      "delay": 0.3,
+      "conditions": []
+    },
+    "UI_RIDING": {
+      "type": "click",
+      "description": "탈것 탑승 UI 클릭",
+      "delay": 0.5,
+      "conditions": []
+    },
+    "UI_RIDING_OUT": {
+      "type": "click",
+      "description": "탈것 하차 UI 클릭",
+      "delay": 0.5,
+      "conditions": []
+    },
+    "UI_CRAFT": {
+      "type": "click",
+      "description": "제작 UI 클릭",
+      "delay": 0.5,
+      "conditions": []
+    },
+    "UI_WING": {
+      "type": "click",
+      "description": "날개 UI 클릭",
+      "delay": 0.5,
+      "conditions": []
+    }
+  },
+  "priority_rules": [
+    {
+      "name": "작업 중 대기",
+      "conditions": ["UI_WORKING"],
+      "action": "wait",
+      "description": "작업 중일 때는 대기"
+    },
+    {
+      "name": "나침반 상태 대기", 
+      "conditions": ["UI_COMPASS"],
+      "action": "wait",
+      "description": "나침반 상태일 때는 대기"
+    },
+    {
+      "name": "채굴 우선",
+      "conditions": ["UI_MINING", "COAL_VEIN"],
+      "action": "COAL_VEIN",
+      "description": "채굴 UI + 석탄 광맥 감지시 채굴 실행"
+    },
+    {
+      "name": "채굴 우선2",
+      "conditions": ["UI_MINING", "IRON_VEIN"],
+      "action": "IRON_VEIN", 
+      "description": "채굴 UI + 철 광맥 감지시 채굴 실행"
+    },
+    {
+      "name": "채굴 우선3",
+      "conditions": ["UI_MINING", "NORMAL_VEIN"],
+      "action": "NORMAL_VEIN",
+      "description": "채굴 UI + 일반 광맥 감지시 채굴 실행"
+    },
+    {
+      "name": "벌채 우선",
+      "conditions": ["UI_FELLING", "TREE"],
+      "action": "TREE",
+      "description": "벌채 UI + 나무 감지시 벌채 실행"
+    }
+  ]
+} 
