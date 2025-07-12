@@ -1,0 +1,59 @@
+﻿using System.Net;
+using System.Net.Sockets;
+using System.Text;
+
+namespace DummyClient
+{
+    internal class Program
+    {
+        static void Main(string[] args)
+        {
+            string host = Dns.GetHostName();
+            IPHostEntry ipHost = Dns.GetHostEntry(host);
+            IPAddress ipAddr = ipHost.AddressList[0];
+            IPEndPoint endPoint = new IPEndPoint
+            (
+                ipAddr,
+                7777
+             );
+
+            Socket socket = new Socket
+            (
+                endPoint.AddressFamily,
+                SocketType.Stream,
+                ProtocolType.Tcp
+            );
+
+
+            try
+            {
+                socket.Connect(endPoint);
+                ClientLogger.Instance.Info($"Connected to {socket.RemoteEndPoint}");
+
+                byte[] sendBuffer = Encoding.UTF8.GetBytes("Hello from client!");
+                int sentBytes = socket.Send(sendBuffer);
+
+                ClientLogger.Instance.Info($"Sent {sentBytes} bytes to server");
+
+                byte[] recvBuffer = new byte[1024];
+                int recvBytes = socket.Receive(recvBuffer);
+
+                string revcData = Encoding.UTF8.GetString(recvBuffer, 0, recvBytes);
+                ClientLogger.Instance.Info($"Received data: {revcData}");
+
+                socket.Shutdown(SocketShutdown.Both);
+                socket.Close();
+            }
+            catch (SocketException ex)
+            {
+                ClientLogger.Instance.Error($"Socket error: {ex.Message}");
+                return;
+            }
+            catch (Exception ex)
+            {
+                ClientLogger.Instance.Error($"Unexpected error: {ex.Message}");
+                return;
+            }
+        }
+    }
+}
