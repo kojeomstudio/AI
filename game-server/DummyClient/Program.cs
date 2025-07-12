@@ -17,42 +17,41 @@ namespace DummyClient
                 7777
              );
 
-            Socket socket = new Socket
-            (
-                endPoint.AddressFamily,
-                SocketType.Stream,
-                ProtocolType.Tcp
-            );
-
-
-            try
+            while (true)
             {
-                socket.Connect(endPoint);
-                ClientLogger.Instance.Info($"Connected to {socket.RemoteEndPoint}");
+                Thread.Sleep(1000);
 
-                byte[] sendBuffer = Encoding.UTF8.GetBytes("Hello from client!");
-                int sentBytes = socket.Send(sendBuffer);
+                try
+                {
+                    Socket socket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
-                ClientLogger.Instance.Info($"Sent {sentBytes} bytes to server");
+                    socket.Connect(endPoint);
+                    ClientLogger.Instance.Info($"Connected to {socket.RemoteEndPoint}");
 
-                byte[] recvBuffer = new byte[1024];
-                int recvBytes = socket.Receive(recvBuffer);
+                    byte[] sendBuffer = Encoding.UTF8.GetBytes("Hello from client!");
+                    int sentBytes = socket.Send(sendBuffer);
 
-                string revcData = Encoding.UTF8.GetString(recvBuffer, 0, recvBytes);
-                ClientLogger.Instance.Info($"Received data: {revcData}");
+                    ClientLogger.Instance.Info($"Sent {sentBytes} bytes to server");
 
-                socket.Shutdown(SocketShutdown.Both);
-                socket.Close();
-            }
-            catch (SocketException ex)
-            {
-                ClientLogger.Instance.Error($"Socket error: {ex.Message}");
-                return;
-            }
-            catch (Exception ex)
-            {
-                ClientLogger.Instance.Error($"Unexpected error: {ex.Message}");
-                return;
+                    byte[] recvBuffer = new byte[1024];
+                    int recvBytes = socket.Receive(recvBuffer);
+
+                    string revcData = Encoding.UTF8.GetString(recvBuffer, 0, recvBytes);
+                    ClientLogger.Instance.Info($"Received data: {revcData}");
+
+                    socket.Shutdown(SocketShutdown.Both);
+                    socket.Close();
+                }
+                catch (SocketException ex)
+                {
+                    ClientLogger.Instance.Error($"Socket error: {ex.Message}");
+                    return;
+                }
+                catch (Exception ex)
+                {
+                    ClientLogger.Instance.Error($"Unexpected error: {ex.Message}");
+                    return;
+                }
             }
         }
     }
