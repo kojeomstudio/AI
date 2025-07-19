@@ -12,17 +12,15 @@ namespace ServerCore
         {
             try
             {
-                byte[] recvBuffer = new Byte[1024];
-                int recvBytes = clientSocket.Receive(recvBuffer);
+                Session session = new Session();
+                session.Start(clientSocket);
 
-                string recvData = Encoding.UTF8.GetString(recvBuffer, 0, recvBytes);
-                ServerLogger.Instance.Log(LogLevel.Info, $"Received data: {recvData}");
+                byte[] sendBuffer = Encoding.UTF8.GetBytes("Welcome to MMOPRG Server~!");
+                session.Send(sendBuffer);
 
-                byte[] sendBuffer = Encoding.UTF8.GetBytes("Hello from server!");
-                clientSocket.Send(sendBuffer);
+                Thread.Sleep(1000);
 
-                clientSocket.Shutdown(SocketShutdown.Both);
-                clientSocket.Close();
+                session.Disconnect();
             }
             catch (Exception ex)
             {

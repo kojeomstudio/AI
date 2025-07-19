@@ -38,7 +38,7 @@ namespace ServerCore
             }
         }
 
-        private void OnAcceptCompleted(object sender, SocketAsyncEventArgs args)
+        private void OnAcceptCompleted(object? sender, SocketAsyncEventArgs args)
         {
             if (args.SocketError == SocketError.Success)
             {

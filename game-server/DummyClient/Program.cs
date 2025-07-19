@@ -28,10 +28,13 @@ namespace DummyClient
                     socket.Connect(endPoint);
                     ClientLogger.Instance.Info($"Connected to {socket.RemoteEndPoint}");
 
-                    byte[] sendBuffer = Encoding.UTF8.GetBytes("Hello from client!");
-                    int sentBytes = socket.Send(sendBuffer);
+                    for (int i = 0; i < 5; i++)
+                    {
+                        byte[] sendBuffer = Encoding.UTF8.GetBytes("Hello from client!");
+                        int sentBytes = socket.Send(sendBuffer);
 
-                    ClientLogger.Instance.Info($"Sent {sentBytes} bytes to server");
+                        ClientLogger.Instance.Info($"Sent {sentBytes} bytes to server, index : {i}");
+                    }
 
                     byte[] recvBuffer = new byte[1024];
                     int recvBytes = socket.Receive(recvBuffer);
