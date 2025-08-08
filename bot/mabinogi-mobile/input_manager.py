@@ -10,6 +10,25 @@ from logger_helper import get_logger
 
 logger = get_logger()
 
+# 지원되는 특수 키에 대한 가상 키 코드 매핑
+KEY_MAP = {
+    "space": win32con.VK_SPACE,
+    "enter": win32con.VK_RETURN,
+    "esc": win32con.VK_ESCAPE,
+    "left": win32con.VK_LEFT,
+    "up": win32con.VK_UP,
+    "right": win32con.VK_RIGHT,
+    "down": win32con.VK_DOWN,
+}
+
+
+def _get_vk_code(key: str):
+    """문자 또는 키 이름을 가상 키 코드로 변환"""
+    key = key.lower()
+    if len(key) == 1:
+        return ord(key.upper())
+    return KEY_MAP.get(key)
+
 class InputManager:
     """다른 프로세스에 입력을 전달하는 매니저 클래스"""
     
@@ -198,7 +217,7 @@ class InputManager:
         """키보드 입력 전송"""
         if not self.target_hwnd:
             return False
-            
+
         try:
             if method == 'pyautogui':
                 # 윈도우 포커스 후 키 전송
@@ -206,27 +225,35 @@ class InputManager:
                 time.sleep(0.1)
                 pyautogui.press(key)
                 logger.debug(f"pyautogui 키 전송: {key}")
-                
+
             elif method == 'postmessage':
+                vk_code = _get_vk_code(key)
+                if vk_code is None:
+                    logger.error(f"지원하지 않는 키: {key}")
+                    return False
                 # PostMessage로 키 이벤트 전송
-                win32gui.PostMessage(self.target_hwnd, win32con.WM_KEYDOWN, 
-                                   ord(key.upper()), 0)
+                win32gui.PostMessage(self.target_hwnd, win32con.WM_KEYDOWN, vk_code, 0)
                 time.sleep(0.05)
-                win32gui.PostMessage(self.target_hwnd, win32con.WM_KEYUP, 
-                                   ord(key.upper()), 0)
+                win32gui.PostMessage(self.target_hwnd, win32con.WM_KEYUP, vk_code, 0)
                 logger.debug(f"PostMessage 키 전송: {key}")
-                
+
             elif method == 'sendmessage':
+                vk_code = _get_vk_code(key)
+                if vk_code is None:
+                    logger.error(f"지원하지 않는 키: {key}")
+                    return False
                 # SendMessage로 키 이벤트 전송
-                win32gui.SendMessage(self.target_hwnd, win32con.WM_KEYDOWN, 
-                                   ord(key.upper()), 0)
+                win32gui.SendMessage(self.target_hwnd, win32con.WM_KEYDOWN, vk_code, 0)
                 time.sleep(0.05)
-                win32gui.SendMessage(self.target_hwnd, win32con.WM_KEYUP, 
-                                   ord(key.upper()), 0)
+                win32gui.SendMessage(self.target_hwnd, win32con.WM_KEYUP, vk_code, 0)
                 logger.debug(f"SendMessage 키 전송: {key}")
-                
+
+            else:
+                logger.error(f"지원하지 않는 메서드: {method}")
+                return False
+
             return True
-            
+
         except Exception as e:
             logger.error(f"키 전송 실패: {e}")
             return False
