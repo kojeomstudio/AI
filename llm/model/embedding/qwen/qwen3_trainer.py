@@ -6,6 +6,26 @@ from torch.utils.data import Dataset, DataLoader
 from transformers import AutoModel, AutoTokenizer, get_linear_schedule_with_warmup
 from peft import LoraConfig, get_peft_model
 
+from pathlib import Path
+from train_helpers import make_dataloader, infer_data_paths
+
+# 1) 경로 추론 (현재 파일 위치 기준 tools/data 또는 data에서 검색)
+pairs_path, _ = infer_data_paths(Path(__file__).resolve().parent)
+assert pairs_path is not None, "pairs.jsonl 경로를 찾을 수 없습니다."
+
+# 2) DataLoader 생성
+train_loader = make_dataloader(
+    pairs_path,
+    tokenizer_name_or_obj="Qwen/Qwen3-Embedding-0.6B",  # HF 토크나이저 이름 또는 인스턴스
+    batch_size=32,
+    shuffle=True,
+    max_length=128,
+    return_negatives=True
+)
+
+if(torch.backends.mps.is_available()):
+    print("[info] MPS backend available. Using it for training.")
+
 device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
 
 model_id = "Qwen/Qwen3-Embedding-0.6B"  # 32~1024차원 가변 지원
@@ -41,12 +61,6 @@ def collate_fn(batch):
     enc_p = tokenizer(positives, padding=True, truncation=True, return_tensors="pt", max_length=512)
     return enc_a, enc_p
 
-# 데모용 소규모 데이터 (실전은 수십~수백만 쌍 권장)
-train_data = [
-    {"anchor": "best laptop for coding", "positive": "A developer laptop buying guide"},
-    {"anchor": "python web framework", "positive": "Flask is a lightweight web framework in Python"},
-]
-train_loader = DataLoader(PairDataset(train_data), batch_size=32, shuffle=True, collate_fn=collate_fn, drop_last=True)
 
 if len(train_loader) == 0:
     raise ValueError("No training data found. Please provide a valid dataset.")
@@ -63,9 +77,10 @@ model.train()
 
 last_loss = None
 for epoch in range(num_epochs):
-    for step, (enc_a, enc_p) in enumerate(train_loader):
-        enc_a = {k: v.to(device) for k, v in enc_a.items()}
-        enc_p = {k: v.to(device) for k, v in enc_p.items()}
+    for step, batch in enumerate(train_loader, start=1):
+        enc_a = batch["anchor_inputs"]      # transformers 포맷의 dict of tensors
+        enc_p = batch["positive_inputs"]
+        enc_n = batch.get("negative_inputs")  # 없을 수도 있음
 
         out_a = model(**enc_a, return_dict=True)
         out_p = model(**enc_p, return_dict=True)
