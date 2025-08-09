@@ -1,0 +1,38 @@
+{
+  "model_id": "Qwen/Qwen3-Embedding-0.6B",
+  "hf_token": null,
+  "trust_remote_code": true,
+  "data": {
+    "pairs_path": "./tools/data/pairs.jsonl",
+    "max_length": 64,
+    "pad_to_multiple_of": 8
+  },
+  "train": {
+    "batch_size": 4,
+    "grad_acc_steps": 8,
+    "epochs": 3,
+    "lr": 2e-05,
+    "weight_decay": 0.01,
+    "warmup_ratio": 0.06,
+    "optimizer": "adafactor",
+    "log_every": 5
+  },
+  "device": {
+    "prefer_mps": true,
+    "dtype": "auto"
+  },
+  "output": {
+    "save_dir": "./outputs/qwen3_embed_ft",
+    "save_name": "qwen3-embed-ft-v1",
+    "save_metrics": true,
+    "ollama": {
+      "enable": false,
+      "gguf_path": null,
+      "modelfile_path": "./outputs/qwen3_embed_ft/Modelfile",
+      "template_name": "qwen3-embed-ft",
+      "parameters": {
+        "num_ctx": 2048
+      }
+    }
+  }
+}

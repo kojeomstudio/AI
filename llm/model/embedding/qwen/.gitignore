@@ -1,0 +1,8 @@
+.venv
+.output
+*.pyc
+__pycache__
+*.pyo
+*.pyd
+*.pkl
+*.pkl.gz
