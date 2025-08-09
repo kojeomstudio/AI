@@ -1,0 +1,9 @@
+{
+  "server": {
+    "transport": "http",
+    "host": "0.0.0.0",
+    "port": 4200,
+    "path": "/mcp",
+    "log_level": "debug"
+  }
+}
