@@ -1,6 +1,12 @@
 
 https://qwen.readthedocs.io/en/latest/getting_started/concepts.html
+-> qwen arch
 
 https://github.com/NousResearch/Hermes-Function-Calling#prompt-format-for-function-calling
+-> llm function calling(tool call)
 
 https://gofastmcp.com/servers/tools
+-> fastmcp v2
+
+https://wikidocs.net/225142
+-> json-rpc

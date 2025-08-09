@@ -1,0 +1,28 @@
+# ── Core ─────────────────────────────────────────────
+torch>=2.3
+transformers>=4.51.0
+accelerate>=0.33.0
+datasets>=2.20.0
+peft>=0.13.0
+
+# ── Eval / Metrics / Utils ──────────────────────────
+scikit-learn>=1.5.0
+evaluate>=0.4.2
+
+# ── ANN (권장) ──────────────────────────────────────
+# Mac ARM에서도 pip 휠이 되는 경우가 많습니다. 문제 시 아래 주석 처리하고 sklearn 대체.
+faiss-cpu>=1.8.0
+
+# ── Optional ────────────────────────────────────────
+# sentence-transformers는 teacher 임베딩/평가에 유용(증류/비교용)
+sentence-transformers>=3.0.0
+
+# 로그/트래킹(선택)
+tensorboard>=2.17.0
+
+# HTML 파싱
+beautifulsoup4==4.12.3
+lxml==5.2.2
+
+# HTTP 요청
+requests==2.32.3
