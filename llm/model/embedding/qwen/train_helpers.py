@@ -1,13 +1,16 @@
 # -*- coding: utf-8 -*-
 """
-train_helpers.py (MPS/CUDA/CPU 안전, 토크나이저 토큰/옵션 지원)
+train_helpers.py
+----------------
+Device-aware DataLoader builder for contrastive embedding training.
 
-기능
-- load_pairs_jsonl(path)
-- infer_data_paths(start_path)
-- PairJsonlDataset(rows)
-- ContrastiveCollator(...): device로 텐서 이동, tuple/dict 모드 지원
-- make_dataloader(...): 안전 가드, 헬퍼 인자 전달
+Features
+- Loads pairs.jsonl ({"anchor","positive","hard_negatives"?})
+- Infers data paths (tools/data or data)
+- Collator tokenizes on-the-fly and moves tensors to a target device
+- Flexible outputs: dict (default) or tuple mode
+- HF token / trust_remote_code / local_files_only supported
+- Structured logging for observability
 """
 
 from __future__ import annotations
@@ -15,6 +18,9 @@ from dataclasses import dataclass
 from typing import List, Dict, Optional, Tuple, Any
 from pathlib import Path
 import json
+import logging
+
+logger = logging.getLogger(__name__)
 
 try:
     import torch
@@ -30,21 +36,28 @@ except Exception:
 
 # --------------------------- I/O ---------------------------
 def load_pairs_jsonl(path: Path) -> List[Dict[str, Any]]:
+    """Load JSONL pairs file."""
     if not path.exists():
         raise FileNotFoundError(f"pairs 파일을 찾을 수 없습니다: {path}")
     rows: List[Dict[str, Any]] = []
     with path.open("r", encoding="utf-8") as f:
         for line in f:
             rows.append(json.loads(line))
+    logger.info(f"[helpers] Loaded pairs: {len(rows)} from {path}")
+    if not rows:
+        logger.warning("[helpers] pairs is empty")
     return rows
 
 
 def infer_data_paths(any_project_path: Path) -> Tuple[Optional[Path], Optional[Path]]:
+    """Try to find tools/data or data folders upwards/downwards."""
+    logger.info(f"[helpers] Inferring data paths from base: {any_project_path}")
     candidates = []
     for rel in ["tools/data", "data", "../tools/data", "../data", "../../tools/data"]:
         p = (any_project_path / rel).resolve()
         if p.exists():
             candidates.append(p)
+
     root = any_project_path.resolve()
     for parent in [root, *root.parents]:
         td = parent / "tools" / "data"
@@ -53,10 +66,13 @@ def infer_data_paths(any_project_path: Path) -> Tuple[Optional[Path], Optional[P
         d = parent / "data"
         if d.exists():
             candidates.append(d)
+
+    # stable unique
     seen = []
     for c in candidates:
         if c not in seen:
             seen.append(c)
+
     pairs_path = None
     csv_path = None
     for c in seen:
@@ -64,6 +80,8 @@ def infer_data_paths(any_project_path: Path) -> Tuple[Optional[Path], Optional[P
             pairs_path = c / "pairs.jsonl"
         if (c / "game_glossary.csv").exists():
             csv_path = c / "game_glossary.csv"
+
+    logger.info(f"[helpers] Detected pairs: {pairs_path}, csv: {csv_path}")
     return pairs_path, csv_path
 
 
@@ -105,6 +123,7 @@ class ContrastiveCollator:
         if isinstance(self.tokenizer_name_or_obj, str):
             if AutoTokenizer is None:
                 raise RuntimeError("transformers가 필요합니다.")
+            logger.info(f"[helpers] Loading tokenizer: {self.tokenizer_name_or_obj}")
             self.tokenizer = AutoTokenizer.from_pretrained(
                 self.tokenizer_name_or_obj,
                 use_fast=True,
@@ -114,6 +133,7 @@ class ContrastiveCollator:
             )
         else:
             self.tokenizer = self.tokenizer_name_or_obj
+            logger.info("[helpers] Using provided tokenizer instance")
 
     def _to_device(self, batch_encoding):
         if self.device is None:
@@ -183,6 +203,7 @@ def make_dataloader(
 ) -> "DataLoader":
     rows = load_pairs_jsonl(pairs_path)
     effective_bs = min(batch_size, max(1, len(rows)))
+    logger.info(f"[helpers] DataLoader: batch_size={effective_bs} (requested {batch_size}), len={len(rows)}")
     ds = PairJsonlDataset(rows, use_negatives=return_negatives)
     collator = ContrastiveCollator(
         tokenizer_name_or_obj=tokenizer_name_or_obj,
@@ -196,10 +217,12 @@ def make_dataloader(
         pad_to_multiple_of=pad_to_multiple_of,
     )
     loader = DataLoader(ds, batch_size=effective_bs, shuffle=shuffle, collate_fn=collator, drop_last=False)
+    logger.info(f"[helpers] DataLoader ready: batches/epoch≈{len(loader)}")
     return loader
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)s | %(message)s")
     here = Path(__file__).resolve().parent
     pairs_path, _ = infer_data_paths(here)
     if not pairs_path:
@@ -213,4 +236,4 @@ if __name__ == "__main__":
         trust_remote_code=True,
     )
     first = next(iter(loader))
-    print("Batch keys:", list(first.keys()))
+    logger.info(f"[helpers] First batch keys: {list(first.keys())}")
