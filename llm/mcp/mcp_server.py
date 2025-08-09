@@ -1,8 +1,8 @@
 """
 MCP Server (FastMCP-based)
-- JSON-RPC 2.0 over HTTP
+- JSON-RPC 2.0 over HTTP (Streamable-HTTP in FastMCP 2.x)
 - Settings loaded from config.json
-- Exposes `mcp_server` object for tool registration (used by tools.py)
+- Tools registered via decorators in tools.py
 """
 from __future__ import annotations
 
@@ -11,48 +11,39 @@ from pathlib import Path
 from typing import Any, Dict
 from fastmcp import FastMCP
 
-# Load config.json (server section)
+# Load config
 CONFIG_PATH = Path(__file__).with_name("config.json")
+cfg = {"server": {}}
 if CONFIG_PATH.exists():
-    raw = json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
-    cfg = raw.get("server", {})
-else:
-    cfg = {}
+    try:
+        cfg = json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
+    except Exception as e:
+        print(f"[warn] Failed to parse config.json: {e}")
 
-TRANSPORT: str = cfg.get("transport", "http")
-HOST: str = cfg.get("host", "0.0.0.0")
-PORT: int = int(cfg.get("port", 4200))
-PATH: str = cfg.get("path", "/mcp")
-LOG_LEVEL: str = cfg.get("log_level", "info")
+scfg = cfg.get("server", {})
+TRANSPORT = scfg.get("transport", "http")
+HOST = scfg.get("host", "0.0.0.0")
+PORT = int(scfg.get("port", 4200))
+PATH = scfg.get("path", "/mcp")  # base path (client should POST to /mcp/)
+LOG_LEVEL = scfg.get("log_level", "info")
 
-# Create MCP server instance (exported for tools.py to import)
+# Create server object for tools.py to import and register tools
 mcp_server = FastMCP("MCP Server")
 
-# ---- Optional: basic health/ping tool to check JSON-RPC wiring ----
-@mcp_server.tool(
-    name="ping",
-    description="Liveness probe. Returns 'pong' with optional echo payload."
-)
+# Simple liveness probe (also helps verify JSON-RPC+session wiring)
+@mcp_server.tool(name="ping", description="Liveness probe. Returns pong with optional echo payload.")
 async def ping(payload: Dict[str, Any] | None = None) -> Dict[str, Any]:
     return {"ok": True, "result": "pong", "echo": payload or {}}
 
-# NOTE: Do not import tools here at module import time to avoid circular issues
-# Tools should import `mcp_server` and register themselves. Then, when running
-# as `__main__`, we import tools to ensure registration.
-
 def _import_tools():
+    # Ensure tool registration side effects happen before server run
     try:
-        import tools  # noqa: F401  (registration side-effects)
+        import tools  # noqa: F401  (registration via decorators)
     except Exception as e:
-        # Keep running even if tools are absent; log a warning at startup.
-        print(f"[warn] tools import failed: {e}")
+        print(f"[warn] tools import failed (no user tools registered): {e}")
 
 if __name__ == "__main__":
-    # Ensure tools are registered before running
     _import_tools()
-
-    # Start FastMCP with transport from config
-    # For HTTP transport, JSON-RPC 2.0 requests go to http://HOST:PORT{PATH}
     mcp_server.run(
         transport=TRANSPORT,
         host=HOST,

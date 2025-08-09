@@ -1,4 +1,3 @@
-# mcp_client.py
 """
 Refactored MCP JSON-RPC 2.0 client
 - Supports Streamable-HTTP and plain HTTP

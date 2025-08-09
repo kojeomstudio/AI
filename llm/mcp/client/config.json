@@ -3,5 +3,9 @@
     "server_url": "http://127.0.0.1:4200/mcp/",
     "request_timeout_seconds": 15,
     "transport_mode": "auto"
+  },
+  "llm":
+  {
+    "api_url": ""
   }
 }
