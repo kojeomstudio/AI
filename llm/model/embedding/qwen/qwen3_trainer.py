@@ -1,109 +1,121 @@
-# pip install "transformers>=4.51.0" peft datasets accelerate faiss-cpu
+# pip install "transformers>=4.51.0" peft accelerate
+import os
+import math
 import torch
 import torch.nn.functional as F
-from torch import nn
-from torch.utils.data import Dataset, DataLoader
+from torch.optim import AdamW
 from transformers import AutoModel, AutoTokenizer, get_linear_schedule_with_warmup
-from peft import LoraConfig, get_peft_model
 
 from pathlib import Path
 from train_helpers import make_dataloader, infer_data_paths
 
-# 1) 경로 추론 (현재 파일 위치 기준 tools/data 또는 data에서 검색)
+# ------------------------ Config ------------------------
+MODEL_ID = os.getenv("MODEL_ID", "Qwen/Qwen3-Embedding-0.6B")
+HF_TOKEN = os.getenv("HF_TOKEN")  # huggingface-cli login 했다면 없어도 OK
+TRUST_REMOTE_CODE = True
+
+BATCH_SIZE = int(os.getenv("BATCH_SIZE", "16"))
+MAX_LENGTH = int(os.getenv("MAX_LENGTH", "128"))
+LR = float(os.getenv("LR", "2e-5"))
+EPOCHS = int(os.getenv("EPOCHS", "1"))
+WARMUP_RATIO = float(os.getenv("WARMUP_RATIO", "0.06"))
+WEIGHT_DECAY = float(os.getenv("WEIGHT_DECAY", "0.01"))
+RETURN_NEGATIVES = False  # in-batch negatives 사용
+
+# ------------------------ Paths ------------------------
 pairs_path, _ = infer_data_paths(Path(__file__).resolve().parent)
 assert pairs_path is not None, "pairs.jsonl 경로를 찾을 수 없습니다."
+print(f"[Data] pairs: {pairs_path}")
 
-# 2) DataLoader 생성
+# ------------------------ Device/Dtype ------------------------
+use_mps = torch.backends.mps.is_available()
+device = torch.device("mps" if use_mps else "cpu")
+dtype = torch.float16 if use_mps else torch.float32  # MPS: fp16 권장, 필요시 fp32
+
+print(f"[Device] {device}, dtype={dtype}")
+
+# ------------------------ DataLoader ------------------------
 train_loader = make_dataloader(
-    pairs_path,
-    tokenizer_name_or_obj="Qwen/Qwen3-Embedding-0.6B",  # HF 토크나이저 이름 또는 인스턴스
-    batch_size=32,
+    pairs_path=pairs_path,
+    tokenizer_name_or_obj=MODEL_ID,
+    batch_size=BATCH_SIZE,
     shuffle=True,
-    max_length=128,
-    return_negatives=True
+    max_length=MAX_LENGTH,
+    return_negatives=RETURN_NEGATIVES,
+    return_tuple=False,
+    device=device,                 # ✅ collator가 토큰을 바로 device로 이동
+    hf_token=HF_TOKEN,
+    trust_remote_code=TRUST_REMOTE_CODE,
+    local_files_only=False,
+    pad_to_multiple_of=8 if use_mps else None,
 )
+steps_per_epoch = max(1, len(train_loader))
 
-if(torch.backends.mps.is_available()):
-    print("[info] MPS backend available. Using it for training.")
-
-device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
-
-model_id = "Qwen/Qwen3-Embedding-0.6B"  # 32~1024차원 가변 지원
-tokenizer = AutoTokenizer.from_pretrained(model_id, padding_side="left")
-base_model = AutoModel.from_pretrained(model_id, torch_dtype=torch.float16 if device.type!="cpu" else None).to(device)
-
-# LoRA 구성 (주의: Mac에서는 양자화 대신 LoRA 사용을 권장)
-peft_config = LoraConfig(
-    r=16, lora_alpha=32, lora_dropout=0.05, bias="none",
-    target_modules=["q_proj","k_proj","v_proj","o_proj","dense"]  # Qwen3 계열 호환 모듈명
+# ------------------------ Model ------------------------
+tok = AutoTokenizer.from_pretrained(
+    MODEL_ID, use_fast=True, token=HF_TOKEN, trust_remote_code=TRUST_REMOTE_CODE
 )
-model = get_peft_model(base_model, peft_config).to(device)
-
-def masked_mean_pooling(last_hidden_state, attention_mask):
-    mask = attention_mask.unsqueeze(-1).type_as(last_hidden_state)
-    summed = (last_hidden_state * mask).sum(dim=1)
-    counts = mask.sum(dim=1).clamp(min=1e-9)
-    return summed / counts
-
-class PairDataset(Dataset):
-    # 예시: [{"anchor":"...", "positive":"...", "hard_negatives":["...","..."]}, ...]
-    def __init__(self, data): self.data = data
-    def __len__(self): return len(self.data)
-    def __getitem__(self, idx): return self.data[idx]
-
-def collate_fn(batch):
-    anchors = []
-    positives = []
-    for b in batch:
-        anchors.append(b["anchor"])
-        positives.append(b["positive"])
-    enc_a = tokenizer(anchors, padding=True, truncation=True, return_tensors="pt", max_length=512)
-    enc_p = tokenizer(positives, padding=True, truncation=True, return_tensors="pt", max_length=512)
-    return enc_a, enc_p
-
-
-if len(train_loader) == 0:
-    raise ValueError("No training data found. Please provide a valid dataset.")
-
-num_epochs = 2
-optimizer = torch.optim.AdamW(model.parameters(), lr=1e-3)  # LoRA면 lr 크게 가능
-num_training_steps = num_epochs * len(train_loader)
-scheduler = get_linear_schedule_with_warmup(optimizer, int(0.1*num_training_steps), num_training_steps)
-
-# 학습 가능한 temperature (소배치시 ↑)
-temperature = nn.Parameter(torch.tensor(0.1, device=device))
-
+model = AutoModel.from_pretrained(
+    MODEL_ID,
+    trust_remote_code=TRUST_REMOTE_CODE,
+    torch_dtype=dtype,
+    device_map=None,        # ✅ meta 텐서 방지
+)
+model.to(device)
 model.train()
 
-last_loss = None
-for epoch in range(num_epochs):
+# ------------------------ Optimizer/Scheduler ------------------------
+optimizer = AdamW(model.parameters(), lr=LR, weight_decay=WEIGHT_DECAY)
+num_train_steps = EPOCHS * steps_per_epoch
+num_warmup = max(1, int(num_train_steps * WARMUP_RATIO))
+scheduler = get_linear_schedule_with_warmup(optimizer, num_warmup, num_train_steps)
+
+# ------------------------ Utils ------------------------
+def mean_pool(last_hidden_state, attention_mask):
+    # attention_mask: [B, L]
+    mask = attention_mask.unsqueeze(-1).type_as(last_hidden_state)  # [B, L, 1]
+    s = (last_hidden_state * mask).sum(dim=1)
+    d = mask.sum(dim=1).clamp(min=1e-6)
+    return s / d
+
+def get_embeddings(enc_inputs):
+    with torch.set_grad_enabled(True):
+        out = model(**enc_inputs, return_dict=True)
+        # 우선순위: pooler_output → last_hidden_state mean pool
+        if hasattr(out, "pooler_output") and out.pooler_output is not None:
+            return out.pooler_output
+        else:
+            return mean_pool(out.last_hidden_state, enc_inputs["attention_mask"])
+
+def info_nce_in_batch(z_a, z_p, temperature=0.07):
+    # z_a, z_p: [B, D]
+    z_a = F.normalize(z_a, dim=-1)
+    z_p = F.normalize(z_p, dim=-1)
+    logits = torch.matmul(z_a, z_p.t()) / temperature  # [B, B]
+    labels = torch.arange(z_a.size(0), device=z_a.device)
+    loss = F.cross_entropy(logits, labels)
+    acc = (logits.argmax(dim=-1) == labels).float().mean()
+    return loss, acc
+
+# ------------------------ Train ------------------------
+global_step = 0
+print(f"[Train] steps/epoch={steps_per_epoch}, epochs={EPOCHS}, total_steps={num_train_steps}")
+for epoch in range(EPOCHS):
     for step, batch in enumerate(train_loader, start=1):
-        enc_a = batch["anchor_inputs"]      # transformers 포맷의 dict of tensors
+        enc_a = batch["anchor_inputs"]
         enc_p = batch["positive_inputs"]
-        enc_n = batch.get("negative_inputs")  # 없을 수도 있음
 
-        out_a = model(**enc_a, return_dict=True)
-        out_p = model(**enc_p, return_dict=True)
+        z_a = get_embeddings(enc_a)  # [B, D]
+        z_p = get_embeddings(enc_p)  # [B, D]
+        loss, acc = info_nce_in_batch(z_a, z_p, temperature=0.07)
 
-        emb_a = masked_mean_pooling(out_a.last_hidden_state, enc_a["attention_mask"])
-        emb_p = masked_mean_pooling(out_p.last_hidden_state, enc_p["attention_mask"])
-        emb_a = F.normalize(emb_a, p=2, dim=1)
-        emb_p = F.normalize(emb_p, p=2, dim=1)
-
-        logits = (emb_a @ emb_p.T) / temperature.clamp(min=1e-6)
-        labels = torch.arange(logits.size(0), device=device)
-        loss_i2t = F.cross_entropy(logits, labels)
-        loss_t2i = F.cross_entropy((emb_p @ emb_a.T) / temperature.clamp(min=1e-6), labels)
-        loss = 0.5 * (loss_i2t + loss_t2i)
-
-        last_loss = loss.item()
-
+        optimizer.zero_grad(set_to_none=True)
         loss.backward()
         optimizer.step()
-        optimizer.zero_grad(set_to_none=True)
         scheduler.step()
 
-    print(f"epoch {epoch+1} | loss={last_loss:.4f} | temp={temperature.item():.3f}")
+        global_step += 1
+        if step % 10 == 0 or step == steps_per_epoch:
+            print(f"epoch {epoch+1} step {step}/{steps_per_epoch} | loss={loss.item():.4f} | acc={acc.item():.3f}")
 
-model.save_pretrained("./qwen3_embed_0p6b_lora_mps")
-tokenizer.save_pretrained("./qwen3_embed_0p6b_lora_mps")
+print("[OK] Training loop finished.")
