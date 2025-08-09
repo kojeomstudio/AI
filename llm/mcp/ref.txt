@@ -1,0 +1,6 @@
+
+https://qwen.readthedocs.io/en/latest/getting_started/concepts.html
+
+https://github.com/NousResearch/Hermes-Function-Calling#prompt-format-for-function-calling
+
+https://gofastmcp.com/servers/tools
