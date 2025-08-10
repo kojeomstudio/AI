@@ -4,30 +4,43 @@ using System.Text;
 
 namespace ServerCore
 {
+    class GameSession : Session
+    {
+        public override void OnConnected(EndPoint endPoint)
+        {
+            ServerLogger.Instance.Log(LogLevel.Info, $"OnConnected EndPoint : {endPoint}");
+
+            byte[] sendBuffer = Encoding.UTF8.GetBytes("Welcome to MMOPRG Server~!");
+            Send(sendBuffer);
+
+            Thread.Sleep(1000);
+
+            Disconnect();
+        }
+
+        public override void OnDisconnected(EndPoint endPoint)
+        {
+            ServerLogger.Instance.Log(LogLevel.Info, $"OnDisconnected EndPoint : {endPoint}");
+        }
+
+        public override void OnReceive(ArraySegment<byte> buffer)
+        {
+
+            string recvData = Encoding.UTF8.GetString(buffer.Array, buffer.Offset, buffer.Count);
+            ServerLogger.Instance.Log(LogLevel.Info, $"[From Client] {recvData}");
+
+        }
+
+        public override void OnSend(int numOfBytes)
+        {
+            ServerLogger.Instance.Log(LogLevel.Info, $"Transferred Bytes : {numOfBytes}");
+        }
+    }
+
     internal class Program
     {
         static Listener _listener = new Listener();
 
-        static void OnAcceptHandler(Socket clientSocket)
-        {
-            try
-            {
-                Session session = new Session();
-                session.Start(clientSocket);
-
-                byte[] sendBuffer = Encoding.UTF8.GetBytes("Welcome to MMOPRG Server~!");
-                session.Send(sendBuffer);
-
-                Thread.Sleep(1000);
-
-                session.Disconnect();
-            }
-            catch (Exception ex)
-            {
-                ServerLogger.Instance.Log(LogLevel.Error, $"Error setting up server: {ex.Message}");
-                return;
-            }
-        }
         static void Main(string[] args)
         {
             string host = Dns.GetHostName();
@@ -39,7 +52,7 @@ namespace ServerCore
                 7777
              );
 
-            _listener.Init(endPoint, OnAcceptHandler);
+            _listener.Init(endPoint, ()=> { return new GameSession(); });
 
             while(true)
             {

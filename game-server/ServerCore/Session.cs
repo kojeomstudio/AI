@@ -1,35 +1,47 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace ServerCore
 {
-    public class Session
+    public abstract class Session
     {
         private Socket _socket;
         private int _disconnected = 0;
 
         private SocketAsyncEventArgs _sendArgs = new SocketAsyncEventArgs();
+        private SocketAsyncEventArgs _recvArgs = new SocketAsyncEventArgs();
 
         private object _lock = new object();
         private Queue<byte[]> _sendQueue = new Queue<byte[]>();
         private bool _pending = false;
 
+        private List<ArraySegment<byte>> _pendinglist = new List<ArraySegment<byte>>();
+
         public void Start(Socket socket)
         {
             _socket = socket;
 
-            SocketAsyncEventArgs recvArgs = new SocketAsyncEventArgs();
-            recvArgs.Completed += new EventHandler<SocketAsyncEventArgs>(OnRecvCompleted);
-            recvArgs.SetBuffer(new byte[1024], 0, 1024);
+            
+            _recvArgs.Completed += new EventHandler<SocketAsyncEventArgs>(OnRecvCompleted);
+            _recvArgs.SetBuffer(new byte[1024], 0, 1024);
 
             _sendArgs.Completed += new EventHandler<SocketAsyncEventArgs>(OnSendCompleted);
 
-            RegisterRecv(recvArgs);
+            RegisterRecv(_recvArgs);
         }
+
+        // Handlers.
+        public abstract void OnConnected(EndPoint endPoint);
+
+        public abstract void OnReceive(ArraySegment<byte> buffer);
+        public abstract void OnSend(int numOfBytes);
+        public abstract void OnDisconnected(EndPoint endPoint);
+        // ~Handlers.
 
         public void Send(byte[] sendBuff)
         {
@@ -50,6 +62,8 @@ namespace ServerCore
                 return;
             }
 
+            OnDisconnected(_socket.RemoteEndPoint);
+
             _socket.Shutdown(SocketShutdown.Both);
             _socket.Close();
         }
@@ -59,8 +73,14 @@ namespace ServerCore
         {
             _pending = true;
 
-            byte[] buff = _sendQueue.Dequeue();
-            _sendArgs.SetBuffer(buff, 0, buff.Length);
+            
+            while (_sendQueue.Count > 0)
+            {
+                byte[] buff = _sendQueue.Dequeue();
+                _pendinglist.Add(new ArraySegment<byte>(buff, 0, buff.Length));
+            }
+            
+            _sendArgs.BufferList = _pendinglist;
 
             bool pending = _socket.SendAsync(_sendArgs);
             if(pending == false)
@@ -77,6 +97,11 @@ namespace ServerCore
                 {
                     try
                     {
+                        _sendArgs.BufferList = null;
+                        _pendinglist.Clear();
+
+                        OnSend(_sendArgs.BytesTransferred);
+
                         if (_sendQueue.Count > 0)
                         {
                             RegisterSend();
@@ -114,8 +139,7 @@ namespace ServerCore
             {
                 try
                 {
-                    string recvData = Encoding.UTF8.GetString(args.Buffer, args.Offset, args.BytesTransferred);
-                    ServerLogger.Instance.Log(LogLevel.Info, $"[From Client] {recvData}");
+                    OnReceive(new ArraySegment<byte>(args.Buffer, args.Offset, args.BytesTransferred));
                     RegisterRecv(args);
                 }
                 catch (Exception ex)
