@@ -1,5 +1,6 @@
 .venv
 .output
+outputs
 *.pyc
 __pycache__
 *.pyo
