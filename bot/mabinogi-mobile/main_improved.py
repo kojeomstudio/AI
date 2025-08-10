@@ -45,7 +45,10 @@ def match_elements(results, elements):
     for element in elements:
         is_match, pos = element.match(results)
         if is_match:
+            logger.debug(f"감지됨: {element.get_type().name} at {pos}")
             matched[element.get_type()] = (element, pos)
+        else:
+            logger.debug(f"미감지: {element.get_type().name}")
     return matched
 
 def create_elements():
@@ -73,14 +76,21 @@ def main_loop_improved(model, elements, action_processor, tick=0.5):
     
     try:
         while running:
+            # 타겟 프로세스 감시
+            if not action_processor.input_manager.monitor_process():
+                logger.warning("타겟 프로세스를 찾지 못했습니다. 5초 후 재시도...")
+                time.sleep(5)
+                continue
+
             # 화면 캡처
             screen_np = get_game_window_image(config["window_title"])
             if screen_np is None:
                 logger.warning("게임 창을 찾을 수 없습니다. 5초 후 재시도...")
                 time.sleep(5)
                 continue
-            
+
             # YOLO 예측
+            logger.debug("YOLO 예측 수행")
             results = model.predict(screen_np, conf=0.5, verbose=False)
             
             # 요소 매칭
