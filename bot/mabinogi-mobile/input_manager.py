@@ -1,11 +1,14 @@
 import time
-import win32gui
-import win32con
-import win32api
-import win32process
 import ctypes
 from ctypes import wintypes
+
+import psutil
 import pyautogui
+import win32api
+import win32con
+import win32gui
+import win32process
+
 from logger_helper import get_logger
 
 logger = get_logger()
@@ -35,6 +38,7 @@ class InputManager:
     def __init__(self, target_window_title="Mabinogi Mobile"):
         self.target_window_title = target_window_title
         self.target_hwnd = None
+        self.process_id = None
         self._find_target_window()
         
     def _find_target_window(self):
@@ -42,8 +46,30 @@ class InputManager:
         self.target_hwnd = win32gui.FindWindow(None, self.target_window_title)
         if self.target_hwnd == 0:
             logger.error(f"윈도우를 찾을 수 없습니다: {self.target_window_title}")
+            self.target_hwnd = None
+            self.process_id = None
             return False
-        logger.info(f"타겟 윈도우 찾음: {self.target_window_title} (HWND: {self.target_hwnd})")
+
+        _, pid = win32process.GetWindowThreadProcessId(self.target_hwnd)
+        self.process_id = pid
+        logger.info(
+            f"타겟 윈도우 찾음: {self.target_window_title} (HWND: {self.target_hwnd}, PID: {pid})"
+        )
+        return True
+
+    def monitor_process(self) -> bool:
+        """타겟 프로세스와 윈도우 감시"""
+        if not self.target_hwnd or not win32gui.IsWindow(self.target_hwnd):
+            logger.warning("타겟 윈도우를 찾을 수 없습니다. 재검색합니다.")
+            return self._find_target_window()
+
+        if self.process_id is not None and not psutil.pid_exists(self.process_id):
+            logger.warning("타겟 프로세스가 종료된 것으로 보입니다. 재검색합니다.")
+            return self._find_target_window()
+
+        logger.debug(
+            f"프로세스 감시: HWND {self.target_hwnd} PID {self.process_id} 정상 동작"
+        )
         return True
     
     def _get_window_info(self):
