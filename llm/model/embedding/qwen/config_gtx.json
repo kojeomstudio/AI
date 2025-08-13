@@ -1,0 +1,39 @@
+{
+  "model_id": "Qwen/Qwen3-Embedding-0.6B",
+  "hf_token": null,
+  "trust_remote_code": true,
+  "data": {
+    "pairs_path": "./tools/data/pairs.jsonl",
+    "max_length": 64,
+    "pad_to_multiple_of": 8
+  },
+  "train": {
+    "batch_size": 8,
+    "grad_acc_steps": 4,
+    "epochs": 3,
+    "lr": 1e-05,
+    "weight_decay": 0.01,
+    "warmup_ratio": 0.1,
+    "optimizer": "adamw",
+    "log_every": 5
+  },
+  "device": {
+    "prefer_cuda": true,
+    "use_mixed_precision": true,
+    "dtype": "auto"
+  },
+  "output": {
+    "save_dir": "./outputs/qwen3_embed_ft_gtx",
+    "save_name": "qwen3-embed-ft-gtx-v1",
+    "save_metrics": true,
+    "ollama": {
+      "enable": false,
+      "gguf_path": null,
+      "modelfile_path": "./outputs/qwen3_embed_ft_gtx/Modelfile",
+      "template_name": "qwen3-embed-ft-gtx",
+      "parameters": {
+        "num_ctx": 2048
+      }
+    }
+  }
+}
