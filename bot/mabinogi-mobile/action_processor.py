@@ -13,18 +13,33 @@ class ActionProcessor:
     def __init__(self, action_config_path: str, input_manager: InputManager):
         self.input_manager = input_manager
         self.action_config = self._load_action_config(action_config_path)
-        self.last_action_time = {}  # 액션별 마지막 실행 시간 추적
+        # 각 액션의 마지막 실행 시간과 실행 횟수를 추적
+        self.last_action_time: Dict[str, float] = {}
+        self.action_counts: Dict[str, int] = {}
         
     def _load_action_config(self, config_path: str) -> dict:
         """액션 설정 파일 로드"""
         try:
             with open(config_path, 'r', encoding='utf-8') as f:
                 config = json.load(f)
+
+            # 예상되는 키가 누락되었거나 잘못된 형식일 경우 기본값 적용
+            if not isinstance(config.get('actions'), dict):
+                logger.warning("액션 설정이 없거나 형식이 올바르지 않습니다. 기본값을 사용합니다.")
+                config['actions'] = {}
+            if not isinstance(config.get('priority_rules'), list):
+                logger.warning("우선순위 규칙이 없거나 형식이 올바르지 않습니다. 기본값을 사용합니다.")
+                config['priority_rules'] = []
+
             logger.info(f"액션 설정 로드 완료: {config_path}")
             return config
+        except FileNotFoundError:
+            logger.error(f"액션 설정 파일을 찾을 수 없습니다: {config_path}")
+        except json.JSONDecodeError as e:
+            logger.error(f"액션 설정 파일 파싱 실패: {e}")
         except Exception as e:
             logger.error(f"액션 설정 로드 실패: {e}")
-            return {}
+        return {'actions': {}, 'priority_rules': []}
     
     def _check_cooldown(self, action_name: str) -> bool:
         """액션 쿨다운 체크"""
@@ -40,6 +55,7 @@ class ActionProcessor:
     def _update_action_time(self, action_name: str):
         """액션 실행 시간 업데이트"""
         self.last_action_time[action_name] = time.time()
+        self.action_counts[action_name] = self.action_counts.get(action_name, 0) + 1
     
     def _check_conditions(self, detected_elements: List[str], required_conditions: List[str]) -> bool:
         """조건 충족 여부 확인"""
@@ -150,13 +166,9 @@ class ActionProcessor:
     def get_action_stats(self) -> Dict:
         """액션 실행 통계 반환"""
         stats = {
-            'total_actions': len(self.last_action_time),
-            'action_counts': {},
-            'last_action_times': {}
+            'total_actions': sum(self.action_counts.values()),
+            'action_counts': dict(self.action_counts),
+            'last_action_times': dict(self.last_action_time)
         }
-        
-        for action_name, last_time in self.last_action_time.items():
-            stats['action_counts'][action_name] = 1  # 간단한 카운트
-            stats['last_action_times'][action_name] = last_time
-            
-        return stats 
+
+        return stats

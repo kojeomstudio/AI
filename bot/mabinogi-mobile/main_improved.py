@@ -76,32 +76,35 @@ def main_loop_improved(model, elements, action_processor, tick=0.5):
     
     try:
         while running:
-            # 타겟 프로세스 감시
-            if not action_processor.input_manager.monitor_process():
-                logger.warning("타겟 프로세스를 찾지 못했습니다. 5초 후 재시도...")
-                time.sleep(5)
-                continue
+            try:
+                # 타겟 프로세스 감시
+                if not action_processor.input_manager.monitor_process():
+                    logger.warning("타겟 프로세스를 찾지 못했습니다. 5초 후 재시도...")
+                    time.sleep(5)
+                    continue
 
-            # 화면 캡처
-            screen_np = get_game_window_image(config["window_title"])
-            if screen_np is None:
-                logger.warning("게임 창을 찾을 수 없습니다. 5초 후 재시도...")
-                time.sleep(5)
-                continue
+                # 화면 캡처
+                screen_np = get_game_window_image(config["window_title"])
+                if screen_np is None:
+                    logger.warning("게임 창을 찾을 수 없습니다. 5초 후 재시도...")
+                    time.sleep(5)
+                    continue
 
-            # YOLO 예측
-            logger.debug("YOLO 예측 수행")
-            results = model.predict(screen_np, conf=0.5, verbose=False)
-            
-            # 요소 매칭
-            matched = match_elements(results, elements)
-            
-            # 액션 처리
-            if matched:
-                action_processor.process_detected_elements(matched)
-            else:
-                logger.debug("감지된 요소 없음")
-            
+                # YOLO 예측
+                logger.debug("YOLO 예측 수행")
+                results = model.predict(screen_np, conf=0.5, verbose=False)
+
+                # 요소 매칭
+                matched = match_elements(results, elements)
+
+                # 액션 처리
+                if matched:
+                    action_processor.process_detected_elements(matched)
+                else:
+                    logger.debug("감지된 요소 없음")
+            except Exception as e:
+                logger.error(f"루프 처리 중 오류: {e}")
+
             # 대기
             time.sleep(tick)
             
