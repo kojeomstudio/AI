@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using ServerCore;
+using System.Net;
 using System.Net.Sockets;
 using System.Text;
 
@@ -6,6 +7,39 @@ namespace DummyClient
 {
     internal class Program
     {
+        class GameSession : Session
+        {
+            public override void OnConnected(EndPoint endPoint)
+            {
+                Console.WriteLine($"OnConnected EndPoint : {endPoint}");
+
+                for (int i = 0; i < 5; i++)
+                {
+                    byte[] sendBuffer = Encoding.UTF8.GetBytes("Hello from client!");
+                    Send(sendBuffer);
+
+                    ClientLogger.Instance.Info($"Sent {sendBuffer.Length} bytes to server, index : {i}");
+                }
+            }
+
+            public override void OnDisconnected(EndPoint endPoint)
+            {
+                Console.WriteLine($"OnDisconnected EndPoint : {endPoint}");
+            }
+
+            public override void OnReceive(ArraySegment<byte> buffer)
+            {
+
+                string recvData = Encoding.UTF8.GetString(buffer.Array, buffer.Offset, buffer.Count);
+                Console.WriteLine($"[From Server] {recvData}");
+
+            }
+
+            public override void OnSend(int numOfBytes)
+            {
+                Console.WriteLine($"Transferred Bytes : {numOfBytes}");
+            }
+        }
         static void Main(string[] args)
         {
             string host = Dns.GetHostName();
@@ -17,44 +51,13 @@ namespace DummyClient
                 7777
              );
 
+            Connector connector = new Connector();
+            connector.Connect(endPoint, () => { return new GameSession(); });
+
             while (true)
             {
                 Thread.Sleep(1000);
 
-                try
-                {
-                    Socket socket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-
-                    socket.Connect(endPoint);
-                    ClientLogger.Instance.Info($"Connected to {socket.RemoteEndPoint}");
-
-                    for (int i = 0; i < 5; i++)
-                    {
-                        byte[] sendBuffer = Encoding.UTF8.GetBytes("Hello from client!");
-                        int sentBytes = socket.Send(sendBuffer);
-
-                        ClientLogger.Instance.Info($"Sent {sentBytes} bytes to server, index : {i}");
-                    }
-
-                    byte[] recvBuffer = new byte[1024];
-                    int recvBytes = socket.Receive(recvBuffer);
-
-                    string revcData = Encoding.UTF8.GetString(recvBuffer, 0, recvBytes);
-                    ClientLogger.Instance.Info($"Received data: {revcData}");
-
-                    socket.Shutdown(SocketShutdown.Both);
-                    socket.Close();
-                }
-                catch (SocketException ex)
-                {
-                    ClientLogger.Instance.Error($"Socket error: {ex.Message}");
-                    return;
-                }
-                catch (Exception ex)
-                {
-                    ClientLogger.Instance.Error($"Unexpected error: {ex.Message}");
-                    return;
-                }
             }
         }
     }
