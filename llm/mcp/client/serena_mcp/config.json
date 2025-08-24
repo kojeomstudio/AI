@@ -1,0 +1,19 @@
+{
+  "llm": {
+    "model": "qwen2.5:7b-instruct",
+    "host": "http://localhost:11434",
+    "system_prompt": "당신은 MCP 오케스트레이터 보조자입니다. 필요한 경우에만 도구를 호출하세요.",
+    "max_rounds": 6
+  },
+  "serena": {
+    "sse_url": "http://localhost:9121/sse",
+    "context": "ide-assistant",
+    "project_path": "/ABS/PATH/TO/PROJECT",
+    "timeout_ms": 60000
+  },
+  "runtime": {
+    "user_prompt": "프로젝트에서 AUWActorBase 관련 코드를 찾아 요약해줘.",
+    "log_level": "info",
+    "xdg_app_name": "mcp_orchestrator"
+  }
+}
