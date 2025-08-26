@@ -13,3 +13,9 @@
 [submodule "llm/search/local-deep-research"]
 	path = llm/search/local-deep-research
 	url = git@github.com:kojeomstudio/local-deep-research.git
+[submodule "llm/mcp/mcp-use"]
+	path = llm/mcp/mcp-use
+	url = git@github.com:kojeomstudio/mcp-use.git
+[submodule "llm/mcp/serena"]
+	path = llm/mcp/serena
+	url = git@github.com:kojeomstudio/serena.git
