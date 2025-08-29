@@ -1,0 +1,3 @@
+# gitea, mysql ==> docker container volume mount (bind)
+gitea
+mysql
