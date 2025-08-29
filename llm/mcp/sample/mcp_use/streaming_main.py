@@ -30,12 +30,18 @@ async def main():
 
     agent = MCPAgent(llm=llm, client=client)
 
-# Run the query
-    result = await agent.run(
-        "c#으로 작성된 게임 서버 코드를 모두 검색해서 알려주세요. 반드시 한글로 답변해주세요.",
-        max_steps= 5,
-    )
-    print(f"\nResult: {result}")
+    async for item in agent.stream("c#으로 작성된 게임 서버 코드를 모두 검색해서 알려주세요. 반드시 한글로 답변해주세요."):
+        if isinstance(item, str):
+            # Final result
+            print(f"\n✅ Final Result:\n{item}")
+        else:
+            # Intermediate step (action, observation)
+            action, observation = item
+            print(f"\n🔧 Tool: {action.tool}")
+            print(f"📝 Input: {action.tool_input}")
+            print(f"📄 Result: {observation[:100]}{'...' if len(observation) > 100 else ''}")
+
+    print("\n🎉 Done!")
 
 if __name__ == "__main__":
     asyncio.run(main())
