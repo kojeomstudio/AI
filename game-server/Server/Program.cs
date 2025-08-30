@@ -23,12 +23,13 @@ namespace KojeomGameServer
             ServerLogger.Instance.Log(LogLevel.Info, $"OnDisconnected EndPoint : {endPoint}");
         }
 
-        public override void OnReceive(ArraySegment<byte> buffer)
+        public override int OnReceive(ArraySegment<byte> buffer)
         {
 
             string recvData = Encoding.UTF8.GetString(buffer.Array, buffer.Offset, buffer.Count);
             ServerLogger.Instance.Log(LogLevel.Info, $"[From Client] {recvData}");
 
+            return buffer.Count;
         }
 
         public override void OnSend(int numOfBytes)
