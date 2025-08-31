@@ -89,6 +89,16 @@ python embed_trainer/train.py --config embed_trainer/config.json
   4) 여전히 실패하면 추론 전용 래퍼일 수 있으니, 학습 가능한 임베딩 백본 모델(e5/bge 등)로 교체 권장
   5) Jina v3를 반드시 쓰고자 한다면 `hf.loader="sentence_transformer"`, `hf.trust_remote_code=true`, `hf.default_task="classification"`를 설정하세요.
 
+### 트러블슈팅: NaN loss / 정확도 정체(=1/batch)
+- 증상: 학습 초반부터 `loss=nan`, 정확도 `~1/batch_size`에서 고정
+- 원인: fp16/bf16에서 정규화(`normalize`)의 eps 언더플로우 또는 마스킹 평균에서 0으로 나누기
+- 조치(트레이너에 반영됨):
+  - 풀링/정규화를 float32에서 수행 후 원래 dtype으로 캐스팅하여 수치적 안정성 확보
+  - `normalize(..., eps=1e-6)`로 안전한 eps 사용
+- 추가 팁:
+  - 여전히 NaN이면 `dtype: "float32"`로 변경하여 재시도
+  - `temperature`를 0.07→0.1~0.2로 높여 logits 스케일을 낮추면 안정화에 도움이 될 수 있음
+
 ### 트러블슈팅: MPS OOM
 - 증상: `MPS backend out of memory ... Tried to allocate ...` 메시지와 함께 종료
 - 조치:

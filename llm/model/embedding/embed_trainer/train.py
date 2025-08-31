@@ -468,6 +468,7 @@ def main(cfg_path: Path):
                 out = fwd(**enc, return_dict=True)
                 return out.last_hidden_state
             with torch.enable_grad():
+                # Forward under AMP
                 with amp_ctx:
                     lhs_a = _fwd(forward_target, enc_a)
                     lhs_p = _fwd(forward_target, enc_p)
@@ -480,14 +481,9 @@ def main(cfg_path: Path):
                         "Also try clearing dynamic module cache and upgrading transformers. See README troubleshooting."
                     )
 
-                # 항상 last_hidden_state + attention_mask로 mean-pooling (pooler_output 사용 금지)
-                z_a = mean_pool(lhs_a, enc_a["attention_mask"])
-                z_p = mean_pool(lhs_p, enc_p["attention_mask"])
-
-                # (선택) 정규화가 내부에서 안 된다면 여기서 명시적으로
-                # import torch.nn.functional as F
-                # z_a = F.normalize(z_a, dim=-1)
-                # z_p = F.normalize(z_p, dim=-1)
+                # Pooling and contrastive loss outside AMP (float32 math for stability)
+                z_a = mean_pool(lhs_a, enc_a["attention_mask"])  # returns dtype of lhs
+                z_p = mean_pool(lhs_p, enc_p["attention_mask"])  # returns dtype of lhs
 
                 loss, acc = info_nce_in_batch(z_a, z_p, temperature=0.07)
                 loss = loss / grad_acc_steps

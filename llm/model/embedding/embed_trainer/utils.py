@@ -86,18 +86,27 @@ def resolve_device_dtype(prefer_mps: bool = True, dtype_opt: str = "auto") -> Tu
 
 
 def mean_pool(last_hidden_state: torch.Tensor, attention_mask: torch.Tensor) -> torch.Tensor:
-    mask = attention_mask.unsqueeze(-1).expand(last_hidden_state.size()).float()
-    masked = last_hidden_state * mask
+    """Mean-pool token embeddings using attention mask.
+    Computes in float32 for numerical stability on fp16/bf16 backends, then casts back.
+    """
+    lhs = last_hidden_state
+    orig_dtype = lhs.dtype
+    lhs_f = lhs.float()
+    mask_f = attention_mask.unsqueeze(-1).expand(lhs.size()).float()
+    masked = lhs_f * mask_f
     summed = masked.sum(dim=1)
-    counts = mask.sum(dim=1).clamp(min=1e-9)
-    return summed / counts
+    counts = mask_f.sum(dim=1).clamp(min=1e-6)
+    pooled = summed / counts
+    return pooled.to(orig_dtype)
 
 
 def info_nce_in_batch(z_a: torch.Tensor, z_p: torch.Tensor, temperature: float = 0.07):
-    """In-batch InfoNCE. Returns (loss, accuracy)."""
-    z_a = torch.nn.functional.normalize(z_a, dim=-1)
-    z_p = torch.nn.functional.normalize(z_p, dim=-1)
-    logits = (z_a @ z_p.t()) / temperature
+    """In-batch InfoNCE. Returns (loss, accuracy).
+    Normalizes in float32 with a safe epsilon to avoid NaN on fp16/bf16.
+    """
+    z_a_f = torch.nn.functional.normalize(z_a.float(), dim=-1, eps=1e-6)
+    z_p_f = torch.nn.functional.normalize(z_p.float(), dim=-1, eps=1e-6)
+    logits = (z_a_f @ z_p_f.t()) / float(temperature)
     labels = torch.arange(logits.size(0), device=logits.device)
     loss = torch.nn.functional.cross_entropy(logits, labels)
     acc = (logits.argmax(dim=-1) == labels).float().mean()
