@@ -5,11 +5,17 @@ train.py
 일반화된 임베딩 모델 파인튜너. 설정 파일(config.json)을 읽어
 Hugging Face 임베딩 모델을 로드하고, pairs.jsonl 데이터로 InfoNCE 학습을 수행합니다.
 
-주요 흐름
+#주요 흐름
 1) 설정/런타임 파라미터 로딩 (모델/토크나이저/디바이스/학습옵션)
 2) pairs.jsonl 로더 + DataLoader 구성
 3) 모델 로딩 및 mean-pooling 기반 InfoNCE 학습 루프
 4) 체크포인트 저장 및 스냅샷 기록
+
+#예외처리.
+# 동적 모듈 캐시 폴더만 제거
+1) rm -rf ~/.cache/huggingface/modules/transformers_modules/jinaai/xlm-roberta-flash-implementation
+2) pip install -U "transformers>=4.44" "huggingface_hub>=0.24" accelerate
+
 """
 import os
 import sys
@@ -60,6 +66,85 @@ def setup_logger() -> logging.Logger:
     return logging.getLogger("embed_trainer")
 
 
+def _maybe_set_default_task(model: Any, task: str, log: logging.Logger) -> None:
+    """Best-effort: set `default_task` attribute on model or known submodules.
+    This is useful for models like Jina Embeddings v3 when using remote wrappers.
+    """
+    if not task:
+        return
+    try:
+        if hasattr(model, "default_task"):
+            setattr(model, "default_task", task)
+            log.info(f"[Model] set default_task on model: {task}")
+            return
+        # Try common submodules
+        for name in (
+            "base_model",
+            "model",
+            "backbone",
+            "encoder",
+            "transformer",
+            "bert",
+            "roberta",
+            "deberta",
+            "xlm_roberta",
+        ):
+            sub = getattr(model, name, None)
+            if sub is None:
+                continue
+            if hasattr(sub, "default_task"):
+                setattr(sub, "default_task", task)
+                log.info(f"[Model] set default_task on submodule '{name}': {task}")
+                return
+        # Some composite wrappers may be indexable (e.g., SentenceTransformer-like)
+        try:
+            sub0 = model[0]  # type: ignore[index]
+            if hasattr(sub0, "default_task"):
+                setattr(sub0, "default_task", task)
+                log.info(f"[Model] set default_task on model[0]: {task}")
+                return
+        except Exception:
+            pass
+    except Exception as e:
+        log.warning(f"[Model] failed to set default_task='{task}': {e}")
+
+
+def _patch_jina_rotary_alias(log: logging.Logger) -> None:
+    """Workaround for some Jina flash impl versions where backward references
+    `apply_rotary` while only `apply_rotary_emb` exists. Alias if needed."""
+    try:
+        patched = 0
+        for name, mod in list(sys.modules.items()):
+            file = getattr(mod, "__file__", None)
+            if not file or "xlm-roberta-flash-implementation" not in str(file):
+                continue
+            if str(file).endswith("rotary.py"):
+                # On non-CUDA setups, their module doesn't define apply_rotary at all.
+                # Build a pure-torch fallback that mirrors apply_rotary semantics and
+                # supports backward by using the same rotation with sign flip (conjugate).
+                if hasattr(mod, "apply_rotary_emb_torch") and not hasattr(mod, "apply_rotary"):
+                    torch_impl = getattr(mod, "apply_rotary_emb_torch")
+
+                    def _apply_rotary_fallback(x, cos, sin, *args, interleaved=False, inplace=False, conjugate=False, **kwargs):  # type: ignore[no-redef]
+                        try:
+                            if conjugate:
+                                sin = -sin
+                            out = torch_impl(x, cos, sin, interleaved=interleaved)
+                            if inplace:
+                                x.copy_(out)
+                                return x
+                            return out
+                        except Exception as e:
+                            raise RuntimeError(f"apply_rotary fallback failed: {e}")
+
+                    setattr(mod, "apply_rotary", _apply_rotary_fallback)
+                    patched += 1
+        if patched:
+            log.warning(f"[Patch] Installed rotary torch fallback in {patched} module(s) (no CUDA apply_rotary)")
+    except Exception as e:
+        log.warning(f"[Patch] rotary fallback failed: {e}")
+
+
 def build_optimizer(name: str, params, lr: float, weight_decay: float):
     name = (name or "adamw").lower()
     if name in ("adamw", "adamw_torch"):
@@ -83,8 +168,19 @@ def main(cfg_path: Path):
 
     hf = cfg.get("hf", {})
     hf_token = hf.get("token")
-    trust_remote_code = bool(hf.get("trust_remote_code", False))
+    # Respect config for remote code; some models ship custom wrappers that may
+    # disable grads (e.g., inference-only). Default True for compatibility but
+    # do NOT override user config.
+    trust_remote_code = True
+    cfg_trust_remote = hf.get("trust_remote_code")
+    if cfg_trust_remote is not None:
+        trust_remote_code = bool(cfg_trust_remote)
     local_files_only = bool(hf.get("local_files_only", False))
+    default_task = hf.get("default_task")  # optional; e.g., "classification"
+    loader = (hf.get("loader") or "automodel").lower()  # "automodel" | "sentence_transformer"
+
+    # Do not force-enable remote code for any specific model. If a repo requires
+    # remote code, the user can set it explicitly in config.
 
     device_opt = (cfg.get("device") or "auto").lower()
     dtype_opt = (cfg.get("dtype") or "auto").lower()
@@ -120,6 +216,10 @@ def main(cfg_path: Path):
             from contextlib import nullcontext
             amp_ctx = nullcontext()
 
+    # MPS OOM mitigation: relax high-watermark unless explicitly set
+    if device.type == "mps" and os.environ.get("PYTORCH_MPS_HIGH_WATERMARK_RATIO") is None:
+        os.environ["PYTORCH_MPS_HIGH_WATERMARK_RATIO"] = "0.0"
+
     log.info(f"[Runtime] device={device} dtype={dtype}")
 
     # -------------------- Data --------------------
@@ -135,23 +235,140 @@ def main(cfg_path: Path):
 
     # -------------------- Model/Tokenizer --------------------
     # 모델/토크나이저 로딩. AutoModel을 사용하여 대부분의 임베딩 백본과 호환
-    log.info(f"[Model] loading: {model_id}")
+    log.info(f"[Model] loading: {model_id} (loader={loader})")
     tok = AutoTokenizer.from_pretrained(
         tok_id,
         token=hf_token,
         trust_remote_code=trust_remote_code,
         local_files_only=local_files_only,
         use_fast=True,
+        force_download=True, #
     )
-    model = AutoModel.from_pretrained(
-        model_id,
-        token=hf_token,
-        trust_remote_code=trust_remote_code,
-        local_files_only=local_files_only,
-        torch_dtype=dtype,
-    )
-    model.to(device)
+
+    st_transformer = None
+    if loader == "sentence_transformer":
+        try:
+            from sentence_transformers import SentenceTransformer  # type: ignore
+        except Exception as e:
+            raise RuntimeError(
+                "hf.loader=sentence_transformer requires 'sentence-transformers' package.\n"
+                "Install: pip install -U sentence-transformers"
+            ) from e
+        st_kwargs = {}
+        if isinstance(default_task, str) and default_task:
+            st_kwargs["model_kwargs"] = {"default_task": default_task}
+        model = SentenceTransformer(
+            model_id,
+            trust_remote_code=trust_remote_code,
+            **st_kwargs,
+        )
+        # Keep a handle to the first module (Transformer) for token-level outputs
+        try:
+            st_transformer = model[0]
+        except Exception:
+            st_transformer = None
+    else:
+        model = AutoModel.from_pretrained(
+            model_id,
+            token=hf_token,
+            trust_remote_code=trust_remote_code,
+            local_files_only=local_files_only,
+            torch_dtype=dtype,
+        )
+    # Ensure device placement and dtype cast for memory control
+    try:
+        model.to(device, dtype=dtype)
+    except Exception:
+        model.to(device)
     model.train()
+    # If user asked for a specific default_task (for remote wrappers), try to set it.
+    if isinstance(default_task, str) and default_task:
+        _maybe_set_default_task(model, default_task, log)
+    # Apply Jina rotary alias patch if those modules are present
+    if trust_remote_code:
+        _patch_jina_rotary_alias(log)
+    # Ensure all parameters are trainable (some remote wrappers may freeze by default)
+    for p in model.parameters():
+        if not p.requires_grad:
+            p.requires_grad_(True)
+
+    # Some remote models wrap forward with no_grad (e.g., inference-only wrappers).
+    # Detect this and try to locate a trainable submodule to use for forward.
+    forward_target = model
+    try:
+        probe_inputs = tok(
+            ["__probe__"],
+            return_tensors="pt",
+            padding=True,
+            truncation=True,
+            max_length=8,
+        )
+        probe_inputs = {k: v.to(device) for k, v in probe_inputs.items()}
+        # Prepare a forward that returns an object with last_hidden_state
+        class _Out:
+            def __init__(self, x):
+                self.last_hidden_state = x
+
+        def _call_forward(m, inputs):
+            # SentenceTransformer transformer module returns dict with 'token_embeddings'
+            if st_transformer is not None:
+                # Disable AMP for ST transformer to avoid dtype mismatch inside custom modules
+                with torch.amp.autocast(device_type=device.type, enabled=False):
+                    out = st_transformer(inputs)
+                if isinstance(out, dict) and "token_embeddings" in out:
+                    return _Out(out["token_embeddings"])  # type: ignore[index]
+                if isinstance(out, dict) and "last_hidden_state" in out:
+                    return _Out(out["last_hidden_state"])  # type: ignore[index]
+                if hasattr(out, "last_hidden_state"):
+                    return _Out(out.last_hidden_state)  # type: ignore[attr-defined]
+                raise RuntimeError("Unexpected ST transformer output shape")
+            # AutoModel path
+            forward_fn = getattr(m, "forward", m)
+            return forward_fn(**inputs, return_dict=True)
+
+        with torch.enable_grad():
+            with amp_ctx:
+                probe_out = _call_forward(model, probe_inputs)
+        grad_ok = (
+            getattr(probe_out, "last_hidden_state", None) is not None
+            and probe_out.last_hidden_state.requires_grad
+        )
+    except Exception as e:
+        # If probing fails, assume not ok so we try submodules next
+        grad_ok = False
+
+    if not grad_ok:
+        # Try common base attributes to bypass no_grad wrappers
+        candidate_attrs = [
+            "base_model",
+            "model",
+            "backbone",
+            "encoder",
+            "transformer",
+            "bert",
+            "roberta",
+            "deberta",
+            "xlm_roberta",
+        ]
+        for name in candidate_attrs:
+            sub = getattr(model, name, None)
+            if sub is None:
+                continue
+            try:
+                with torch.enable_grad():
+                    with amp_ctx:
+                        test_out = _call_forward(sub, probe_inputs)
+                if getattr(test_out, "last_hidden_state", None) is not None and test_out.last_hidden_state.requires_grad:
+                    forward_target = sub
+                    log.warning(f"[Model] detected grad-disabled wrapper; using submodule '{name}' for training forward")
+                    break
+            except Exception:
+                continue
+        else:
+            log.warning(
+                "[Model] Forward appears to disable grads (no grad_fn). Training may fail. "
+                "Consider setting hf.trust_remote_code=false in config to load the base architecture."
+            )
 
     # -------------------- DataLoader --------------------
     tr = cfg.get("train", {})
@@ -185,6 +402,24 @@ def main(cfg_path: Path):
     lr = float(optim_cfg.get("lr", 5e-5))
     weight_decay = float(optim_cfg.get("weight_decay", 0.01))
     warmup_ratio = float(optim_cfg.get("warmup_ratio", 0.05))
+    # Optional gradient checkpointing
+    use_gc = bool(tr.get("grad_checkpointing", False))
+    if use_gc:
+        try:
+            if hasattr(model, "gradient_checkpointing_enable"):
+                model.gradient_checkpointing_enable()
+            # ST path: also try underlying auto_model
+            try:
+                from sentence_transformers import SentenceTransformer  # noqa: F401
+                am = getattr(st_transformer, "auto_model", None) if 'st_transformer' in locals() else None
+                if am is not None and hasattr(am, "gradient_checkpointing_enable"):
+                    am.gradient_checkpointing_enable()
+            except Exception:
+                pass
+            log.info("[Train] gradient checkpointing enabled")
+        except Exception as e:
+            log.warning(f"[Train] failed to enable gradient checkpointing: {e}")
+
     optimizer = build_optimizer(optim_cfg.get("name", "adamw"), model.parameters(), lr, weight_decay)
     for g in optimizer.param_groups:
         g.setdefault("initial_lr", g.get("lr", lr))
@@ -212,22 +447,52 @@ def main(cfg_path: Path):
             enc_a = batch["anchor_inputs"]
             enc_p = batch["positive_inputs"]
 
-            with amp_ctx:
-                out_a = model(**enc_a, return_dict=True)
-                out_p = model(**enc_p, return_dict=True)
-                z_a = (
-                    out_a.pooler_output
-                    if hasattr(out_a, "pooler_output") and out_a.pooler_output is not None
-                    else mean_pool(out_a.last_hidden_state, enc_a["attention_mask"])
-                )
-                z_p = (
-                    out_p.pooler_output
-                    if hasattr(out_p, "pooler_output") and out_p.pooler_output is not None
-                    else mean_pool(out_p.last_hidden_state, enc_p["attention_mask"])
-                )
+            loss = None
+            acc = None
+
+            # Call .forward explicitly to bypass any __call__ with no_grad wrappers
+            # Define unified forward for both AutoModel and ST-transformer module
+            def _fwd(mod, enc):
+                if st_transformer is not None and mod is forward_target:
+                    # Disable AMP for ST transformer to avoid dtype mismatch inside custom modules
+                    with torch.amp.autocast(device_type=device.type, enabled=False):
+                        out = st_transformer(enc)
+                    if isinstance(out, dict) and "token_embeddings" in out:
+                        return out["token_embeddings"]  # type: ignore[index]
+                    if isinstance(out, dict) and "last_hidden_state" in out:
+                        return out["last_hidden_state"]  # type: ignore[index]
+                    if hasattr(out, "last_hidden_state"):
+                        return out.last_hidden_state  # type: ignore[attr-defined]
+                    raise RuntimeError("Unexpected ST transformer output shape")
+                fwd = getattr(mod, "forward", mod)
+                out = fwd(**enc, return_dict=True)
+                return out.last_hidden_state
+            with torch.enable_grad():
+                with amp_ctx:
+                    lhs_a = _fwd(forward_target, enc_a)
+                    lhs_p = _fwd(forward_target, enc_p)
+
+                if not (getattr(lhs_a, "requires_grad", False) and getattr(lhs_p, "requires_grad", False)):
+                    raise RuntimeError(
+                        "Forward produced non-grad tensors (no grad_fn).\n"
+                        f"Hint: If using Jina v3, set hf.loader='sentence_transformer', hf.trust_remote_code=true, hf.default_task='classification'.\n"
+                        "Or set hf.trust_remote_code=false to load base AutoModel.\n"
+                        "Also try clearing dynamic module cache and upgrading transformers. See README troubleshooting."
+                    )
+
+                # 항상 last_hidden_state + attention_mask로 mean-pooling (pooler_output 사용 금지)
+                z_a = mean_pool(lhs_a, enc_a["attention_mask"])
+                z_p = mean_pool(lhs_p, enc_p["attention_mask"])
+
+                # (선택) 정규화가 내부에서 안 된다면 여기서 명시적으로
+                # import torch.nn.functional as F
+                # z_a = F.normalize(z_a, dim=-1)
+                # z_p = F.normalize(z_p, dim=-1)
+
                 loss, acc = info_nce_in_batch(z_a, z_p, temperature=0.07)
                 loss = loss / grad_acc_steps
 
+            # Backprop on full-precision scaler-less; AMP is only for forward
             loss.backward()
             accum_loss += loss.item()
 
@@ -283,14 +548,32 @@ if __name__ == "__main__":
     import argparse
 
     ap = argparse.ArgumentParser(description="General Embedding Fine-tuner")
-    ap.add_argument("--config", type=str, default=None, help="config file path (default: ./config.example.json)")
+    ap.add_argument("--config", type=str, default=None, help="config file path (default: ./config.json)")
+    ap.add_argument("--probe-only", action="store_true", help="Only run a single forward probe and exit")
     args = ap.parse_args()
 
-    default_cfg = Path(__file__).parent / "config.example.json"
+    default_cfg = Path(__file__).parent / "config.json"
     cfg_path = Path(args.config) if args.config else default_cfg
 
     if not cfg_path.exists():
         print(f"[ERROR] config not found: {cfg_path}")
         sys.exit(1)
 
-    main(cfg_path)
+    if args.probe_only:
+        # Minimal config-run to check grad availability
+        try:
+            # Temporarily patch config to run for 1 step and 1 epoch
+            cfg = load_json(cfg_path)
+            cfg.setdefault("train", {})
+            cfg["train"].update({"epochs": 1, "steps_per_epoch": 1, "log_every": 1})
+            tmp_cfg = Path(".tmp.probe.config.json")
+            write_json(tmp_cfg, cfg)
+            print("[probe] Running a single forward step to verify grads...")
+            main(tmp_cfg)
+        finally:
+            try:
+                Path(".tmp.probe.config.json").unlink(missing_ok=True)  # type: ignore[call-arg]
+            except Exception:
+                pass
+    else:
+        main(cfg_path)

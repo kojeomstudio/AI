@@ -1,10 +1,12 @@
 {
-  "model_id": "BAAI/bge-small-en-v1.5",
+  "model_id": "jinaai/jina-embeddings-v3",
   "tokenizer_id": null,
   "hf": {
     "token": null,
-    "trust_remote_code": false,
-    "local_files_only": false
+    "trust_remote_code": true,
+    "local_files_only": false,
+    "default_task": "classification",
+    "loader": "sentence_transformer"
   },
   "device": "auto",
   "dtype": "auto",
@@ -23,7 +25,7 @@
     "warmup_ratio": 0.05
   },
   "data": {
-    "pairs_path": null
+    "pairs_path": "./tools/data/pairs.jsonl"
   },
   "output": {
     "save_dir": "./outputs",
@@ -31,4 +33,3 @@
     "save_metrics": true
   }
 }
-

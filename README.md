@@ -11,3 +11,6 @@
 4) 마비노기 모바일 매크로 프로그램(봇)
 5) 머신러닝 관련 기초 학습
 6) 알고리즘 트레이닝
+
+# docker hub : https://hub.docker.com/repositories/kojeomstudio#
+# hugging-face : https://huggingface.co/kojeomstudio
