@@ -32,8 +32,8 @@ async def main():
 
 # Run the query
     result = await agent.run(
-        "Activate the project /serena_projects, c#으로 작성된 게임 서버 코드를 모두 검색해서 알려주세요. 반드시 한글로 답변해주세요.",
-        max_steps= 5,
+        "Activate the project /serena_projects/AI, c#으로 작성된 게임 서버 코드를 모두 검색해서 알려주세요. 반드시 한글로 답변해주세요.",
+        max_steps= 20,
     )
     print(f"\nResult: {result}")
 
