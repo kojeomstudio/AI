@@ -51,8 +51,11 @@ python embed_trainer/train.py --config embed_trainer/config.json
 - `device`(`auto|cuda|mps|cpu`), `dtype`(`auto|float32|float16|bfloat16`)
 - `train`: `batch_size`, `epochs`, `max_length`, `grad_accum_steps`, `steps_per_epoch`(옵션: 고정 step)
   - `grad_checkpointing`(옵션, bool): 메모리 절약을 위해 그라디언트 체크포인팅 활성화
+  - `num_workers`(옵션, int): DataLoader 워커 수. CPU 토크나이즈 병렬화
+  - `pad_to_multiple_of`(옵션, int): 패딩 길이를 8/16 등 배수로 맞춰 가속기 효율 향상
 - `optim`: `name`(AdamW 등), `lr`, `weight_decay`, `warmup_ratio`
 - `data`: `pairs_path`(옵션), 없으면 자동 탐색
+  - `stream`(옵션, bool): JSONL을 스트리밍(라인 단위)으로 로딩하여 메모리 사용 최소화
 - `output`: `save_dir`, `save_name`, `save_metrics`
 
 ### HF(remote code) 관련 옵션
@@ -108,9 +111,35 @@ python embed_trainer/train.py --config embed_trainer/config.json
   - `train.grad_checkpointing: true`를 설정해 메모리 사용량을 낮추세요
   - 트레이너는 MPS에서 `PYTORCH_MPS_HIGH_WATERMARK_RATIO=0.0`을 기본 설정하여 상한 완화(필요 시)합니다
 
+## 메모리 절약 팁(대용량 데이터)
+- `data.stream: true`로 설정하면 `pairs.jsonl`을 메모리에 올리지 않고 라인 단위로 읽습니다.
+  - 스트리밍 모드에서는 DataLoader 길이를 알 수 없을 수 있으므로 `train.steps_per_epoch`를 명시하거나, 트레이너가 안전하게 라인 수를 1회 카운트하여 steps를 추정합니다.
+- `train.grad_accum_steps`: 배치를 줄이는 대신 누적으로 유효 배치 크기를 맞추세요.
+- `train.grad_checkpointing: true`: 피처맵 저장 대신 재계산으로 VRAM 사용을 줄입니다.
+- `train.max_length`: 문장 길이를 줄이면 토큰 수가 줄어 메모리 압박이 크게 완화됩니다.
+- `train.pad_to_multiple_of: 8`(또는 16): 텐서 코어/벡터화에 유리해 성능/메모리 효율이 개선될 수 있습니다.
+- CUDA의 경우 `num_workers>0` + `pin_memory=True`(기본)로 호스트→디바이스 전송 효율이 향상됩니다.
+
+## 테스트
+본 프로젝트에는 간단한 학습 검증용 테스트가 포함됩니다.
+
+- 실행:
+```
+pip install -r embed_trainer/requirements.txt
+pip install pytest
+pytest -q
+```
+
+- 포함된 테스트:
+  - `tests/test_training_smoke.py::test_train_end_to_end`: 초소형 HF 모델로 2 스텝 학습 후 저장물/메트릭 확인
+  - `tests/test_training_smoke.py::test_streaming_loader`: 스트리밍 DataLoader가 배치 생성 여부 확인
+
+## 변경 이력
+
 ## 변경 이력
 - v0: 초기 공개. `embedding/qwen`의 구조/로직을 단순화하여 일반화.
 - v0.1: no-grad 래퍼를 우회하기 위해 서브모듈 `forward` 직접 호출 및 파라미터 unfreeze 로직 추가. README 트러블슈팅/설정 안내 보강.
 - v0.2: `hf.trust_remote_code` 사용자 설정을 엄격히 준수하도록 변경(특정 모델에 대해 강제 활성화 제거). Jina 원격 래퍼 사용 시 발생하던 `loss.backward()`의 no-grad 오류를 회피하기 쉬워짐.
 - v0.3: `hf.default_task`(예: `classification`)를 지원하여, 원격 래퍼가 해당 속성을 사용할 때 자동 설정하도록 개선.
 - v0.4: `hf.loader=sentence_transformer` 경로 추가. Jina v3 등 ST 기반 모델을 Transformer 모듈 기준으로 학습할 수 있도록 forward 어댑터를 구현.
+- v0.5: 메모리 세이프 학습을 위해 `data.stream`, `train.num_workers`, `train.pad_to_multiple_of` 추가. 스트리밍 길이 추정 및 소형 E2E 테스트/스트리밍 테스트 추가.

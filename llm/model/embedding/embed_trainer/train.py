@@ -43,7 +43,7 @@ if __package__ in (None, ""):
         mean_pool,
         info_nce_in_batch,
     )
-    from data_utils import make_dataloader, infer_pairs_path  # type: ignore
+    from data_utils import make_dataloader, infer_pairs_path, count_pairs  # type: ignore
 else:
     from .utils import (
         load_json,
@@ -54,7 +54,7 @@ else:
         mean_pool,
         info_nce_in_batch,
     )
-    from .data_utils import make_dataloader, infer_pairs_path
+    from .data_utils import make_dataloader, infer_pairs_path, count_pairs
 
 
 def setup_logger() -> logging.Logger:
@@ -379,6 +379,11 @@ def main(cfg_path: Path):
     steps_per_epoch = tr.get("steps_per_epoch")
     steps_per_epoch = int(steps_per_epoch) if steps_per_epoch else None
     log_every = int(tr.get("log_every", 50))
+    num_workers = int(tr.get("num_workers", 0))
+    pad_to_multiple_of = tr.get("pad_to_multiple_of")
+    pad_to_multiple_of = int(pad_to_multiple_of) if pad_to_multiple_of else None
+
+    data_stream = bool(cfg.get("data", {}).get("stream", False))
 
     train_loader = make_dataloader(
         tokenizer_name_or_obj=tok,
@@ -387,14 +392,22 @@ def main(cfg_path: Path):
         max_length=max_length,
         device=device,
         shuffle=True,
-        num_workers=0,
+        num_workers=num_workers,
         hf_token=hf_token,
         trust_remote_code=trust_remote_code,
         local_files_only=local_files_only,
+        stream=data_stream,
+        pad_to_multiple_of=pad_to_multiple_of,
     )
 
     if steps_per_epoch is None:
-        steps_per_epoch = len(train_loader)
+        # If streaming, len(dataloader) may be undefined. Fallback to counting lines.
+        try:
+            steps_per_epoch = len(train_loader)
+        except TypeError:
+            # Estimate steps from file length to keep memory small
+            n_pairs = count_pairs(pairs_path)
+            steps_per_epoch = max(1, n_pairs // batch_size)
         log.info(f"[Train] inferred steps_per_epoch={steps_per_epoch}")
 
     # -------------------- Optim/Scheduler --------------------

@@ -19,3 +19,6 @@
 [submodule "llm/mcp/serena"]
 	path = llm/mcp/serena
 	url = git@github.com:kojeomstudio/serena.git
+[submodule "workflow/n8n"]
+	path = workflow/n8n
+	url = git@github.com:kojeomstudio/n8n.git

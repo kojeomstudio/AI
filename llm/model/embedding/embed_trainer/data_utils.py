@@ -5,13 +5,13 @@ data_utils.py
 pairs.jsonl(contrastive) 데이터셋 로딩 및 토크나이즈 콜레이터/로더 제공.
 """
 from dataclasses import dataclass
-from typing import List, Dict, Optional, Any
+from typing import List, Dict, Optional, Any, Iterator
 from pathlib import Path
 import json
 import logging
 
 import torch
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import Dataset, DataLoader, IterableDataset
 
 try:
     from transformers import AutoTokenizer
@@ -47,6 +47,31 @@ class PairJsonlDataset(Dataset):
         if self.use_negatives:
             out["negatives"] = r.get("hard_negatives") or []
         return out
+
+
+class IterablePairsJsonlDataset(IterableDataset):
+    """Streaming-style JSONL reader to avoid loading all pairs in memory.
+    Each item is parsed on demand. Suitable for very large datasets.
+    """
+    def __init__(self, path: Path, use_negatives: bool = True):
+        super().__init__()
+        self.path = path
+        self.use_negatives = use_negatives
+
+    def parse_line(self, line: str) -> Dict[str, Any]:
+        r = json.loads(line)
+        out = {"anchor": r["anchor"], "positive": r["positive"]}
+        if self.use_negatives:
+            out["negatives"] = r.get("hard_negatives") or []
+        return out
+
+    def __iter__(self) -> Iterator[Dict[str, Any]]:
+        with self.path.open("r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                yield self.parse_line(line)
 
 
 @dataclass
@@ -118,9 +143,15 @@ def make_dataloader(
     hf_token: Optional[str] = None,
     trust_remote_code: bool = False,
     local_files_only: bool = False,
+    stream: bool = False,
+    pad_to_multiple_of: Optional[int] = None,
 ):
-    rows = load_pairs_jsonl(pairs_path)
-    ds = PairJsonlDataset(rows)
+    # Choose dataset mode: in-memory or streaming
+    if stream:
+        ds = IterablePairsJsonlDataset(pairs_path)
+    else:
+        rows = load_pairs_jsonl(pairs_path)
+        ds = PairJsonlDataset(rows)
     collator = ContrastiveCollator(
         tokenizer_name_or_obj=tokenizer_name_or_obj,
         max_length=max_length,
@@ -128,6 +159,7 @@ def make_dataloader(
         hf_token=hf_token,
         trust_remote_code=trust_remote_code,
         local_files_only=local_files_only,
+        pad_to_multiple_of=pad_to_multiple_of,
     )
     dl = DataLoader(
         ds,
@@ -137,5 +169,16 @@ def make_dataloader(
         pin_memory=(device is not None and device.type == "cuda"),
         collate_fn=collator,
         drop_last=True,
+        persistent_workers=(num_workers > 0),
     )
     return dl
+
+
+def count_pairs(pairs_path: Path) -> int:
+    """Count number of non-empty lines (pairs) in JSONL without loading into memory."""
+    n = 0
+    with pairs_path.open("r", encoding="utf-8") as f:
+        for line in f:
+            if line.strip():
+                n += 1
+    return n
