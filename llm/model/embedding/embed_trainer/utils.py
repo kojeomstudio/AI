@@ -100,6 +100,21 @@ def mean_pool(last_hidden_state: torch.Tensor, attention_mask: torch.Tensor) -> 
     return pooled.to(orig_dtype)
 
 
+def cls_pool(last_hidden_state: torch.Tensor, attention_mask: torch.Tensor) -> torch.Tensor:
+    """CLS pooling: 첫 토큰(hidden_state[:, 0])을 그대로 사용.
+    일부 BERT 계열 모델에서 권장되는 방법. attention_mask는 인터페이스 통일용.
+    """
+    return last_hidden_state[:, 0]
+
+
+def last_token_pool(last_hidden_state: torch.Tensor, attention_mask: torch.Tensor) -> torch.Tensor:
+    """마지막 유효 토큰의 은닉 상태를 사용. 패딩을 고려.
+    입력마다 길이가 다를 때 마지막 non-pad 위치를 찾아 선택.
+    """
+    idx = attention_mask.sum(dim=1).clamp(min=1) - 1  # [B]
+    return last_hidden_state[torch.arange(last_hidden_state.size(0), device=last_hidden_state.device), idx]
+
+
 def info_nce_in_batch(z_a: torch.Tensor, z_p: torch.Tensor, temperature: float = 0.07):
     """In-batch InfoNCE. Returns (loss, accuracy).
     Normalizes in float32 with a safe epsilon to avoid NaN on fp16/bf16.

@@ -53,6 +53,14 @@ python embed_trainer/train.py --config embed_trainer/config.json
   - `grad_checkpointing`(옵션, bool): 메모리 절약을 위해 그라디언트 체크포인팅 활성화
   - `num_workers`(옵션, int): DataLoader 워커 수. CPU 토크나이즈 병렬화
   - `pad_to_multiple_of`(옵션, int): 패딩 길이를 8/16 등 배수로 맞춰 가속기 효율 향상
+  - `pooling`(옵션, `mean|cls|last`): 임베딩 풀링 방식 선택(기본: `mean`)
+  - `temperature`(옵션, float): InfoNCE 온도(기본: `0.07`)
+  - `clip_grad_norm`(옵션, float): 그래디언트 클리핑 L2 노름 최대치(기본: `0.0`=비활성)
+  - `freeze_base`(옵션, bool): 베이스 모델 파라미터 동결(프로젝션 헤드만 학습 등)
+  - `projection_head`(옵션): 단순 투사 헤드(Linear+활성화) 학습/저장
+    - 예: `{ "enabled": true, "out_dim": 256, "activation": "tanh" }`
+  - `use_hard_negatives`(옵션, bool): pairs.jsonl의 `hard_negatives`를 사용해 per-anchor 로짓에 하드 네거티브 포함
+  - `negatives_per_anchor`(옵션, int): 앵커당 사용할 하드 네거티브 개수(k)
 - `optim`: `name`(AdamW 등), `lr`, `weight_decay`, `warmup_ratio`
 - `data`: `pairs_path`(옵션), 없으면 자동 탐색
   - `stream`(옵션, bool): JSONL을 스트리밍(라인 단위)으로 로딩하여 메모리 사용 최소화
@@ -150,9 +158,21 @@ pytest -q
 python -m embed_trainer.eval --model-dir outputs/embed-ft --pairs tools/data/pairs.jsonl --device auto
 ```
 
-출력 예:
+출력 예(개수/퍼센트 포함):
 ```
-recall@1: 0.6250
-recall@5: 1.0000
-mrr@10: 0.7500
+queries: 800
+recall@1: 62.50% (500/800)
+recall@5: 92.13% (737/800)
+mrr@10:  75.00%
 ```
+
+프로젝션 헤드를 사용해 학습했을 경우(`projection_head.enabled: true`), 저장 디렉터리의 `projection_head.pt`를 평가기가 자동으로 로드하여 동일한 투사를 적용합니다.
+
+### 학습 품질이 낮을 때 점검 포인트
+- 풀링 방식: `pooling: mean`이 항상 최선은 아닙니다. BERT 계열은 `cls`가 더 나을 수 있습니다.
+- 온도: `temperature`를 0.07→0.1~0.2로 조정해 logits 스케일을 완화해 보세요.
+- 투사 헤드: `projection_head`로 과제 적응력을 높이거나, `freeze_base: true`로 헤드만 먼저 맞춰본 뒤 점진적 unfreeze를 고려하세요.
+- 그래디언트 클리핑: `clip_grad_norm: 1.0` 등으로 폭주 방지.
+- 배치/길이: `batch_size`를 줄이고 `grad_accum_steps`를 늘리거나, `max_length`를 낮춰 토큰 수를 줄이세요.
+- 데이터 확인: `pairs.jsonl` 품질/정렬/중복을 점검하세요. 레이블 오류가 성능에 직접적 영향을 줍니다.
+- 하드 네거티브: `use_hard_negatives: true`, `negatives_per_anchor: 1~3`을 설정하면 쉬운 in-batch 네거티브 대비 학습 신호가 강화됩니다.

@@ -70,6 +70,7 @@ def embed_texts(
     dtype: torch.dtype,
     batch_size: int = 32,
     max_length: int = 128,
+    proj_head: Optional[Any] = None,
 ) -> torch.Tensor:
     """텍스트 리스트를 배치로 임베딩(mean-pool)하여 하나의 텐서로 반환."""
     st_transformer = _detect_st_transformer(model)
@@ -89,6 +90,8 @@ def embed_texts(
         with torch.amp.autocast(device_type=device_type, dtype=dtype, enabled=(device_type != "cpu")):
             lhs = _forward_hidden_states(model, enc, device_type=device_type, st_transformer=st_transformer)
         vec = mean_pool(lhs, enc["attention_mask"])  # returns lhs dtype
+        if proj_head is not None:
+            vec = proj_head(vec)
         all_vecs.append(vec)
     return torch.cat(all_vecs, dim=0)
 
@@ -96,6 +99,11 @@ def embed_texts(
 def compute_retrieval_metrics(q: torch.Tensor, c: torch.Tensor, k_values: Tuple[int, ...] = (1, 5)) -> Dict[str, float]:
     """쿼리 임베딩(q)과 코퍼스 임베딩(c)으로 R@k, MRR@10을 계산.
     q, c는 같은 순서(동일 인덱스 쌍이 긍정)라고 가정.
+    반환 값에 다음을 포함:
+    - recall@k: float (0..1)
+    - hits@k: int (정답이 top-k에 포함된 쿼리 수)
+    - mrr@10: float (0..1)
+    - n_queries: int (쿼리 개수)
     """
     # cosine 유사도: float32에서 정규화 후 행렬 곱
     qn = torch.nn.functional.normalize(q.float(), dim=-1, eps=1e-6)
@@ -107,8 +115,12 @@ def compute_retrieval_metrics(q: torch.Tensor, c: torch.Tensor, k_values: Tuple[
     ranks = (sorted_idx == labels.unsqueeze(1)).nonzero()[:, 1]
 
     metrics: Dict[str, float] = {}
+    n = int(qn.size(0))
+    metrics["n_queries"] = float(n)
     for k in k_values:
-        r_at_k = (ranks < k).float().mean().item()
+        hits = int((ranks < k).sum().item())
+        metrics[f"hits@{k}"] = float(hits)
+        r_at_k = hits / max(1, n)
         metrics[f"recall@{k}"] = r_at_k
     # MRR@10
     cutoff = 10
@@ -125,6 +137,7 @@ def evaluate_pairs_with_model(
     dtype_opt: str = "auto",
     batch_size: int = 32,
     max_length: int = 128,
+    proj_head: Optional[Any] = None,
 ) -> Dict[str, float]:
     """저장된 모델/토크나이저를 사용해 pairs.jsonl의 R@k/MRR을 계산."""
     # imported at module level with safe path above
@@ -151,8 +164,8 @@ def evaluate_pairs_with_model(
     model.to(device)
     model.eval()
 
-    emb_q = embed_texts(model, tokenizer, anchors, device=device, dtype=dtype, batch_size=batch_size, max_length=max_length)
-    emb_c = embed_texts(model, tokenizer, positives, device=device, dtype=dtype, batch_size=batch_size, max_length=max_length)
+    emb_q = embed_texts(model, tokenizer, anchors, device=device, dtype=dtype, batch_size=batch_size, max_length=max_length, proj_head=proj_head)
+    emb_c = embed_texts(model, tokenizer, positives, device=device, dtype=dtype, batch_size=batch_size, max_length=max_length, proj_head=proj_head)
     return compute_retrieval_metrics(emb_q, emb_c)
 
 

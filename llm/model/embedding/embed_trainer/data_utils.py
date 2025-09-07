@@ -83,6 +83,8 @@ class ContrastiveCollator:
     trust_remote_code: bool = False
     local_files_only: bool = False
     pad_to_multiple_of: Optional[int] = None
+    include_negatives: bool = False
+    negatives_per_anchor: int = 0
 
     def __post_init__(self):
         if isinstance(self.tokenizer_name_or_obj, str):
@@ -116,7 +118,31 @@ class ContrastiveCollator:
         if self.device is not None:
             enc_a = {k: v.to(self.device, non_blocking=True) for k, v in enc_a.items()}
             enc_p = {k: v.to(self.device, non_blocking=True) for k, v in enc_p.items()}
-        return {"anchor_inputs": enc_a, "positive_inputs": enc_p}
+        out = {"anchor_inputs": enc_a, "positive_inputs": enc_p}
+
+        # Optional hard negatives per anchor
+        if self.include_negatives and self.negatives_per_anchor > 0:
+            neg_ptrs = []  # list of (start, count) for each anchor
+            neg_texts: List[str] = []
+            for r in batch:
+                negs = r.get("negatives") or []
+                # 샘플링: 앞에서부터 k개 사용(간단). 필요시 무작위 샘플링으로 확장 가능.
+                k = min(self.negatives_per_anchor, len(negs))
+                start = len(neg_texts)
+                neg_texts.extend(negs[:k])
+                neg_ptrs.append((start, k))
+
+            if neg_texts:
+                enc_n = self._tok(neg_texts)
+                if self.device is not None:
+                    enc_n = {k: v.to(self.device, non_blocking=True) for k, v in enc_n.items()}
+                out["negative_inputs"] = enc_n
+                out["neg_ptrs"] = neg_ptrs
+            else:
+                out["negative_inputs"] = None
+                out["neg_ptrs"] = [(0, 0)] * len(batch)
+
+        return out
 
 
 def infer_pairs_path(base_dir: Path) -> Optional[Path]:
@@ -145,6 +171,8 @@ def make_dataloader(
     local_files_only: bool = False,
     stream: bool = False,
     pad_to_multiple_of: Optional[int] = None,
+    include_negatives: bool = False,
+    negatives_per_anchor: int = 0,
 ):
     # Choose dataset mode: in-memory or streaming
     if stream:
@@ -160,6 +188,8 @@ def make_dataloader(
         trust_remote_code=trust_remote_code,
         local_files_only=local_files_only,
         pad_to_multiple_of=pad_to_multiple_of,
+        include_negatives=include_negatives,
+        negatives_per_anchor=negatives_per_anchor,
     )
     dl = DataLoader(
         ds,

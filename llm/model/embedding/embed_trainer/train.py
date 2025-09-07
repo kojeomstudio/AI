@@ -41,6 +41,8 @@ if __package__ in (None, ""):
         to_abs,
         resolve_device_dtype,
         mean_pool,
+        cls_pool,
+        last_token_pool,
         info_nce_in_batch,
     )
     from data_utils import make_dataloader, infer_pairs_path, count_pairs  # type: ignore
@@ -52,6 +54,8 @@ else:
         to_abs,
         resolve_device_dtype,
         mean_pool,
+        cls_pool,
+        last_token_pool,
         info_nce_in_batch,
     )
     from .data_utils import make_dataloader, infer_pairs_path, count_pairs
@@ -242,7 +246,6 @@ def main(cfg_path: Path):
         trust_remote_code=trust_remote_code,
         local_files_only=local_files_only,
         use_fast=True,
-        force_download=True, #
     )
 
     st_transformer = None
@@ -382,8 +385,18 @@ def main(cfg_path: Path):
     num_workers = int(tr.get("num_workers", 0))
     pad_to_multiple_of = tr.get("pad_to_multiple_of")
     pad_to_multiple_of = int(pad_to_multiple_of) if pad_to_multiple_of else None
+    pooling_method = (tr.get("pooling", "mean") or "mean").lower()  # mean|cls|last
+    temperature = float(tr.get("temperature", 0.07))
+    clip_grad_norm = float(tr.get("clip_grad_norm", 0.0))
+    freeze_base = bool(tr.get("freeze_base", False))
+    proj_cfg = tr.get("projection_head") or {}
+    use_proj = bool(proj_cfg.get("enabled", False))
+    proj_out = int(proj_cfg.get("out_dim", 0))
+    proj_act = (proj_cfg.get("activation", "tanh") or "tanh").lower()
 
     data_stream = bool(cfg.get("data", {}).get("stream", False))
+    use_hard_negs = bool(tr.get("use_hard_negatives", False))
+    negs_per_anchor = int(tr.get("negatives_per_anchor", 0))
 
     train_loader = make_dataloader(
         tokenizer_name_or_obj=tok,
@@ -398,6 +411,8 @@ def main(cfg_path: Path):
         local_files_only=local_files_only,
         stream=data_stream,
         pad_to_multiple_of=pad_to_multiple_of,
+        include_negatives=use_hard_negs,
+        negatives_per_anchor=negs_per_anchor,
     )
 
     if steps_per_epoch is None:
@@ -409,6 +424,58 @@ def main(cfg_path: Path):
             n_pairs = count_pairs(pairs_path)
             steps_per_epoch = max(1, n_pairs // batch_size)
         log.info(f"[Train] inferred steps_per_epoch={steps_per_epoch}")
+
+    # -------------------- Optional: Freeze base --------------------
+    if freeze_base:
+        frozen = 0
+        for p in model.parameters():
+            if p.requires_grad:
+                p.requires_grad_(False)
+                frozen += 1
+        log.info(f"[Train] base model frozen params: {frozen}")
+
+    # -------------------- Optional: Projection head --------------------
+    import torch.nn as nn
+    proj_head = None
+    hidden_size = None
+    try:
+        # reuse earlier probe to infer hidden size
+        # build minimal input
+        probe_inputs = tok(["__probe__"], return_tensors="pt", padding=True, truncation=True, max_length=8)
+        probe_inputs = {k: v.to(device) for k, v in probe_inputs.items()}
+        with torch.no_grad():
+            with amp_ctx:
+                probe_out = forward_target(**probe_inputs, return_dict=True) if st_transformer is None else None
+        if st_transformer is not None:
+            with torch.amp.autocast(device_type=device.type, enabled=False):
+                out = st_transformer(probe_inputs)
+            if isinstance(out, dict) and "token_embeddings" in out:
+                probe_lhs = out["token_embeddings"]
+            elif isinstance(out, dict) and "last_hidden_state" in out:
+                probe_lhs = out["last_hidden_state"]
+            else:
+                probe_lhs = out.last_hidden_state  # type: ignore[attr-defined]
+        else:
+            probe_lhs = probe_out.last_hidden_state  # type: ignore[union-attr]
+        hidden_size = int(probe_lhs.size(-1))
+    except Exception:
+        pass
+
+    if use_proj:
+        if not hidden_size:
+            raise RuntimeError("projection_head enabled but hidden_size inference failed")
+        if proj_out <= 0:
+            proj_out = hidden_size
+        act = nn.Tanh() if proj_act == "tanh" else nn.ReLU()
+        class ProjectionHead(nn.Module):
+            def __init__(self, in_dim: int, out_dim: int, activation: nn.Module):
+                super().__init__()
+                self.linear = nn.Linear(in_dim, out_dim)
+                self.act = activation
+            def forward(self, x: torch.Tensor) -> torch.Tensor:
+                return self.act(self.linear(x))
+        proj_head = ProjectionHead(hidden_size, proj_out, act).to(device)
+        log.info(f"[Train] projection head enabled: {hidden_size}->{proj_out} act={proj_act}")
 
     # -------------------- Optim/Scheduler --------------------
     optim_cfg = cfg.get("optim", {})
@@ -433,7 +500,11 @@ def main(cfg_path: Path):
         except Exception as e:
             log.warning(f"[Train] failed to enable gradient checkpointing: {e}")
 
-    optimizer = build_optimizer(optim_cfg.get("name", "adamw"), model.parameters(), lr, weight_decay)
+    # Collect trainable parameters (include projection head if any)
+    params = list(p for p in model.parameters() if p.requires_grad)
+    if proj_head is not None:
+        params += list(proj_head.parameters())
+    optimizer = build_optimizer(optim_cfg.get("name", "adamw"), params, lr, weight_decay)
     for g in optimizer.param_groups:
         g.setdefault("initial_lr", g.get("lr", lr))
 
@@ -485,6 +556,10 @@ def main(cfg_path: Path):
                 with amp_ctx:
                     lhs_a = _fwd(forward_target, enc_a)
                     lhs_p = _fwd(forward_target, enc_p)
+                    enc_n = batch.get("negative_inputs") if use_hard_negs else None
+                    lhs_n = None
+                    if enc_n is not None:
+                        lhs_n = _fwd(forward_target, enc_n)
 
                 if not (getattr(lhs_a, "requires_grad", False) and getattr(lhs_p, "requires_grad", False)):
                     raise RuntimeError(
@@ -495,10 +570,52 @@ def main(cfg_path: Path):
                     )
 
                 # Pooling and contrastive loss outside AMP (float32 math for stability)
-                z_a = mean_pool(lhs_a, enc_a["attention_mask"])  # returns dtype of lhs
-                z_p = mean_pool(lhs_p, enc_p["attention_mask"])  # returns dtype of lhs
+                if pooling_method == "cls":
+                    z_a = cls_pool(lhs_a, enc_a["attention_mask"])  # [B, H]
+                    z_p = cls_pool(lhs_p, enc_p["attention_mask"])  # [B, H]
+                elif pooling_method == "last":
+                    z_a = last_token_pool(lhs_a, enc_a["attention_mask"])  # [B, H]
+                    z_p = last_token_pool(lhs_p, enc_p["attention_mask"])  # [B, H]
+                else:
+                    z_a = mean_pool(lhs_a, enc_a["attention_mask"])  # [B, H]
+                    z_p = mean_pool(lhs_p, enc_p["attention_mask"])  # [B, H]
 
-                loss, acc = info_nce_in_batch(z_a, z_p, temperature=0.07)
+                if proj_head is not None:
+                    z_a = proj_head(z_a)
+                    z_p = proj_head(z_p)
+                # Hard-negative aware loss
+                if use_hard_negs and lhs_n is not None and batch.get("neg_ptrs") is not None:
+                    # Normalize for cosine similarity in float32
+                    z_a_f = torch.nn.functional.normalize(z_a.float(), dim=-1, eps=1e-6)
+                    z_p_f = torch.nn.functional.normalize(z_p.float(), dim=-1, eps=1e-6)
+                    z_n = mean_pool(lhs_n, enc_n["attention_mask"])  # type: ignore[index]
+                    if proj_head is not None:
+                        z_n = proj_head(z_n)
+                    z_n_f = torch.nn.functional.normalize(z_n.float(), dim=-1, eps=1e-6)
+
+                    neg_ptrs = batch["neg_ptrs"]
+                    losses = []
+                    hits = 0
+                    start_global = 0
+                    # Build per-anchor logits: [1 + k]
+                    for i, (start, cnt) in enumerate(neg_ptrs):
+                        if cnt == 0:
+                            # Fall back to in-batch negatives if none provided
+                            sim_row = (z_a_f[i] @ z_p_f.t()) / float(temperature)
+                            label = torch.tensor(i, device=sim_row.device)
+                            losses.append(torch.nn.functional.cross_entropy(sim_row.unsqueeze(0), label.unsqueeze(0)))
+                            hits += int(sim_row.argmax().item() == i)
+                            continue
+                        pos_sim = (z_a_f[i] * z_p_f[i]).sum(0, keepdim=True)  # [1]
+                        neg_sims = z_a_f[i].unsqueeze(0) @ z_n_f[start : start + cnt].t()  # [1, k]
+                        logits_i = torch.cat([pos_sim, neg_sims.squeeze(0)], dim=0) / float(temperature)  # [1+k]
+                        label_i = torch.tensor(0, device=logits_i.device)
+                        losses.append(torch.nn.functional.cross_entropy(logits_i.unsqueeze(0), label_i.unsqueeze(0)))
+                        hits += int(logits_i.argmax().item() == 0)
+                    loss = torch.stack(losses).mean()
+                    acc = torch.tensor(hits / max(1, len(neg_ptrs)), device=z_a.device)
+                else:
+                    loss, acc = info_nce_in_batch(z_a, z_p, temperature=temperature)
                 loss = loss / grad_acc_steps
 
             # Backprop on full-precision scaler-less; AMP is only for forward
@@ -506,6 +623,9 @@ def main(cfg_path: Path):
             accum_loss += loss.item()
 
             if (step % grad_acc_steps) == 0:
+                # Gradient clipping (optional)
+                if clip_grad_norm > 0.0:
+                    torch.nn.utils.clip_grad_norm_(params, max_norm=clip_grad_norm)
                 optimizer.step()
                 if scheduler is not None:
                     scheduler.step()
@@ -536,6 +656,15 @@ def main(cfg_path: Path):
     model.save_pretrained(target)
     tok.save_pretrained(target)
 
+    # Save projection head (if used)
+    if proj_head is not None:
+        torch.save({
+            "state_dict": proj_head.state_dict(),
+            "in_dim": hidden_size,
+            "out_dim": proj_out,
+            "activation": proj_act,
+        }, target / "projection_head.pt")
+
     if bool(out_cfg.get("save_metrics", True)):
         metrics = {
             "finished_at": datetime.utcnow().isoformat() + "Z",
@@ -548,6 +677,11 @@ def main(cfg_path: Path):
             "device": str(device),
             "dtype": str(dtype),
             "model_id": model_id,
+            "pooling": pooling_method,
+            "temperature": temperature,
+            "clip_grad_norm": clip_grad_norm,
+            "freeze_base": freeze_base,
+            "projection_head": {"enabled": bool(proj_head is not None), "out_dim": proj_out, "activation": proj_act} if proj_head is not None else {"enabled": False},
         }
         write_json(target / "metrics.json", metrics, "metrics")
         write_json(target / "config.snapshot.json", cfg, "config snapshot")
