@@ -143,3 +143,16 @@ pytest -q
 - v0.3: `hf.default_task`(예: `classification`)를 지원하여, 원격 래퍼가 해당 속성을 사용할 때 자동 설정하도록 개선.
 - v0.4: `hf.loader=sentence_transformer` 경로 추가. Jina v3 등 ST 기반 모델을 Transformer 모듈 기준으로 학습할 수 있도록 forward 어댑터를 구현.
 - v0.5: 메모리 세이프 학습을 위해 `data.stream`, `train.num_workers`, `train.pad_to_multiple_of` 추가. 스트리밍 길이 추정 및 소형 E2E 테스트/스트리밍 테스트 추가.
+### 평가 (Evaluation)
+학습 결과 디렉터리와 pairs.jsonl로 간단한 검색 성능을 측정할 수 있습니다.
+
+```
+python -m embed_trainer.eval --model-dir outputs/embed-ft --pairs tools/data/pairs.jsonl --device auto
+```
+
+출력 예:
+```
+recall@1: 0.6250
+recall@5: 1.0000
+mrr@10: 0.7500
+```

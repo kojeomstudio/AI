@@ -68,6 +68,24 @@ def test_train_end_to_end(tmp_path: Path):
     metrics = json.loads((target / "metrics.json").read_text(encoding="utf-8"))
     assert metrics.get("total_steps") == 2
 
+    # Evaluate saved model on the same small dataset
+    from eval_utils import load_model_and_tokenizer, evaluate_pairs_with_model
+
+    model, tok = load_model_and_tokenizer(target)
+    eval_metrics = evaluate_pairs_with_model(
+        model,
+        tok,
+        pairs_path=data_file,
+        device=None,
+        dtype_opt="float32",
+        batch_size=4,
+        max_length=16,
+    )
+    # Basic sanity: metrics present and in range
+    for key in ("recall@1", "recall@5", "mrr@10"):
+        assert key in eval_metrics
+        assert 0.0 <= eval_metrics[key] <= 1.0
+
 
 def test_streaming_loader(tmp_path: Path):
     # Validate streaming dataloader produces batches without loading entire file
@@ -96,4 +114,3 @@ def test_streaming_loader(tmp_path: Path):
     assert set(batch1.keys()) == {"anchor_inputs", "positive_inputs"}
     # Should be batched to size 2
     assert batch1["anchor_inputs"]["input_ids"].shape[0] == 2
-
