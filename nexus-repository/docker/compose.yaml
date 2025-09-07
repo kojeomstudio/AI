@@ -1,0 +1,33 @@
+
+services:
+  nexus:
+    image: kojeomstudio/nexus-repository:v1
+    container_name: nexus-repository
+    environment:
+      - INSTALL4J_ADD_VM_PARAMS=-Xms1200m -Xmx1200m -XX:+UseG1GC -Djava.util.prefs.userRoot=/nexus-data/javaprefs
+      - TZ=Asia/Seoul
+    volumes:
+      - ./data:/nexus-data
+    expose:
+      - "8081"          # UI
+      # Nexus에서 Docker 레지스트리 커넥터 포트를 예: 8082(HTTP), 8083(HTTP)처럼 내부로 열어둡니다.
+      # 실제 포트 값은 UI에서 레포지토리 생성 시 설정하게 됨. 여기선 Nginx가 프록시만 함.
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: nexus-proxy
+    depends_on:
+      - nexus
+    ports:
+      - "${HTTP_PORT:-80}:80"
+      - "${HTTPS_PORT:-443}:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      # 인증서 위치(필요 시 교체)
+      - ./nginx/certs:/etc/nginx/certs:ro
+    restart: unless-stopped
