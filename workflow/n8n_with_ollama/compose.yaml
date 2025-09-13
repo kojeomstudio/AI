@@ -1,0 +1,65 @@
+# compose.yaml
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama:/root/.ollama
+    networks:
+      - automation-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:11434/api/tags || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+
+  n8n:
+    image: docker.n8n.io/n8nio/n8n:latest
+    container_name: n8n
+    ports:
+      - "5678:5678"
+    # macOS 예시 경로. Linux/서버에서는 .env로 바꾸세요 (N8N_DATA_DIR).
+    volumes:
+      - ${N8N_DATA_DIR:-/Users/kojeomstudio/.n8n_storage}:/home/node/.n8n
+    environment:
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=${N8N_BASIC_AUTH_USER:-admin}
+      - N8N_BASIC_AUTH_PASSWORD=${N8N_BASIC_AUTH_PASSWORD:-change_me}
+      - N8N_HOST=${N8N_HOST:-localhost}
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - N8N_SECURE_COOKIE=false
+      - N8N_EDITOR_BASE_URL=${N8N_EDITOR_BASE_URL:-http://localhost:5678/}
+      - N8N_PUBLIC_API_BASE_URL=${N8N_PUBLIC_API_BASE_URL:-http://localhost:5678/}
+      - N8N_EMAIL_MODE=smtp
+      - N8N_SMTP_HOST=${N8N_SMTP_HOST:-smtp.your-email-provider.com}
+      - N8N_SMTP_PORT=${N8N_SMTP_PORT:-587}
+      - TZ=Asia/Seoul
+      # n8n에서 ollama 호출 시 내부 주소
+      - OLLAMA_BASE_URL=http://ollama:11434
+    stdin_open: true
+    tty: true
+    networks:
+      - automation-net
+    restart: unless-stopped
+    depends_on:
+      ollama:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:5678/healthz || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 30s
+
+networks:
+  automation-net:
+    driver: bridge
+
+volumes:
+  ollama:
+    name: ollama
