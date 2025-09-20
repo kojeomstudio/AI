@@ -2,11 +2,11 @@ import requests
 import json
 
 # n8n 웹훅 주소
-url = "http://localhost:5678/webhook/test"
+url = "http://192.168.0.22:5678/webhook-test/review"
 
 # POST body (JSON 스키마)
 payload = {
-    "trigger": "kuma",
+    "trigger": "kojeomstudio",
     "target_files": ["a.cpp", "b.py"],
     "build_id": 12345
 }
