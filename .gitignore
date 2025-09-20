@@ -16,3 +16,6 @@ processed_files.db
 
 # datas for study.
 pytorch_data
+
+# test volumes
+.n8n_storage
