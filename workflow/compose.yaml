@@ -5,6 +5,8 @@ services:
     ports:
       - "5678:5678"
     volumes:
+      # image 생성할 때 워킹 디렉토리를 /home/node로 만들고 있음.
+      # n8n 데이터 저장 위치 (호스트 경로:컨테이너 경로)
       - ./.n8n_storage:/home/node/.n8n
     restart: unless-stopped
     environment:
