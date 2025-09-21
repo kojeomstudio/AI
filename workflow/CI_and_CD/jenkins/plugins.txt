@@ -1,0 +1,7 @@
+# Minimum plugin set for typical pipelines
+git
+workflow-aggregator
+credentials
+matrix-auth
+docker-plugin
+docker-workflow

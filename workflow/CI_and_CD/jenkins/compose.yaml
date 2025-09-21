@@ -1,0 +1,26 @@
+services:
+  jenkins:
+    image: kojeomstudio/jenkins:2.516.3-lts-jdk17   # compose will build and tag with this name
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: jenkins
+    restart: unless-stopped
+    # Map container user to host 'kuma' (set via .env file)
+    user: "${LOCAL_UID}:${LOCAL_GID}"
+    environment:
+      - TZ=Asia/Seoul
+      # - JENKINS_OPTS=--prefix=/jenkins  # use only if you run behind a reverse-proxy subpath
+    ports:
+      - "32167:8080"      # Web UI on host port 32167
+      # - "50000:50000"   # Enable only if you use JNLP agents
+    volumes:
+      - /mnt/storage1/.jenkins_home:/var/jenkins_home
+      - /mnt/storage1/workspace:/mnt/storage1/workspace
+      - /home/kuma/.ssh:/root/.ssh:ro # github ssh 
+      # - /var/run/docker.sock:/var/run/docker.sock  # enable if Jenkins jobs need Docker (security risk)
+    healthcheck:
+      test: ["CMD", "bash", "-lc", "curl -fsS http://127.0.0.1:8080/login || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 10
