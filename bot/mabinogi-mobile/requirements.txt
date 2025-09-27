@@ -1,0 +1,6 @@
+typer
+ultralytics
+pywin32
+opencv-python
+numpy
+jsonschema
