@@ -6,191 +6,184 @@ import signal
 from typing import Dict, List
 
 from ultralytics import YOLO
-
 from ui.object import *
 from ui.action import *
 from ui.base.element import *
 from logger_helper import get_logger
-from utils.capture import *
+from utils.capture import get_game_window_image
 from input_manager import InputManager
 from action_processor import ActionProcessor
 
-logger = get_logger()
-config = None
-running = True
-
-def signal_handler(signum, frame):
-    """시그널 핸들러 - 프로그램 종료"""
-    global running
-    logger.info("종료 신호 수신, 프로그램을 종료합니다...")
-    running = False
-
-def get_file_path(in_origin):
-    """실행 환경에 따라 상대 경로 처리"""
-    base_dir = os.path.dirname(sys.executable) if getattr(sys, 'frozen', False) else os.path.dirname(os.path.abspath(__file__))
-    return os.path.join(base_dir, str(in_origin))
-
-def load_config(path="config.json"):
-    """설정 파일 로드"""
-    try:
-        with open(path, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except Exception as e:
-        logger.error(f"설정 파일 로드 실패: {e}")
-        return {}
-
-def match_elements(results, elements):
-    """모든 요소와 YOLO 결과 매칭"""
-    matched = {}
-    for element in elements:
-        is_match, pos = element.match(results)
-        if is_match:
-            logger.debug(f"감지됨: {element.get_type().name} at {pos}")
-            matched[element.get_type()] = (element, pos)
-        else:
-            logger.debug(f"미감지: {element.get_type().name}")
-    return matched
-
-def create_elements():
-    """YOLO 요소 리스트 생성"""
-    return [
-        CoalVeinNode(ElementType.COAL_VEIN, class_id=0),
-        IronVeinNode(ElementType.IRON_VEIN, class_id=7),
-        NormalVeinNode(ElementType.NORMAL_VEIN, class_id=8),
-        TreeNode(ElementType.TREE, class_id=9),
-        UI_Attack(ElementType.UI_ATTACK, class_id=1),
-        UI_Inventory(ElementType.UI_INVENTORY, class_id=2),
-        UI_Riding(ElementType.UI_RIDING, class_id=3),
-        UI_Riding_Out(ElementType.UI_RIDING_OUT, class_id=11),
-        UI_Mining(ElementType.UI_MINING, class_id=4),
-        UI_Craft(ElementType.UI_CRAFT, class_id=5),
-        UI_Compass(ElementType.UI_COMPASS, class_id=6),
-        UI_Felling(ElementType.UI_FELLING, class_id=12),
-        UI_Working(ElementType.UI_WORKING, class_id=10),
-        UI_Wing(ElementType.UI_WING, class_id=13),
-    ]
-
-def main_loop_improved(model, elements, action_processor, tick=0.5):
-    """개선된 메인 루프"""
-    global running
-    
-    try:
-        while running:
-            try:
-                # 타겟 프로세스 감시
-                if not action_processor.input_manager.monitor_process():
-                    logger.warning("타겟 프로세스를 찾지 못했습니다. 5초 후 재시도...")
-                    time.sleep(5)
-                    continue
-
-                # 화면 캡처
-                screen_np = get_game_window_image(config["window_title"])
-                if screen_np is None:
-                    logger.warning("게임 창을 찾을 수 없습니다. 5초 후 재시도...")
-                    time.sleep(5)
-                    continue
-
-                # YOLO 예측
-                logger.debug("YOLO 예측 수행")
-                results = model.predict(screen_np, conf=0.5, verbose=False)
-
-                # 요소 매칭
-                matched = match_elements(results, elements)
-
-                # 액션 처리
-                if matched:
-                    action_processor.process_detected_elements(matched)
-                else:
-                    logger.debug("감지된 요소 없음")
-            except Exception as e:
-                logger.error(f"루프 처리 중 오류: {e}")
-
-            # 대기
-            time.sleep(tick)
-            
-    except KeyboardInterrupt:
-        logger.info("[EXIT] 매크로 종료됨")
-    except Exception as e:
-        logger.error(f"메인 루프 오류: {e}")
-
-def test_mode(model, elements, action_processor):
-    """테스트 모드 - 입력 메서드 테스트"""
-    logger.info("=== 테스트 모드 시작 ===")
-    
-    # 화면 중앙 좌표 계산
-    screen_np = get_game_window_image(config["window_title"])
-    if screen_np is not None:
-        height, width = screen_np.shape[:2]
-        center_x = width // 2
-        center_y = height // 2
+class MacroApp:
+    def __init__(self, config_path="config/config.json", elements_path="config/elements.json"):
+        self.logger = get_logger()
+        self.running = True
+        self.config = self._load_json(config_path)
+        self.elements_config = self._load_json(elements_path)
         
-        logger.info(f"화면 크기: {width}x{height}, 중앙: ({center_x}, {center_y})")
-        
-        # 입력 메서드 테스트
-        action_processor.test_input_methods(center_x, center_y)
-    else:
-        logger.error("게임 창을 찾을 수 없어 테스트를 진행할 수 없습니다.")
+        if not self.config or not self.elements_config:
+            self.logger.error("Failed to load configuration files. Exiting.")
+            sys.exit(1)
 
-def print_stats(action_processor):
-    """통계 출력"""
-    stats = action_processor.get_action_stats()
-    logger.info("=== 매크로 실행 통계 ===")
-    logger.info(f"총 실행된 액션 수: {stats['total_actions']}")
-    
-    if stats['action_counts']:
-        logger.info("액션별 실행 횟수:")
-        for action, count in stats['action_counts'].items():
-            logger.info(f"  {action}: {count}회")
+        self.model = self._load_model()
+        self.elements = self._load_elements()
+        self.input_manager = InputManager(self.config["window_title"])
+        self.action_processor = ActionProcessor("config/action_config.json", self.input_manager)
 
-if __name__ == "__main__":
-    # 시그널 핸들러 등록
-    signal.signal(signal.SIGINT, signal_handler)
-    signal.signal(signal.SIGTERM, signal_handler)
-    
-    # 설정 로드
-    config = load_config(get_file_path("./config/config.json"))
-    if not config:
-        logger.error("설정 파일을 로드할 수 없습니다.")
-        sys.exit(1)
-    
-    # YOLO 모델 로드
-    model_path = get_file_path("ml/training_output/mabinogi_model/weights/best.pt")
-    if not os.path.exists(model_path):
-        logger.error(f"YOLO 모델 파일을 찾을 수 없습니다: {model_path}")
-        sys.exit(1)
-    
-    model = YOLO(model_path)
-    logger.info(f"YOLO 모델 로드 완료: {model_path}")
-    
-    # 요소 리스트 생성
-    elements = create_elements()
-    logger.info(f"YOLO 요소 {len(elements)}개 로드 완료")
-    
-    # 입력 매니저 초기화
-    input_manager = InputManager(config["window_title"])
-    if not input_manager.target_hwnd:
-        logger.error("타겟 윈도우를 찾을 수 없습니다.")
-        sys.exit(1)
-    
-    # 액션 프로세서 초기화
-    action_config_path = get_file_path("./config/action_config.json")
-    action_processor = ActionProcessor(action_config_path, input_manager)
-    
-    # 명령행 인수 처리
-    if len(sys.argv) > 1 and sys.argv[1] == "--test":
-        test_mode(model, elements, action_processor)
-    else:
-        logger.info("[START] 개선된 YOLO 매크로 실행 중...")
-        logger.info(f"타겟 윈도우: {config['window_title']}")
-        logger.info(f"틱 간격: {config.get('tick_interval', 0.5)}초")
+        signal.signal(signal.SIGINT, self._signal_handler)
+        signal.signal(signal.SIGTERM, self._signal_handler)
+
+    def _load_json(self, path: str) -> dict:
+        """Loads a JSON file."""
+        try:
+            with open(self._get_file_path(path), "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception as e:
+            self.logger.error(f"Failed to load JSON file at {path}: {e}")
+            return {}
+
+    def _get_file_path(self, in_origin: str) -> str:
+        """Gets the absolute path to a file."""
+        base_dir = os.path.dirname(sys.executable) if getattr(sys, 'frozen', False) else os.path.dirname(os.path.abspath(__file__))
+        return os.path.join(base_dir, str(in_origin))
+
+    def _load_model(self) -> YOLO:
+        """Loads the YOLO model."""
+        model_path = self._get_file_path(self.config["model_path"])
+        if not os.path.exists(model_path):
+            self.logger.error(f"YOLO model file not found: {model_path}")
+            sys.exit(1)
         
         try:
-            main_loop_improved(
-                model, 
-                elements, 
-                action_processor, 
-                tick=config.get('tick_interval', 0.5)
-            )
+            model = YOLO(model_path)
+            self.logger.info(f"YOLO model loaded successfully: {model_path}")
+            return model
+        except Exception as e:
+            self.logger.error(f"Failed to load YOLO model: {e}")
+            sys.exit(1)
+
+    def _load_elements(self) -> List:
+        """Loads YOLO elements from the configuration."""
+        elements = []
+        element_classes = {
+            "CoalVeinNode": CoalVeinNode,
+            "IronVeinNode": IronVeinNode,
+            "NormalVeinNode": NormalVeinNode,
+            "TreeNode": TreeNode,
+            "UI_Attack": UI_Attack,
+            "UI_Inventory": UI_Inventory,
+            "UI_Riding": UI_Riding,
+            "UI_Riding_Out": UI_Riding_Out,
+            "UI_Mining": UI_Mining,
+            "UI_Craft": UI_Craft,
+            "UI_Compass": UI_Compass,
+            "UI_Felling": UI_Felling,
+            "UI_Working": UI_Working,
+            "UI_Wing": UI_Wing,
+        }
+
+        for element_data in self.elements_config.get("elements", []):
+            element_name = element_data.get("name")
+            class_id = element_data.get("class_id")
+            
+            # Find the corresponding class in element_classes based on the name
+            element_class = next((cls for name, cls in element_classes.items() if name == element_name), None)
+
+            if element_class:
+                try:
+                    element_type = ElementType[element_name]
+                    elements.append(element_class(element_type, class_id=class_id))
+                except KeyError:
+                    self.logger.error(f"ElementType '{element_name}' not found.")
+                except Exception as e:
+                    self.logger.error(f"Failed to create element '{element_name}': {e}")
+            else:
+                self.logger.warning(f"Element class for '{element_name}' not found.")
+
+        self.logger.info(f"Loaded {len(elements)} YOLO elements.")
+        return elements
+
+    def _signal_handler(self, signum, frame):
+        """Handles signals to gracefully shut down the application."""
+        self.logger.info("Termination signal received. Shutting down...")
+        self.running = False
+
+    def _match_elements(self, results) -> Dict:
+        """Matches detected elements with YOLO results."""
+        matched = {}
+        for element in self.elements:
+            is_match, pos = element.match(results)
+            if is_match:
+                self.logger.debug(f"Detected: {element.get_type().name} at {pos}")
+                matched[element.get_type()] = (element, pos)
+        return matched
+
+    def run(self):
+        """The main loop of the macro."""
+        self.logger.info("Starting improved YOLO macro...")
+        self.logger.info(f"Target window: {self.config['window_title']}")
+        self.logger.info(f"Tick interval: {self.config.get('tick_interval', 0.5)}s")
+
+        try:
+            while self.running:
+                try:
+                    if not self.input_manager.monitor_process():
+                        self.logger.warning("Target process not found. Retrying in 5 seconds...")
+                        time.sleep(5)
+                        continue
+
+                    screen_np = get_game_window_image(self.config["window_title"])
+                    if screen_np is None:
+                        self.logger.warning("Game window not found. Retrying in 5 seconds...")
+                        time.sleep(5)
+                        continue
+
+                    self.logger.debug("Performing YOLO prediction...")
+                    results = self.model.predict(screen_np, conf=self.config.get("confidence_threshold", 0.5), verbose=False)
+                    
+                    matched = self._match_elements(results)
+
+                    if matched:
+                        self.action_processor.process_detected_elements(matched)
+                    else:
+                        self.logger.debug("No elements detected.")
+
+                except Exception as e:
+                    self.logger.error(f"An error occurred in the main loop: {e}", exc_info=True)
+
+                time.sleep(self.config.get("tick_interval", 0.5))
+
+        except KeyboardInterrupt:
+            self.logger.info("Macro terminated by user.")
         finally:
-            print_stats(action_processor)
-            logger.info("[END] 매크로 종료") 
+            self._print_stats()
+            self.logger.info("Macro has been shut down.")
+
+    def test_mode(self):
+        """Runs the macro in test mode to test input methods."""
+        self.logger.info("=== Starting Test Mode ===")
+        screen_np = get_game_window_image(self.config["window_title"])
+        if screen_np is not None:
+            height, width, _ = screen_np.shape
+            center_x, center_y = width // 2, height // 2
+            self.logger.info(f"Screen dimensions: {width}x{height}, center: ({center_x}, {center_y})")
+            self.action_processor.test_input_methods(center_x, center_y)
+        else:
+            self.logger.error("Game window not found. Cannot proceed with the test.")
+
+    def _print_stats(self):
+        """Prints the action statistics."""
+        stats = self.action_processor.get_action_stats()
+        self.logger.info("=== Macro Execution Stats ===")
+        self.logger.info(f"Total actions executed: {stats['total_actions']}")
+        if stats['action_counts']:
+            self.logger.info("Actions executed:")
+            for action, count in stats['action_counts'].items():
+                self.logger.info(f"  - {action}: {count} times")
+
+if __name__ == "__main__":
+    app = MacroApp()
+    if len(sys.argv) > 1 and sys.argv[1] == "--test":
+        app.test_mode()
+    else:
+        app.run()
