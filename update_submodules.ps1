@@ -30,8 +30,8 @@ $updateLogic = {
 }
 
 try {
-    # Get a list of all submodule paths from git.
-    $submodulePaths = git submodule --quiet foreach --recursive '$path'
+    # Get a list of all submodule paths from git by explicitly echoing the path.
+    $submodulePaths = git submodule --quiet foreach --recursive 'echo $path'
 
     # Loop through each path in PowerShell.
     foreach ($path in $submodulePaths) {
