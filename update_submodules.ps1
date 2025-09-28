@@ -1,44 +1,77 @@
-# This script updates all git submodules by fetching from 'upstream',
-# merging into the local branch, and pushing to 'origin'.
-# It then commits and pushes the updated submodule references in the parent repository.
+# This script updates all git submodules using a robust, PowerShell-native approach.
 
 Write-Host ">>> Starting submodule update process..."
 
-# Update each submodule
+# Define the script block to be executed in each submodule directory.
+# This avoids complex quoting issues with `git submodule foreach`.
+$updateLogic = {
+    param($submoduleName)
+
+    try {
+        $ErrorActionPreference = 'Stop'
+        Write-Host "`n>>> Processing submodule: $submoduleName"
+
+        $branch = git rev-parse --abbrev-ref HEAD
+        Write-Host ">>> On branch: $branch"
+
+        Write-Host ">>> Fetching from upstream..."
+        git fetch upstream
+
+        Write-Host ">>> Merging upstream/$branch into $branch..."
+        git merge "upstream/$branch"
+
+        Write-Host ">>> Pushing to origin..."
+        git push origin "$branch"
+    }
+    catch {
+        # Throw a terminating error to be caught by the outer catch block.
+        throw "Failed in submodule '$submoduleName': $_"
+    }
+}
+
 try {
-    # git submodule foreach, when run from PowerShell on Windows with Git for Windows,
-    # may use the 'sh' shell. We must explicitly call 'powershell' and pass our
-    # script to it to ensure correct execution.
-    # Inside the -Command string, single quotes are doubled (e.g., ''Stop'') to be treated as literals.
-    git submodule foreach --recursive 'powershell -NoProfile -Command "try { `$ErrorActionPreference = ''''Stop''''; Write-Host ""`n>>> Processing submodule: $name"" ; `$branch = git rev-parse --abbrev-ref HEAD; Write-Host "">>> On branch: `$branch""; Write-Host "">>> Fetching from upstream...""; git fetch upstream; Write-Host "">>> Merging upstream/`$branch into `$branch...""; git merge ""upstream/`$branch"" ; Write-Host "">>> Pushing to origin...""; git push origin ""`$branch""; } catch { Write-Host ""Error in submodule ''''$name'''': `$_.Exception.Message"" -ForegroundColor Red; exit 1; }"'
+    # Get a list of all submodule paths from git.
+    $submodulePaths = git submodule --quiet foreach --recursive '$path'
+
+    # Loop through each path in PowerShell.
+    foreach ($path in $submodulePaths) {
+        # Temporarily change to the submodule's directory.
+        Push-Location $path
+        
+        # Execute the update logic defined above.
+        & $updateLogic -submoduleName $path
+        
+        # Return to the original directory.
+        Pop-Location
+    }
+
+    Write-Host "`n>>> Submodule updates complete."
+    Write-Host ">>> Committing and pushing changes in the parent repository..."
+
+    # Stage the updated submodule references.
+    git add .
+
+    # Commit the changes, but only if there are changes to commit.
+    $changes = git diff-index --quiet HEAD --
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host ">>> Committing submodule updates..."
+        git commit -m "chore: Update submodules from upstream"
+
+        # Push the changes to the parent repository's main branch.
+        Write-Host ">>> Pushing parent repository to origin..."
+        git push origin main # Or your default branch
+    }
+    else {
+        Write-Host ">>> No submodule changes to commit."
+    }
+
+    Write-Host ">>> All done."
 }
 catch {
-    # This block will catch errors from the `git submodule foreach` command itself,
-    # for example if a submodule command returns a non-zero exit code.
-    Write-Error "A submodule script failed. Please check the output above."
-    # Exit the main script with an error code.
+    # If any submodule fails, the script will stop here.
+    Write-Error "A submodule script failed. Halting execution. Error: $_"
+    # Ensure we are back in the original directory in case of failure.
+    while ($Host.UI.RawUI.KeyAvailable -and ($Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown").VirtualKeyCode -ne 13)) {}
+    while(Get-Location -Stack) { Pop-Location }
     exit 1
 }
-
-Write-Host ">>> Submodule updates complete."
-Write-Host ">>> Committing and pushing changes in the parent repository..."
-
-# Stage the updated submodule references
-git add .
-
-# Commit the changes
-# Check if there are staged changes before committing
-$changes = git diff-index --quiet HEAD --
-if ($LASTEXITCODE -eq 0) {
-    Write-Host ">>> No submodule changes to commit."
-}
-else {
-    Write-Host ">>> Committing submodule updates..."
-    git commit -m "chore: Update submodules from upstream"
-
-    # Push the changes to the parent repository's main branch
-    Write-Host ">>> Pushing parent repository to origin..."
-    git push origin main # Or your default branch
-}
-
-Write-Host ">>> All done."
