@@ -6,29 +6,17 @@ Write-Host ">>> Starting submodule update process..."
 
 # Update each submodule
 try {
-    git submodule foreach --recursive '
-        $ErrorActionPreference = "Stop"
-        Write-Host ">>> Processing submodule: $name"
-
-        # Get the current branch name
-        $branch = git rev-parse --abbrev-ref HEAD
-        Write-Host ">>> On branch: $branch"
-
-        # Fetch from upstream
-        Write-Host ">>> Fetching from upstream..."
-        git fetch upstream
-
-        # Merge the corresponding upstream branch
-        Write-Host ">>> Merging upstream/$branch into $branch..."
-        git merge "upstream/$branch"
-
-        # Push to origin
-        Write-Host ">>> Pushing to origin..."
-        git push origin "$branch"
-    '
+    # git submodule foreach, when run from PowerShell on Windows with Git for Windows,
+    # may use the 'sh' shell. We must explicitly call 'powershell' and pass our
+    # script to it to ensure correct execution.
+    # Inside the -Command string, single quotes are doubled (e.g., ''Stop'') to be treated as literals.
+    git submodule foreach --recursive 'powershell -NoProfile -Command "try { `$ErrorActionPreference = ''''Stop''''; Write-Host ""`n>>> Processing submodule: $name"" ; `$branch = git rev-parse --abbrev-ref HEAD; Write-Host "">>> On branch: `$branch""; Write-Host "">>> Fetching from upstream...""; git fetch upstream; Write-Host "">>> Merging upstream/`$branch into `$branch...""; git merge ""upstream/`$branch"" ; Write-Host "">>> Pushing to origin...""; git push origin ""`$branch""; } catch { Write-Host ""Error in submodule ''''$name'''': `$_.Exception.Message"" -ForegroundColor Red; exit 1; }"'
 }
 catch {
-    Write-Error "An error occurred while updating submodules. Please check the output above."
+    # This block will catch errors from the `git submodule foreach` command itself,
+    # for example if a submodule command returns a non-zero exit code.
+    Write-Error "A submodule script failed. Please check the output above."
+    # Exit the main script with an error code.
     exit 1
 }
 
