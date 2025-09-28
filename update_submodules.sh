@@ -9,23 +9,20 @@ echo ">>> Starting submodule update process..."
 
 # Update each submodule
 git submodule foreach --recursive '
+  set -e
   echo ">>> Processing submodule: $name"
   
-  # Get the current branch name
-  BRANCH=$(git rev-parse --abbrev-ref HEAD)
-  echo ">>> On branch: $BRANCH"
-  
-  # Fetch from upstream
-  echo ">>> Fetching from upstream..."
-  git fetch upstream
-  
-  # Merge the corresponding upstream branch
-  echo ">>> Merging upstream/$BRANCH into $BRANCH..."
-  git merge "upstream/$BRANCH"
-  
-  # Push to origin
-  echo ">>> Pushing to origin..."
-  git push origin "$BRANCH"
+  echo ">>> Fetching from origin..."
+  git fetch origin
+
+  echo ">>> Finding default branch..."
+  DEFAULT_BRANCH=$(git remote show origin | grep 'HEAD branch' | awk '{print $3}')
+  if [ -z "$DEFAULT_BRANCH" ]; then
+    echo "Error: Could not determine default branch for $name. Skipping."
+    exit 1
+  fi
+  echo ">>> Default branch is '$DEFAULT_BRANCH'. Checking out origin/$DEFAULT_BRANCH..."
+  git checkout "origin/$DEFAULT_BRANCH"
 '
 
 echo ">>> Submodule updates complete."

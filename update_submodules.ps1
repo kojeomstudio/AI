@@ -11,17 +11,22 @@ $updateLogic = {
         $ErrorActionPreference = 'Stop'
         Write-Host "`n>>> Processing submodule: $submoduleName"
 
-        $branch = git rev-parse --abbrev-ref HEAD
-        Write-Host ">>> On branch: $branch"
+        Write-Host ">>> Fetching from origin..."
+        git fetch origin
 
-        Write-Host ">>> Fetching from upstream..."
-        git fetch upstream
+        # Find the default branch of the remote 'origin'
+        Write-Host ">>> Finding default branch..."
+        $remoteInfo = git remote show origin
+        $headBranchLine = $remoteInfo | Select-String 'HEAD branch'
+        if (-not $headBranchLine) {
+            throw "Could not determine HEAD branch for origin in submodule $submoduleName."
+        }
+        $defaultBranch = ($headBranchLine.ToString() -split ':')[1].Trim()
+        Write-Host ">>> Default branch is '$defaultBranch'. Checking out origin/$defaultBranch..."
 
-        Write-Host ">>> Merging upstream/$branch into $branch..."
-        git merge "upstream/$branch"
+        # Checkout the latest commit of the default branch
+        git checkout "origin/$defaultBranch"
 
-        Write-Host ">>> Pushing to origin..."
-        git push origin "$branch"
     }
     catch {
         # Throw a terminating error to be caught by the outer catch block.

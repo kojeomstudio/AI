@@ -10,13 +10,11 @@ echo >>> Starting submodule update process...
 
 REM Update each submodule
 git submodule foreach --recursive "cmd /c ( ^
-  echo ">>> Processing submodule: %name% on branch 'main'" ^&^& ^
-  echo ">>> Fetching from upstream..." ^&^& ^
-  git fetch upstream ^&^& ^
-  echo ">>> Merging upstream/main into main..." ^&^& ^
-  git merge upstream/main ^&^& ^
-  echo ">>> Pushing to origin..." ^&^& ^
-  git push origin main ^
+  echo ">>> Processing submodule: %name%" ^&^& ^
+  echo ">>> Fetching from origin..." ^&^& ^
+  git fetch origin ^&^& ^
+  echo ">>> Checking out origin/main..." ^&^& ^
+  git checkout origin/main ^
 )"
 IF %ERRORLEVEL% NEQ 0 (
     echo An error occurred while updating submodules.
