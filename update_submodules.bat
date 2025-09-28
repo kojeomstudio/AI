@@ -1,51 +1,55 @@
 @echo off
-setlocal enabledelayedexpansion
+setlocal
 
-REM This script updates all git submodules by fetching from 'upstream',
-REM merging into the local branch, and pushing to 'origin'.
-REM It then commits and pushes the updated submodule references in the parent repository.
-REM This script assumes the branch to be updated is 'main'.
+set LOG_FILE=submodule_update.log
 
-echo >>> Starting submodule update process...
+rem Start with a clean log file for this run
+echo Submodule update process started at %date% %time% > %LOG_FILE%
 
-REM Update each submodule
-git submodule foreach --recursive "cmd /c ( ^
-  echo ">>> Processing submodule: %name%" ^&^& ^
-  echo ">>> Fetching from origin..." ^&^& ^
-  git fetch origin ^&^& ^
-  echo ">>> Checking out origin/main..." ^&^& ^
-  git checkout origin/main ^
-)"
-IF %ERRORLEVEL% NEQ 0 (
-    echo An error occurred while updating submodules.
-    exit /b %ERRORLEVEL%
+echo >>> Starting resilient submodule update process... Errors will be logged to %LOG_FILE%
+
+rem Use a simple for loop to get paths, as it's more robust than `git submodule foreach` for complex logic
+for /f %%p in ('git submodule --quiet foreach --recursive "echo %%p" ') do (
+    echo.
+    echo >>> Processing submodule: %%p
+    
+    rem Change to the submodule directory
+    pushd %%p
+
+    rem Try the update logic. If any command fails, the `||` part will execute.
+    ( 
+        echo --- Attempting to checkout 'main' branch...
+        git checkout main && (
+            echo --- On branch 'main'. Attempting 'upstream -> origin' workflow...
+            git fetch upstream && git merge upstream/main && git push origin main
+        )
+    ) || (
+        echo Failed in submodule: %%p. See %LOG_FILE% for details.
+        echo %date% %time% - Failed in submodule: %%p >> %LOG_FILE%
+    )
+
+    rem Return to the parent directory
+    popd
 )
 
-echo >>> Submodule updates complete.
+echo.
+echo >>> Submodule update process complete.
 echo >>> Committing and pushing changes in the parent repository...
 
-REM Stage the updated submodule references
+rem Stage the updated submodule references
 git add .
 
-REM Commit the changes
+rem Commit the changes, but only if there are changes to commit.
 git diff-index --quiet HEAD --
-IF %ERRORLEVEL% EQU 0 (
-  echo >>> No submodule changes to commit.
-) ELSE (
-  echo >>> Committing submodule updates...
-  git commit -m "chore: Update submodules from upstream"
-  IF %ERRORLEVEL% NEQ 0 (
-    echo An error occurred while committing.
-    exit /b %ERRORLEVEL%
-  )
-  
-  REM Push the changes to the parent repository's main branch
-  echo >>> Pushing parent repository to origin...
-  git push origin main
-  IF %ERRORLEVEL% NEQ 0 (
-    echo An error occurred while pushing the parent repository.
-    exit /b %ERRORLEVEL%
-  )
+if %ERRORLEVEL% neq 0 (
+    echo >>> Committing submodule updates...
+    git commit -m "chore: Update submodules from upstream (resilient)"
+    
+    rem Push the changes to the parent repository's main branch
+    echo >>> Pushing parent repository to origin...
+    git push origin main
+) else (
+    echo >>> No submodule changes to commit.
 )
 
 echo >>> All done.
