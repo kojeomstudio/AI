@@ -17,8 +17,6 @@
 
 ```bash
 pip install -r requirements.txt
-# sentence-transformers가 포함되어 있어야 합니다.
-# requirements.txt에 sentence-transformers 추가가 필요할 수 있습니다.
 ```
 
 ### 2. 데이터 준비
@@ -33,30 +31,48 @@ pip install -r requirements.txt
 
 ### 3. 설정 파일 작성
 
-`config.json` 파일을 생성하고 학습 설정을 구성합니다.
+`config.json` 파일을 생성하고 학습 설정을 구성합니다. `config.qwen.json`은 Qwen 모델을 위한 예시 설정입니다.
 
-**`config.json` 예시:**
+**`config.json` 예시 (주요 설정 필드):**
 ```json
 {
   "model_id": "BAAI/bge-small-en-v1.5",
   "hf": {
     "trust_remote_code": true
   },
+  "device": {
+    "device": "auto",      // auto | cuda | mps | cpu
+    "dtype": "auto"        // auto | float32 | float16 | bfloat16
+  },
   "train": {
-    "batch_size": 32,
-    "epochs": 5
+    "batch_size": 8,
+    "epochs": 15,
+    "max_length": 128,
+    "grad_accum_steps": 1,   // 메모리 제약 시 배치 크기를 줄이고 이 값을 늘려 유효 배치 크기 유지
+    "pad_to_multiple_of": 8, // MPS/CUDA 성능 최적화 (8 또는 16 권장)
+    "fp16": "auto"           // auto | true | false (혼합 정밀도 학습 활성화)
   },
   "optim": {
-    "lr": 2e-5
+    "lr": 5e-5
   },
   "data": {
-    "pairs_path": "./data/pairs.jsonl"
+    "pairs_path": "./tools/data/pairs.jsonl"
   },
   "output": {
-    "save_dir": "./outputs/my-finetuned-model"
+    "save_dir": "./outputs",
+    "save_name": "embed-ft"
   }
 }
 ```
+
+**메모리 관리 팁 (특히 MPS 환경):**
+
+*   **`device.dtype`:** `float16` 또는 `bfloat16` (CUDA만 해당)을 사용하면 메모리 사용량을 절반으로 줄일 수 있습니다. `auto`로 설정하면 시스템이 자동으로 최적의 타입을 선택합니다.
+*   **`train.batch_size`:** 가장 먼저 줄여야 할 값입니다. 메모리 부족 시 이 값을 줄이세요.
+*   **`train.grad_accum_steps`:** `batch_size`를 줄인 만큼 이 값을 늘려주면, 실제 학습에 사용되는 유효 배치 크기(effective batch size = `batch_size` * `grad_accum_steps`)는 유지하면서 메모리 사용량을 줄일 수 있습니다.
+*   **`train.max_length`:** 입력 시퀀스 길이를 줄이면 메모리 사용량이 크게 감소합니다.
+*   **`train.pad_to_multiple_of`:** 8 또는 16과 같은 값으로 설정하면 GPU/MPS의 텐서 코어(Tensor Cores) 활용을 최적화하여 성능을 향상시키고 메모리 효율을 높일 수 있습니다.
+*   **`train.fp16`:** `true`로 설정하면 혼합 정밀도 학습을 활성화하여 메모리 사용량을 줄이고 학습 속도를 높일 수 있습니다. `auto`로 설정하면 `device.dtype`이 `float16` 또는 `bfloat16`일 때 자동으로 활성화됩니다.
 
 ### 4. 학습 실행
 
@@ -64,6 +80,8 @@ pip install -r requirements.txt
 
 ```bash
 python -m embed_trainer.train --config config.json
+# Qwen 모델 학습 예시:
+# python -m embed_trainer.train --config config.qwen.json
 ```
 
 학습이 완료되면 `output.save_dir`에 지정된 경로에 파인튜닝된 모델이 저장됩니다.

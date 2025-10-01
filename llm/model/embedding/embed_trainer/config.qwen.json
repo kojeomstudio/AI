@@ -3,10 +3,18 @@
   "hf": {
     "trust_remote_code": true
   },
+  "device": {
+    "device": "auto",
+    "dtype": "auto"
+  },
   "train": {
     "batch_size": 16,
     "epochs": 5,
-    "log_every": 100
+    "log_every": 100,
+    "grad_accum_steps": 4,
+    "pad_to_multiple_of": 8,
+    "fp16": true,
+    "max_length": 128
   },
   "optim": {
     "lr": 2e-5
