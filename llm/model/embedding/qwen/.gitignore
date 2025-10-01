@@ -1,9 +1,0 @@
-.venv
-.output
-outputs
-*.pyc
-__pycache__
-*.pyo
-*.pyd
-*.pkl
-*.pkl.gz

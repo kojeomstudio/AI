@@ -1,6 +1,0 @@
-# HTML 파싱
-beautifulsoup4==4.12.3
-lxml==5.2.2
-
-# HTTP 요청
-requests==2.32.3

@@ -1,0 +1,20 @@
+{
+  "model_id": "Qwen/Qwen3-Embedding-0.6B",
+  "hf": {
+    "trust_remote_code": true
+  },
+  "train": {
+    "batch_size": 16,
+    "epochs": 5,
+    "log_every": 100
+  },
+  "optim": {
+    "lr": 2e-5
+  },
+  "data": {
+    "pairs_path": "./tools/data/pairs.jsonl"
+  },
+  "output": {
+    "save_dir": "./outputs/qwen3-embed-ft-unified"
+  }
+}
