@@ -1,5 +1,0 @@
-fix(batch): Refactor submodule update script to prevent parsing errors
-
-The previous batch script was prone to parsing errors due to complex nested parentheses and locale-dependent date/time variables.
-
-This commit refactors the script by using subroutine-like `call` statements for modularity, replacing locale-dependent variables with a stable `wmic` timestamp, and simplifying the main loop to avoid parsing issues in cmd.exe.
