@@ -32,10 +32,27 @@ This repository is a collection of Python-based AI/Machine Learning projects, sp
 
 3.  **Running Scripts**:
     *   **embed_trainer**: 
+        For convenience, use the provided shell/batch scripts to set up the environment and run training.
+        
+        **Linux/macOS:**
         ```bash
+        # Run with default config (config.json)
+        ./embedding/embed_trainer/tools/run_train.sh
+        # Run with a specific config (e.g., config.qwen.json)
+        ./embedding/embed_trainer/tools/run_train.sh embedding/embed_trainer/config.qwen.json
+        ```
+        **Windows (Command Prompt/PowerShell):**
+        ```cmd
+        REM Run with default config (config.json)
+        embedding\embed_trainer\tools\run_train.bat
+        REM Run with a specific config (e.g., config.qwen.json)
+        embedding\embed_trainer\tools\run_train.bat embedding\embed_trainer\config.qwen.json
+        ```
+        Alternatively, you can manually activate the environment and run:
+        ```bash
+        # From project root
+        source embedding/embed_trainer/.venv/bin/activate
         python -m embedding.embed_trainer.train --config embedding/embed_trainer/config.json
-        # Example for Qwen model:
-        python -m embedding.embed_trainer.train --config embedding/embed_trainer/config.qwen.json
         ```
     *   **package_size_predict**: `python package_size_predict/run_training.py`
 
