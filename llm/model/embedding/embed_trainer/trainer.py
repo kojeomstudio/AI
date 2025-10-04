@@ -125,8 +125,7 @@ class Trainer:
             checkpoint_path=str(checkpoint_path),
             show_progress_bar=True,
             callback=None, # Optional: Add a callback for custom logging/metrics
-            fp16=self.fp16_enabled, # Enable mixed precision if dtype is float16
-            gradient_accumulation_steps=grad_accum_steps
+
         )
         
         logger.info("Training complete.")
