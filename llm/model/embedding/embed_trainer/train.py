@@ -11,9 +11,9 @@ import logging
 import sys
 from pathlib import Path
 
-from utils import load_json
-from data_utils import load_contrastive_pairs, infer_pairs_path
-from trainer import Trainer
+from .utils import load_json
+from .data_utils import load_contrastive_pairs, infer_pairs_path
+from .trainer import Trainer
 
 def setup_logger() -> logging.Logger:
     logging.basicConfig(

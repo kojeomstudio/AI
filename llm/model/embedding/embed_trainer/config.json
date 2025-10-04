@@ -35,7 +35,6 @@
   },
   "output": {
     "save_dir": "./outputs",
-    "save_name": "embed-ft",
-    "save_metrics": true
+    "save_name": "embed-ft"
   }
 }

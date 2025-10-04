@@ -22,9 +22,15 @@ def load_json(path: Path) -> Dict[str, Any]:
 def write_json(path: Path, data: Dict[str, Any], log_label: str = "data") -> None:
     """Serializes a dictionary to a JSON file."""
     try:
+        path.parent.mkdir(parents=True, exist_ok=True)
         with open(path, 'w', encoding='utf-8') as f:
             json.dump(data, f, indent=2, ensure_ascii=False)
         logger.info(f"[Save] {log_label} saved to: {path}")
     except IOError as e:
         logger.error(f"Failed to write JSON to {path}: {e}")
         raise
+
+def ensure_dir(p: Path) -> Path:
+    """Ensures that the directory for the given path exists."""
+    p.mkdir(parents=True, exist_ok=True)
+    return p
