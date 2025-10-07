@@ -13,12 +13,11 @@ BATCH_SIZE="${BATCH_SIZE:-1}"
 N_ITER="${N_ITER:-1}"
 SEED="${SEED:--1}"
 CHAR_LIST="${CHAR_LIST:-}"
-# 날짜 폴더(로컬 타임존 기준). 필요 시 RUN_DATE=YYYY-MM-DD 로 오버라이드 가능
-RUN_DATE="${RUN_DATE:-$(date +%F)}"   # 예: 2025-10-07
+RUN_DATE="${RUN_DATE:-$(date +%F)}"  # 예: 2025-10-07
 
 [ -n "$CHAR_LIST" ] || { echo "CHAR_LIST 비어있음"; exit 1; }
 
-# 날짜 기준 루트 생성
+# 날짜 기준 상위 폴더 생성
 OUT_DAY_ROOT="${OUT_ROOT}/${RUN_DATE}"
 mkdir -p "$OUT_DAY_ROOT"
 
@@ -39,10 +38,6 @@ for raw in "${names[@]}"; do
   char="$(echo "$raw" | sed 's/^ *//; s/ *$//')"
   [ -n "$char" ] || continue
   safe="$(echo "$char" | tr ' /' '__')"
-
-  # 날짜 폴더 아래 캐릭터별 디렉터리
-  out_dir="${OUT_DAY_ROOT}/${safe}"
-  mkdir -p "$out_dir"
 
   prompt="${POS_TMPL//\{CHAR\}/$char}"
 
@@ -66,6 +61,8 @@ for raw in "${names[@]}"; do
   img_b64="$(printf '%s' "$resp" | sanitize_json | jq -r '.images[0] // empty')"
   [ -n "$img_b64" ] || { echo "생성 실패: $char"; continue; }
 
-  echo "$img_b64" | b64dec > "${out_dir}/${safe}.png"
-  echo "saved: ${out_dir}/${safe}.png"
+  # 날짜 폴더 안에 캐릭터 이름으로 파일 저장
+  out_path="${OUT_DAY_ROOT}/${safe}.png"
+  echo "$img_b64" | b64dec > "$out_path"
+  echo "saved: $out_path"
 done
