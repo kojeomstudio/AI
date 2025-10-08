@@ -3,7 +3,10 @@ set -euo pipefail
 
 # 1) 환경변수 → 변수 세팅
 API_URL="${API_URL:-http://127.0.0.1:7860}"
-OUT_ROOT="${OUT_ROOT:-$PWD/outputs}"
+OUT_ROOT="${OUT_ROOT:-$PWD/outputs}"          # 기본 출력 루트 경로
+OUTPUT_DIR_NAME="${OUTPUT_DIR_NAME:-$(date +%F)}"  # 폴더 이름 (기본값: 오늘 날짜)
+OUT_DIR="${OUT_ROOT%/}/${OUTPUT_DIR_NAME}"     # 최종 출력 경로
+
 WIDTH="${WIDTH:-512}"
 HEIGHT="${HEIGHT:-512}"
 STEPS="${STEPS:-28}"
@@ -13,13 +16,10 @@ BATCH_SIZE="${BATCH_SIZE:-1}"
 N_ITER="${N_ITER:-1}"
 SEED="${SEED:--1}"
 CHAR_LIST="${CHAR_LIST:-}"
-RUN_DATE="${RUN_DATE:-$(date +%F)}"  # 예: 2025-10-07
 
 [ -n "$CHAR_LIST" ] || { echo "CHAR_LIST 비어있음"; exit 1; }
 
-# 날짜 기준 상위 폴더 생성
-OUT_DAY_ROOT="${OUT_ROOT}/${RUN_DATE}"
-mkdir -p "$OUT_DAY_ROOT"
+mkdir -p "$OUT_DIR"
 
 # 유틸
 need(){ command -v "$1" >/dev/null 2>&1 || { echo "필요 명령 없음: $1"; exit 1; }; }
@@ -61,8 +61,9 @@ for raw in "${names[@]}"; do
   img_b64="$(printf '%s' "$resp" | sanitize_json | jq -r '.images[0] // empty')"
   [ -n "$img_b64" ] || { echo "생성 실패: $char"; continue; }
 
-  # 날짜 폴더 안에 캐릭터 이름으로 파일 저장
-  out_path="${OUT_DAY_ROOT}/${safe}.png"
+  out_path="${OUT_DIR}/${safe}.png"
   echo "$img_b64" | b64dec > "$out_path"
   echo "saved: $out_path"
 done
+
+echo "✅ 완료: ${OUT_DIR}"
