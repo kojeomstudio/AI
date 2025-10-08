@@ -16,6 +16,7 @@ BATCH_SIZE="${BATCH_SIZE:-1}"
 N_ITER="${N_ITER:-1}"
 SEED="${SEED:--1}"
 CHAR_LIST="${CHAR_LIST:-}"
+USER_PROMPT="${USER_PROMPT:-}"
 
 [ -n "$CHAR_LIST" ] || { echo "CHAR_LIST 비어있음"; exit 1; }
 
@@ -30,8 +31,7 @@ sanitize_json(){ perl -pe 's/([\x00-\x1F])/sprintf("\\u%04X",ord($1))/ge'; }
 # 2) 캐릭터 반복 호출
 IFS=',' read -r -a names <<< "$CHAR_LIST"
 
-POS_TMPL='pixel_character_sprite, pxlchrctrsprt, sprite, sprite sheet, sprite art, pixel, (pixel art:1.5), retro game, retro, vibrant colors, pixelated, multiple views, concept art, (chibi:1.5), from side, looking away, from behind, back, 1girl, white background, {CHAR} (blue archive), has hair
-<lora:pixel_character_sprite_illustrious:0.7>'
+POS_TMPL="$USER_PROMPT"
 NEGATIVE='low quality, worst quality, normal quality, text, signature, jpeg artifacts, bad anatomy, old, early, copyright name, watermark, artist name, signature'
 
 for raw in "${names[@]}"; do
