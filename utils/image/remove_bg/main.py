@@ -28,7 +28,7 @@ def main():
     session = new_session(model_name)
 
     for src in files:
-        if src.stem.startswith("rm"):
+        if "rm" in src.stem:
             continue
 
         try:
