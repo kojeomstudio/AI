@@ -29,6 +29,7 @@ def main():
 
     for src in files:
         if "rm" in src.stem:
+            print(f"SKIP (이미 처리됨): {src.name}")
             continue
 
         try:
