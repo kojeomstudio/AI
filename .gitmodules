@@ -22,3 +22,6 @@
 [submodule "workflow/n8n"]
 	path = workflow/n8n
 	url = git@github.com:kojeomstudio/n8n.git
+[submodule "llm/agent/open-agent"]
+	path = llm/agent/open-agent
+	url = git@github.com:kojeomstudio/open-agent.git
