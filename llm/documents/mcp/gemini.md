@@ -1,7 +1,14 @@
 {
   "mcpServers": {
-    "serverName": {
-      "url": "http://127.0.0.1:9121/sse",
+    "serena": {
+      # sse의 경우 url
+      "url": "http://127.0.0.1:9121/sse", 
+      "timeout": 30000,
+      "trust": true
+    },
+    "serena": {
+      # http의 경우 httpUrl로 설정.
+      "httpUrl": "http://127.0.0.1:9121/mcp",
       "timeout": 30000,
       "trust": true
     }

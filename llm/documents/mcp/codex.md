@@ -16,3 +16,12 @@ args = [
   "uv", "run", "--directory", "/serena_projects",
   "serena-mcp-server", "--transport", "stdio"
 ]
+
+[mcp_servers.my_remote_server]
+type = "http"
+url = "https://my-mcp-server.example.com/mcp"
+headers = { Authorization = "Bearer YOUR_API_TOKEN" }
+
+[mcp_servers.serena]
+type = "http"
+url = "http://localhost:9121/mcp"
