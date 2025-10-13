@@ -32,7 +32,7 @@ def main():
     sampler = getenv("SAMPLER", "Euler a")
     steps = getenv("STEPS", None, cast=int)            # ✅ 필수 권장(전역만 사용)
     if steps is None or steps <= 0:
-        print("##teamcity[buildProblem description='env.STEPS must be a positive integer']")
+        print("##teamcity[buildProblem description='env.STEPS must be a positive integer']", flush=True)
         raise SystemExit(1)
 
     cfg_scale = getenv("CFGSCALE", "7.0", cast=float)  # ✅ 전역 CFGSCALE
@@ -51,7 +51,7 @@ def main():
 
     # --- 3) config 로드 (딕셔너리만 허용) ---
     if not config_path.exists():
-        print("##teamcity[buildProblem description='config.json not found']")
+        print("##teamcity[buildProblem description='config.json not found']", flush=True)
         raise SystemExit(1)
 
     with open(config_path, "r", encoding="utf-8") as f:
@@ -59,13 +59,13 @@ def main():
 
     prompts = config.get("prompts", {})
     if not isinstance(prompts, dict) or not prompts:
-        print("##teamcity[buildProblem description='prompts must be a non-empty object (key=name, value=prompt string)']")
+        print("##teamcity[buildProblem description='prompts must be a non-empty object (key=name, value=prompt string)']", flush=True)
         raise SystemExit(1)
 
     # --- 4) 프롬프트 루프 (모든 프롬프트에 동일 STEPS/CFGSCALE 적용) ---
     for key, prompt in prompts.items():
         if not isinstance(prompt, str) or not prompt.strip():
-            print(f"##teamcity[message text='Skip empty prompt for key {key}' status='WARNING']")
+            print(f"##teamcity[message text='Skip empty prompt for key {key}' status='WARNING']", flush=True)
             continue
 
         outdir_string = outdir_root
@@ -102,14 +102,14 @@ def main():
         }
 
         try:
-            print(f"##teamcity[message text='Generating key={key} -> {outdir_string}']")
+            print(f"##teamcity[message text='Generating key={key} -> {outdir_string}']", flush=True)
             resp = requests.post(f"{base_url}/sdapi/v1/txt2img", json=payload, timeout=timeout)
             resp.raise_for_status()
-            print(f"##teamcity[message text='Done: {key}']")
+            print(f"##teamcity[message text='Done: {key}']", flush=True)
         except requests.exceptions.RequestException as e:
-            print(f"##teamcity[buildProblem description='HTTP error for {key}: {e}']")
+            print(f"##teamcity[buildProblem description='HTTP error for {key}: {e}']", flush=True)
         except Exception as e:
-            print(f"##teamcity[buildProblem description='Unexpected error for {key}: {e}']")
+            print(f"##teamcity[buildProblem description='Unexpected error for {key}: {e}']", flush=True)
 
 if __name__ == "__main__":
     main()
