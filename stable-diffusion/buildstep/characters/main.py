@@ -5,6 +5,7 @@ import os
 import json
 from pathlib import Path
 import requests
+import argparse
 
 def getenv(name, default=None, cast=None):
     val = os.environ.get(name, default)
@@ -16,9 +17,15 @@ def getenv(name, default=None, cast=None):
     return val
 
 def main():
+    parser = argparse.ArgumentParser(description="실행 인자")
+    parser.add_argument("--config", type=str, default="config.json", help="프롬프트 설정 파일 경로 (기본: config.json)")
+
+    args = parser.parse_args()
+    args_config_path = Path(args.config)
+
     # --- 1) 경로/환경 ---
     script_dir = Path(__file__).resolve().parent
-    config_path = script_dir / "config.json"
+    config_path = script_dir / args_config_path
 
     host = getenv("SD_HOST", "127.0.0.1")
     port = getenv("SD_PORT", "7860")
@@ -71,7 +78,7 @@ def main():
         outdir_string = outdir_root
         outdir_string.mkdir(parents=True, exist_ok=True)
 
-        filename_pattern = f"{key}"
+        filename_pattern = f"[none]{key}"
 
         payload = {
             "prompt": prompt,

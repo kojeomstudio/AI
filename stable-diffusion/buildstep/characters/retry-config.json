@@ -1,0 +1,16 @@
+{
+  "prompts": {
+    "hero": "pixel art, chibi, only one boy, hero, sword, shield, armor, blonde hair, blue eyes, confident pose, full body, (empty background, simple background:1.3), <lora:ElinSpriteNoobLocon_byKonan:1>",
+    "dog": "pixel art, chibi, only one dog, animal, empty background, simple background:1.3, <lora:ElinSpriteNoobLocon_byKonan:1>",
+    "chick": "pixel art, chibi, only one yellow chick, standing, empty background, simple background:1.3, <lora:ElinSpriteNoobLocon_byKonan:1>",
+    "goat": "pixel art, chibi, only one goat, animal, horns, empty fur, standing, empty background, simple background:1.3, <lora:ElinSpriteNoobLocon_byKonan:1>",
+    "safe_box": "pixel art, steel safe, closed door, shiny lock, empty background, simple background:1.3, <lora:ElinSpriteNoobLocon_byKonan:1>",
+    "handsome_boy": "pixel art, chibi, only one handsome young man, short hair, stylish clothes, full body, (empty background, simple background:1.3), <lora:ElinSpriteNoobLocon_byKonan:1>",
+    "chicken": "pixel art, only one chicken, red comb, empty feathers, standing, empty background, simple background:1.3, <lora:ElinSpriteNoobLocon_byKonan:1>",
+    "pot_lid": "pixel art, only one pot lid, metal surface, handle on top, slightly tilted, empty background, simple background:1.3, <lora:ElinSpriteNoobLocon_byKonan:1>",
+    "goldfish": "pixel art, only one goldfish, orange fins, empty background, simple background:1.3, <lora:ElinSpriteNoobLocon_byKonan:1>",
+    "pencil": "pixel art, only one pencil, stuff, yellow body, pink eraser, empty background, simple background:1.3, <lora:ElinSpriteNoobLocon_byKonan:1>",
+    "eraser": "pixel art, only one eraser, rectangular shape, empty background, simple background:1.3, <lora:ElinSpriteNoobLocon_byKonan:1>",
+    "orc": "pixel art, chibi, only one orc, large build, axe, tusks, green skin, full body, (empty background, simple background:1.3), <lora:ElinSpriteNoobLocon_byKonan:1>"
+  }
+}
