@@ -71,7 +71,7 @@ def main():
         outdir_string = outdir_root
         outdir_string.mkdir(parents=True, exist_ok=True)
 
-        filename_pattern = f"{key}-[job_timestamp]-[seed]"
+        filename_pattern = f"{key}"
 
         payload = {
             "prompt": prompt,
@@ -95,7 +95,8 @@ def main():
             "override_settings": {
                 **({"sd_model_checkpoint": model} if model else {}),
                 "outdir_txt2img_samples": str(outdir_string),
-                "samples_filename_pattern": filename_pattern
+                "samples_filename_pattern": filename_pattern,
+                "save_to_dirs": False,  # ✅ 날짜 폴더 생성 금지
             },
             "override_settings_restore_afterwards": True
         }
