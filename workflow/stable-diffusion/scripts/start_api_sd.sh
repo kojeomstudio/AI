@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SCRIPT_PATH="/Users/kojeomstudio/stable-diffusion-webui/webui.sh"
+SCRIPT_PATH="/Users/kojeomstudio/AI/image-generative/stable-diffusion-webui/webui.sh"
 
 if [ -f "$SCRIPT_PATH" ]; then
     echo "Executing $SCRIPT_PATH in API mode..."

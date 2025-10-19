@@ -25,3 +25,9 @@
 [submodule "llm/agent/open-agent"]
 	path = llm/agent/open-agent
 	url = git@github.com:kojeomstudio/open-agent.git
+[submodule "image-generative/comfyUI"]
+	path = image-generative/comfyUI
+	url = git@github.com:kojeomstudio/ComfyUI.git
+[submodule "image-generative/stable-diffusion-webui"]
+	path = image-generative/stable-diffusion-webui
+	url = git@github.com:kojeomstudio/stable-diffusion-webui.git
