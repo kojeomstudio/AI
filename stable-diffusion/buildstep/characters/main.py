@@ -69,6 +69,9 @@ def main():
         print("##teamcity[buildProblem description='prompts must be a non-empty object (key=name, value=prompt string)']", flush=True)
         raise SystemExit(1)
 
+    total_prompts_num = len(prompts)
+    cur_prompt_idx = 0
+
     # --- 4) 프롬프트 루프 (모든 프롬프트에 동일 STEPS/CFGSCALE 적용) ---
     for key, prompt in prompts.items():
         if not isinstance(prompt, str) or not prompt.strip():
@@ -108,8 +111,12 @@ def main():
             "override_settings_restore_afterwards": True
         }
 
+        # 루프 카운팅.
+        cur_prompt_idx += 1
+
         try:
             print(f"##teamcity[message text='Generating key={key} -> {outdir_string}']", flush=True)
+            print(f"##teamcity[progressMessage 'Generating image {cur_prompt_idx} of {total_prompts_num}: {key}']", flush=True)
             resp = requests.post(f"{base_url}/sdapi/v1/txt2img", json=payload, timeout=timeout)
             resp.raise_for_status()
             print(f"##teamcity[message text='Done: {key}']", flush=True)
