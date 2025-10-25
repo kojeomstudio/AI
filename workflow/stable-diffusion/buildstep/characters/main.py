@@ -72,6 +72,9 @@ def main():
     total_prompts_num = len(prompts)
     cur_prompt_idx = 0
 
+    #https://github.com/AUTOMATIC1111/stable-diffusion-webui/wiki
+    # 세부 세팅, 페이로드 설정값은 해당 위키를 참조.
+
     # --- 4) 프롬프트 루프 (모든 프롬프트에 동일 STEPS/CFGSCALE 적용) ---
     for key, prompt in prompts.items():
         if not isinstance(prompt, str) or not prompt.strip():
@@ -102,14 +105,18 @@ def main():
             "hr_upscaler": hr_upscaler if hr_second_pass else None,
             "denoising_strength": denoising_strength if hr_second_pass else None,
 
+
             "override_settings": {
                 **({"sd_model_checkpoint": model} if model else {}),
                 "outdir_txt2img_samples": str(outdir_string),
                 "samples_filename_pattern": filename_pattern,
                 "save_to_dirs": False,  # ✅ 날짜 폴더 생성 금지
+                # https://github.com/AUTOMATIC1111/stable-diffusion-webui/wiki/Custom-Images-Filename-Name-and-Subdirectory
+                "save_images_add_number": False # 번호 접미사 금지
             },
             "override_settings_restore_afterwards": True
         }
+
 
         # 루프 카운팅.
         cur_prompt_idx += 1
