@@ -2,7 +2,7 @@
   "id": "91f6bbe2-ed41-4fd6-bac7-71d5b5864ecb",
   "revision": 0,
   "last_node_id": 80,
-  "last_link_id": 128,
+  "last_link_id": 130,
   "nodes": [
     {
       "id": 38,
@@ -91,128 +91,6 @@
       ]
     },
     {
-      "id": 8,
-      "type": "VAEDecode",
-      "pos": [
-        1190,
-        150
-      ],
-      "size": [
-        210,
-        46
-      ],
-      "flags": {},
-      "order": 14,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "samples",
-          "type": "LATENT",
-          "link": 35
-        },
-        {
-          "name": "vae",
-          "type": "VAE",
-          "link": 76
-        }
-      ],
-      "outputs": [
-        {
-          "name": "IMAGE",
-          "type": "IMAGE",
-          "slot_index": 0,
-          "links": []
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.3.45",
-        "Node name for S&R": "VAEDecode"
-      },
-      "widgets_values": []
-    },
-    {
-      "id": 58,
-      "type": "SaveVideo",
-      "pos": [
-        1200,
-        370
-      ],
-      "size": [
-        660,
-        450
-      ],
-      "flags": {},
-      "order": 13,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "video",
-          "type": "VIDEO",
-          "link": 108
-        }
-      ],
-      "outputs": [],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.3.45",
-        "Node name for S&R": "SaveVideo"
-      },
-      "widgets_values": [
-        "video/ComfyUI",
-        "auto",
-        "auto"
-      ]
-    },
-    {
-      "id": 55,
-      "type": "Wan22ImageToVideoLatent",
-      "pos": [
-        380,
-        540
-      ],
-      "size": [
-        271.9126892089844,
-        150
-      ],
-      "flags": {},
-      "order": 9,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "vae",
-          "type": "VAE",
-          "link": 105
-        },
-        {
-          "name": "start_image",
-          "shape": 7,
-          "type": "IMAGE",
-          "link": 106
-        }
-      ],
-      "outputs": [
-        {
-          "name": "LATENT",
-          "type": "LATENT",
-          "links": [
-            104
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.3.45",
-        "Node name for S&R": "Wan22ImageToVideoLatent"
-      },
-      "widgets_values": [
-        1280,
-        704,
-        121,
-        1
-      ]
-    },
-    {
       "id": 3,
       "type": "KSampler",
       "pos": [
@@ -224,7 +102,7 @@
         262
       ],
       "flags": {},
-      "order": 12,
+      "order": 9,
       "mode": 0,
       "inputs": [
         {
@@ -264,7 +142,7 @@
         "Node name for S&R": "KSampler"
       },
       "widgets_values": [
-        260704349006511,
+        951788556774660,
         "randomize",
         20,
         5,
@@ -287,7 +165,7 @@
       "flags": {
         "collapsed": false
       },
-      "order": 10,
+      "order": 7,
       "mode": 0,
       "inputs": [
         {
@@ -340,45 +218,6 @@
       "bgcolor": "#653"
     },
     {
-      "id": 56,
-      "type": "LoadImage",
-      "pos": [
-        0,
-        540
-      ],
-      "size": [
-        274.080078125,
-        314
-      ],
-      "flags": {},
-      "order": 3,
-      "mode": 4,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "IMAGE",
-          "type": "IMAGE",
-          "links": [
-            106
-          ]
-        },
-        {
-          "name": "MASK",
-          "type": "MASK",
-          "links": null
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.3.45",
-        "Node name for S&R": "LoadImage"
-      },
-      "widgets_values": [
-        "example.png",
-        "image"
-      ]
-    },
-    {
       "id": 37,
       "type": "UNETLoader",
       "pos": [
@@ -390,7 +229,7 @@
         82
       ],
       "flags": {},
-      "order": 4,
+      "order": 3,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -432,7 +271,7 @@
         164.31304931640625
       ],
       "flags": {},
-      "order": 7,
+      "order": 5,
       "mode": 0,
       "inputs": [
         {
@@ -475,7 +314,7 @@
         180.6060791015625
       ],
       "flags": {},
-      "order": 8,
+      "order": 6,
       "mode": 0,
       "inputs": [
         {
@@ -507,11 +346,87 @@
       "bgcolor": "#533"
     },
     {
+      "id": 8,
+      "type": "VAEDecode",
+      "pos": [
+        1190,
+        150
+      ],
+      "size": [
+        210,
+        46
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "samples",
+          "type": "LATENT",
+          "link": 35
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 76
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "slot_index": 0,
+          "links": [
+            129
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.45",
+        "Node name for S&R": "VAEDecode"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 58,
+      "type": "SaveVideo",
+      "pos": [
+        1451.7062542857825,
+        317.3686109337777
+      ],
+      "size": [
+        660,
+        758
+      ],
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "link": 108
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.45",
+        "Node name for S&R": "SaveVideo"
+      },
+      "widgets_values": [
+        "video/ComfyUI",
+        "auto",
+        "auto"
+      ]
+    },
+    {
       "id": 57,
       "type": "CreateVideo",
       "pos": [
-        857.4904546274157,
-        585.2507832300744
+        1466.7452375357686,
+        150.3803761193086
       ],
       "size": [
         270,
@@ -524,7 +439,7 @@
         {
           "name": "images",
           "type": "IMAGE",
-          "link": 128
+          "link": 129
         },
         {
           "name": "audio",
@@ -552,11 +467,59 @@
       ]
     },
     {
+      "id": 55,
+      "type": "Wan22ImageToVideoLatent",
+      "pos": [
+        447.1551294216848,
+        553.2163360889382
+      ],
+      "size": [
+        271.9126892089844,
+        150
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 105
+        },
+        {
+          "name": "start_image",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 130
+        }
+      ],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [
+            104
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.45",
+        "Node name for S&R": "Wan22ImageToVideoLatent"
+      },
+      "widgets_values": [
+        1280,
+        736,
+        21,
+        1
+      ]
+    },
+    {
       "id": 80,
       "type": "579fb867-fad8-4550-be9e-e019fce7e430",
       "pos": [
-        423.4010102654045,
-        765.2755989702988
+        29.947338744153683,
+        560.641705707768
       ],
       "size": [
         210,
@@ -565,7 +528,7 @@
       "flags": {
         "collapsed": false
       },
-      "order": 5,
+      "order": 4,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -573,7 +536,7 @@
           "name": "IMAGE",
           "type": "IMAGE",
           "links": [
-            128
+            130
           ]
         }
       ],
@@ -650,45 +613,6 @@
       "widgets_values": [],
       "color": "#233",
       "bgcolor": "#355"
-    },
-    {
-      "id": 60,
-      "type": "LoadImage",
-      "pos": [
-        854.207994747922,
-        745.0455280495032
-      ],
-      "size": [
-        274.080078125,
-        102
-      ],
-      "flags": {
-        "collapsed": false
-      },
-      "order": 6,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "IMAGE",
-          "type": "IMAGE",
-          "links": []
-        },
-        {
-          "name": "MASK",
-          "type": "MASK",
-          "links": null
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.3.66",
-        "Node name for S&R": "LoadImage"
-      },
-      "widgets_values": [
-        "undefined",
-        "image"
-      ]
     }
   ],
   "links": [
@@ -773,14 +697,6 @@
       "VAE"
     ],
     [
-      106,
-      56,
-      0,
-      55,
-      1,
-      "IMAGE"
-    ],
-    [
       108,
       57,
       0,
@@ -789,11 +705,19 @@
       "VIDEO"
     ],
     [
-      128,
-      80,
+      129,
+      8,
       0,
       57,
       0,
+      "IMAGE"
+    ],
+    [
+      130,
+      80,
+      0,
+      55,
+      1,
       "IMAGE"
     ]
   ],
@@ -830,8 +754,8 @@
       "bounding": [
         -50,
         450,
-        400,
-        420
+        418.4799563894858,
+        675.6811889861158
       ],
       "color": "#3f789e",
       "font_size": 24,
@@ -841,8 +765,8 @@
       "id": 4,
       "title": "Video Size & length",
       "bounding": [
-        370,
-        470,
+        437.1551294216848,
+        483.2163360889379,
         291.9127197265625,
         233.60000610351562
       ],
@@ -932,8 +856,8 @@
               "Node name for S&R": "EmptySD3LatentImage"
             },
             "widgets_values": [
-              1024,
-              1024,
+              1280,
+              720,
               1
             ]
           },
@@ -1060,9 +984,9 @@
               "Node name for S&R": "KSampler"
             },
             "widgets_values": [
-              621580156294126,
+              744051976375156,
               "randomize",
-              30,
+              25,
               4,
               "res_multistep",
               "simple",
@@ -1395,10 +1319,10 @@
   "config": {},
   "extra": {
     "ds": {
-      "scale": 0.5506518349395102,
+      "scale": 0.7653143124590681,
       "offset": [
-        924.7288776783869,
-        -15.009483882753216
+        -204.82357677609437,
+        65.92687401033376
       ]
     },
     "frontendVersion": "1.28.7",
