@@ -160,8 +160,19 @@ def main():
         # 루프 카운팅.
         cur_prompt_idx += 1
 
-        # memory release
-        try_unload_checkpoint(base_url, timeout=timeout)
+        try:
+            tc_message(f"Generating key={key} -> {outdir_string}")
+            tc_message(f"Generating image {cur_prompt_idx} of {total_prompts_num}: {key}")
+            resp = requests.post(f"{base_url}/sdapi/v1/txt2img", json=payload, timeout=timeout)
+            resp.raise_for_status()
+            tc_message(f"Done: {key}")
+        except requests.exceptions.RequestException as e:
+            tc_message(f"HTTP error for {key}: {e}", status="ERROR")
+        except Exception as e:
+            tc_message(f"Unexpected error for {key}: {e}", status="ERROR")
+
+    # memory release
+    try_unload_checkpoint(base_url, timeout=timeout)
 
 if __name__ == "__main__":
     main()
