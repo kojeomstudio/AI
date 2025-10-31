@@ -7,6 +7,46 @@ from pathlib import Path
 import requests
 import argparse
 
+# --- TeamCity service message helpers ---
+def _tc_escape(s: str) -> str:
+    if s is None:
+        return ""
+    return (s.replace('|', '||')
+             .replace("'", "|'")
+             .replace('\n', '|n')
+             .replace('\r', '|r')
+             .replace(']', '|]')
+             .replace('[', '|['))
+
+def tc_message(text: str, status: str = "NORMAL"):
+    print(f"##teamcity[message text='{_tc_escape(str(text))}' status='{_tc_escape(status)}']", flush=True)
+
+def tc_progress(text: str):
+    print(f"##teamcity[progressMessage '{_tc_escape(str(text))}']", flush=True)
+
+def tc_problem(description: str):
+    print(f"##teamcity[buildProblem description='{_tc_escape(str(description))}']", flush=True)
+
+def try_unload_checkpoint(base_url: str, timeout: int = 60):
+    # 1) 현재 메모리 상태 로깅 (선택)
+    try:
+        mem = requests.get(f"{base_url}/sdapi/v1/memory", timeout=timeout).json()
+        tc_message(f"Memory(before)={mem}")
+    except Exception:
+        pass
+
+    # 2) 체크포인트 언로드
+    resp = requests.post(f"{base_url}/sdapi/v1/unload-checkpoint", timeout=timeout)
+    resp.raise_for_status()
+    tc_message("Checkpoint unloaded")
+
+    # 3) 언로드 후 메모리 재확인 (선택)
+    try:
+        mem2 = requests.get(f"{base_url}/sdapi/v1/memory", timeout=timeout).json()
+        tc_message(f"Memory(after)={mem2}")
+    except Exception:
+        pass
+
 def getenv(name, default=None, cast=None):
     val = os.environ.get(name, default)
     if cast and val is not None:
@@ -117,20 +157,11 @@ def main():
             "override_settings_restore_afterwards": True
         }
 
-
         # 루프 카운팅.
         cur_prompt_idx += 1
 
-        try:
-            print(f"##teamcity[message text='Generating key={key} -> {outdir_string}']", flush=True)
-            print(f"##teamcity[progressMessage 'Generating image {cur_prompt_idx} of {total_prompts_num}: {key}']", flush=True)
-            resp = requests.post(f"{base_url}/sdapi/v1/txt2img", json=payload, timeout=timeout)
-            resp.raise_for_status()
-            print(f"##teamcity[message text='Done: {key}']", flush=True)
-        except requests.exceptions.RequestException as e:
-            print(f"##teamcity[buildProblem description='HTTP error for {key}: {e}']", flush=True)
-        except Exception as e:
-            print(f"##teamcity[buildProblem description='Unexpected error for {key}: {e}']", flush=True)
+        # memory release
+        try_unload_checkpoint(base_url, timeout=timeout)
 
 if __name__ == "__main__":
     main()
