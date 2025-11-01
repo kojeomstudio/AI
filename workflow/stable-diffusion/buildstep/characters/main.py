@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 import requests
 import argparse
+import base64
 
 # --- TeamCity service message helpers ---
 def _tc_escape(s: str) -> str:
@@ -56,6 +57,12 @@ def getenv(name, default=None, cast=None):
             return default
     return val
 
+def _decode_base64_image(b64_str: str) -> bytes:
+    # 일부 배포본은 "data:image/png;base64,..." 접두사가 붙을 수 있으므로 분리 처리
+    if "," in b64_str and b64_str.strip().lower().startswith("data:"):
+        b64_str = b64_str.split(",", 1)[1]
+    return base64.b64decode(b64_str)
+
 def main():
     parser = argparse.ArgumentParser(description="실행 인자")
     parser.add_argument("--config", type=str, default="config.json", help="프롬프트 설정 파일 경로 (기본: config.json)")
@@ -79,7 +86,7 @@ def main():
     sampler = getenv("SAMPLER", "Euler a")
     steps = getenv("STEPS", None, cast=int)            # ✅ 필수 권장(전역만 사용)
     if steps is None or steps <= 0:
-        print("##teamcity[buildProblem description='env.STEPS must be a positive integer']", flush=True)
+        tc_problem("env.STEPS must be a positive integer")
         raise SystemExit(1)
 
     cfg_scale = getenv("CFGSCALE", "7.0", cast=float)  # ✅ 전역 CFGSCALE
@@ -98,7 +105,7 @@ def main():
 
     # --- 3) config 로드 (딕셔너리만 허용) ---
     if not config_path.exists():
-        print("##teamcity[buildProblem description='config.json not found']", flush=True)
+        tc_problem("config.json not found")
         raise SystemExit(1)
 
     with open(config_path, "r", encoding="utf-8") as f:
@@ -106,24 +113,23 @@ def main():
 
     prompts = config.get("prompts", {})
     if not isinstance(prompts, dict) or not prompts:
-        print("##teamcity[buildProblem description='prompts must be a non-empty object (key=name, value=prompt string)']", flush=True)
+        tc_problem("prompts must be a non-empty object (key=name, value=prompt string)")
         raise SystemExit(1)
 
     total_prompts_num = len(prompts)
     cur_prompt_idx = 0
 
-    #https://github.com/AUTOMATIC1111/stable-diffusion-webui/wiki
-    # 세부 세팅, 페이로드 설정값은 해당 위키를 참조.
-
     # --- 4) 프롬프트 루프 (모든 프롬프트에 동일 STEPS/CFGSCALE 적용) ---
     for key, prompt in prompts.items():
         if not isinstance(prompt, str) or not prompt.strip():
-            print(f"##teamcity[message text='Skip empty prompt for key {key}' status='WARNING']", flush=True)
+            tc_message(f"Skip empty prompt for key {key}", status="WARNING")
             continue
 
         outdir_string = outdir_root
         outdir_string.mkdir(parents=True, exist_ok=True)
 
+        # 서버 저장은 끄고, 전송만 받는다.
+        # 파일명 패턴은 되돌릴 때를 대비해 유지하지만, 실제 저장은 클라이언트에서 수행.
         filename_pattern = f"[none]{key}"
 
         payload = {
@@ -137,35 +143,72 @@ def main():
             "sampler_name": sampler,
             "batch_size": batch_size,
 
-            "save_images": True,
-            "send_images": False,
+            "save_images": False,            # ✅ 서버 저장 X
+            "send_images": True,             # ✅ 클라이언트로 base64 전송
 
             "enable_hr": hr_second_pass,
             "hr_scale": hr_upscale if hr_second_pass else 1.0,
             "hr_upscaler": hr_upscaler if hr_second_pass else None,
             "denoising_strength": denoising_strength if hr_second_pass else None,
 
-
             "override_settings": {
                 **({"sd_model_checkpoint": model} if model else {}),
                 "outdir_txt2img_samples": str(outdir_string),
                 "samples_filename_pattern": filename_pattern,
-                "save_to_dirs": False,  # ✅ 날짜 폴더 생성 금지
-                # https://github.com/AUTOMATIC1111/stable-diffusion-webui/wiki/Custom-Images-Filename-Name-and-Subdirectory
-                "save_images_add_number": False # 번호 접미사 금지
+                "save_to_dirs": False,
+                "save_images_add_number": False
             },
             "override_settings_restore_afterwards": True
         }
 
-        # 루프 카운팅.
         cur_prompt_idx += 1
 
         try:
             tc_message(f"Generating key={key} -> {outdir_string}")
-            tc_message(f"Generating image {cur_prompt_idx} of {total_prompts_num}: {key}")
+            tc_progress(f"Generating image {cur_prompt_idx} of {total_prompts_num}: {key}")
+
             resp = requests.post(f"{base_url}/sdapi/v1/txt2img", json=payload, timeout=timeout)
             resp.raise_for_status()
-            tc_message(f"Done: {key}")
+            data = resp.json()
+
+            images_b64 = data.get("images", []) or []
+            info_raw = data.get("info", "{}")
+            try:
+                info = json.loads(info_raw) if isinstance(info_raw, str) else (info_raw or {})
+            except Exception:
+                info = {}
+
+            all_seeds = info.get("all_seeds") or ([] if seed is None else [seed])
+
+            if not images_b64:
+                tc_message(f"No images returned for key={key}", status="WARNING")
+                continue
+
+            saved_files = []
+            for idx, b64 in enumerate(images_b64, start=1):
+                img_bytes = _decode_base64_image(b64)
+                # 단일/다중 배치 파일명 규칙
+                fname = f"{key}.png" if len(images_b64) == 1 else f"{key}.png"
+                fpath = outdir_string / fname
+
+                with open(fpath, "wb") as fw:
+                    fw.write(img_bytes)
+                saved_files.append(str(fpath))
+
+                # 해당 인덱스의 시드(있으면)
+                seed_log = None
+                try:
+                    seed_log = all_seeds[idx - 1] if idx - 1 < len(all_seeds) else None
+                except Exception:
+                    seed_log = None
+
+                if seed_log is not None:
+                    tc_message(f"Saved: {fpath} (seed={seed_log})")
+                else:
+                    tc_message(f"Saved: {fpath}")
+
+            tc_message(f"Done: {key} (saved {len(saved_files)} file(s))")
+
         except requests.exceptions.RequestException as e:
             tc_message(f"HTTP error for {key}: {e}", status="ERROR")
         except Exception as e:
