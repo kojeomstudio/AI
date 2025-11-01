@@ -1,0 +1,9 @@
+{
+  "prompts": {
+    "grade_fisher_beginner": "pixel art, chibi, japanese subculture fantasy style, cute anime girl, solo, full body, short brown hair, wearing yellow cap and life jacket, holding small fishing rod, bucket beside, smiling naturally, simple sky blue background, <lora:ElinSpriteNoobLocon_byKonan:1>",
+    "grade_fisher_river": "pixel art, chibi, japanese subculture fantasy style, cute anime girl, solo, full body, medium black hair tied back, wearing casual outdoor jacket, waders boots, holding medium-length fishing rod with reel, relaxed expression, mint green background, <lora:ElinSpriteNoobLocon_byKonan:1>",
+    "grade_fisher_lake": "pixel art, chibi, japanese subculture fantasy style, cute anime girl, solo, full body, long light brown hair, wearing sun hat and plaid shirt, sitting with fishing rod resting on knee, gentle smile, soft light blue background, <lora:ElinSpriteNoobLocon_byKonan:1>",
+    "grade_fisher_sea": "pixel art, chibi, japanese subculture fantasy style, cute anime girl, solo, full body, pink hair tied in ponytail, wearing waterproof jacket, gloves, holding strong sea fishing rod with reel, confident smile, orange daylight background, <lora:ElinSpriteNoobLocon_byKonan:1>",
+    "grade_fisher_master": "pixel art, chibi, japanese subculture fantasy style, cute anime girl, solo, full body, silver long hair, wearing professional fishing gear, polarized sunglasses on head, large carbon fishing rod, waist tool belt, calm confident face, warm sunlight background, <lora:ElinSpriteNoobLocon_byKonan:1>"
+  }
+}
