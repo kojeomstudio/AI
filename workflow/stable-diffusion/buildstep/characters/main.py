@@ -63,6 +63,16 @@ def _decode_base64_image(b64_str: str) -> bytes:
         b64_str = b64_str.split(",", 1)[1]
     return base64.b64decode(b64_str)
 
+def _parse_csv_tags(s: str):
+    """
+    콤마(,)로 구분된 태그 문자열을 리스트로 변환.
+    공백/빈 항목 제거.
+    예) "<lora:Foo:1>, <lora:Bar:0.8>" -> ["<lora:Foo:1>", "<lora:Bar:0.8>"]
+    """
+    if not s:
+        return []
+    return [t.strip() for t in s.split(",") if t.strip()]
+
 def main():
     parser = argparse.ArgumentParser(description="실행 인자")
     parser.add_argument("--config", type=str, default="config.json", help="프롬프트 설정 파일 경로 (기본: config.json)")
@@ -84,12 +94,12 @@ def main():
     # --- 2) 공통 인자 (빌드스텝 환경변수) ---
     model = getenv("MODEL", "")                         # 선택
     sampler = getenv("SAMPLER", "Euler a")
-    steps = getenv("STEPS", None, cast=int)            # ✅ 필수 권장(전역만 사용)
+    steps = getenv("STEPS", None, cast=int)             # ✅ 필수 권장(전역만 사용)
     if steps is None or steps <= 0:
         tc_problem("env.STEPS must be a positive integer")
         raise SystemExit(1)
 
-    cfg_scale = getenv("CFGSCALE", "7.0", cast=float)  # ✅ 전역 CFGSCALE
+    cfg_scale = getenv("CFGSCALE", "7.0", cast=float)   # ✅ 전역 CFGSCALE
     width = getenv("WIDTH", "512", cast=int)
     height = getenv("HEIGHT", "512", cast=int)
     negative_prompt = getenv("NEGATIVE_PROMPT", "")
@@ -102,6 +112,13 @@ def main():
     denoising_strength = getenv("DENOISING_STRENGTH", "0.4", cast=float)
 
     timeout = getenv("TIMEOUT_SEC", "180", cast=int)
+
+    # --- 2-1) LoRA 태그(환경변수) 처리 ---
+    # 예: LORA_TAGS="<lora:Foo:1>,<lora:Bar:0.8>"
+    lora_tags_env = getenv("LORA_TAGS", "") or ""
+    lora_tags = _parse_csv_tags(lora_tags_env)
+    if lora_tags:
+        tc_message(f"LoRA tags from env: {', '.join(lora_tags)}")
 
     # --- 3) config 로드 (딕셔너리만 허용) ---
     if not config_path.exists():
@@ -125,6 +142,14 @@ def main():
             tc_message(f"Skip empty prompt for key {key}", status="WARNING")
             continue
 
+        # 4-1) 프롬프트 뒤에 LORA 태그 append
+        # - 프롬프트 끝의 불필요한 콤마/공백 제거 후 ", " + 태그들
+        final_prompt = prompt.strip()
+        if lora_tags:
+            if final_prompt.endswith(","):
+                final_prompt = final_prompt.rstrip(", \t")
+            final_prompt = (final_prompt + ", " if final_prompt else "") + ", ".join(lora_tags)
+
         outdir_string = outdir_root
         outdir_string.mkdir(parents=True, exist_ok=True)
 
@@ -133,7 +158,7 @@ def main():
         filename_pattern = f"[none]{key}"
 
         payload = {
-            "prompt": prompt,
+            "prompt": final_prompt,
             "negative_prompt": negative_prompt,
             "steps": steps,                  # ✅ 전역 STEPS
             "cfg_scale": cfg_scale,          # ✅ 전역 CFGSCALE
@@ -187,7 +212,7 @@ def main():
             saved_files = []
             for idx, b64 in enumerate(images_b64, start=1):
                 img_bytes = _decode_base64_image(b64)
-                # 단일/다중 배치 파일명 규칙
+                # 단일/다중 배치 파일명 규칙 (현재 동일 파일명 정책)
                 fname = f"{key}.png" if len(images_b64) == 1 else f"{key}.png"
                 fpath = outdir_string / fname
 
@@ -214,8 +239,8 @@ def main():
         except Exception as e:
             tc_message(f"Unexpected error for {key}: {e}", status="ERROR")
 
-    # memory release
-    #try_unload_checkpoint(base_url, timeout=timeout)
+    # 메모리 해제 필요 시 사용
+    # try_unload_checkpoint(base_url, timeout=timeout)
 
 if __name__ == "__main__":
     main()
