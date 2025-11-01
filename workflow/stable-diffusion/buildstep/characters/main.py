@@ -215,7 +215,7 @@ def main():
             tc_message(f"Unexpected error for {key}: {e}", status="ERROR")
 
     # memory release
-    try_unload_checkpoint(base_url, timeout=timeout)
+    #try_unload_checkpoint(base_url, timeout=timeout)
 
 if __name__ == "__main__":
     main()
