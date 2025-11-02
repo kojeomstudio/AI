@@ -31,3 +31,9 @@
 [submodule "image-generative/stable-diffusion-webui"]
 	path = image-generative/stable-diffusion-webui
 	url = git@github.com:kojeomstudio/stable-diffusion-webui.git
+[submodule "llm/mcp/web-search-mcp"]
+	path = llm/mcp/web-search-mcp
+	url = git@github.com:kojeomstudio/web-search-mcp.git
+[submodule "llm/mcp/playwright-mcp"]
+	path = llm/mcp/playwright-mcp
+	url = git@github.com:kojeomstudio/playwright-mcp.git
