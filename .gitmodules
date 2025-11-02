@@ -37,3 +37,6 @@
 [submodule "llm/mcp/playwright-mcp"]
 	path = llm/mcp/playwright-mcp
 	url = git@github.com:kojeomstudio/playwright-mcp.git
+[submodule "llm/mcp/open-webSearch"]
+	path = llm/mcp/open-webSearch
+	url = git@github.com:kojeomstudio/open-webSearch.git
