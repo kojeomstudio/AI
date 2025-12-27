@@ -1,0 +1,19 @@
+# FastAPI and web server
+fastapi==0.115.5
+uvicorn[standard]==0.32.1
+
+# Pydantic for data validation
+pydantic==2.10.3
+pydantic-settings==2.6.1
+
+# Python utilities
+python-dotenv==1.0.1
+
+# Form data parsing (required for Form() in FastAPI)
+python-multipart==0.0.17
+
+# HTTP client for testing
+requests==2.32.3
+
+# Build tools
+pyinstaller==6.11.1

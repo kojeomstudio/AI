@@ -1,0 +1,39 @@
+{
+    "_comment": "Agent Executor API Configuration File",
+    "_description": "This file configures the Agent Executor API server. All settings can be overridden by environment variables.",
+    "app_name": "Agent Executor API",
+    "app_version": "1.2.0",
+    "host": "0.0.0.0",
+    "port": 9999,
+    "reload": false,
+    "default_timeout": 900,
+    "max_timeout": 3600,
+    "default_working_directory": null,
+    "agent_commands": {
+        "claude-code": "claude",
+        "codex": "codex",
+        "gemini": "gemini",
+        "cursor": "cursor",
+        "aider": "aider"
+    },
+    "_prompt_template_comment": "Prompt templates are loaded from the 'prompts' directory. Uses .md format. Placeholders: {context}, {build_id}, {user_id}, {agent_type}, {timestamp}, {date}, {time}",
+    "prompt_template_file": "code_review_ue4.md",
+    "prompt_templates_dir": "prompts",
+    "agent_prompt_templates": {
+        "claude-code": "code_review_ue4.md",
+        "codex": "code_review_ue4.md",
+        "gemini": "code_review_ue4.md",
+        "cursor": "code_review_ue4.md",
+        "aider": "code_review_ue4.md"
+    },
+    "log_level": "INFO",
+    "log_format": "%(asctime)s - %(name)s - %(levelname)s - [%(filename)s:%(lineno)d] - %(message)s",
+    "log_to_file": false,
+    "log_file_path": "agent_executor.log",
+    "log_max_bytes": 10485760,
+    "log_backup_count": 5,
+    "allow_origins": "*",
+    "allow_credentials": true,
+    "allow_methods": "*",
+    "allow_headers": "*"
+}
