@@ -43,3 +43,6 @@
 [submodule "llm/mcp/tavily-mcp"]
 	path = llm/mcp/tavily-mcp
 	url = git@github.com:kojeomstudio/tavily-mcp.git
+[submodule "web-servers/caddy"]
+	path = web-servers/caddy
+	url = git@github.com:kojeomstudio/caddy.git
