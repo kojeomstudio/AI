@@ -22,6 +22,7 @@ AI/
 ├── reinforcement_learning/ # 강화학습 관련 코드
 ├── study/               # 학습 및 연구 코드
 ├── utils/               # 유틸리티 스크립트
+├── web-servers/         # 웹 서버 (Caddy 등)
 └── workflow/            # 워크플로우 자동화 (n8n 등)
 ```
 
@@ -68,6 +69,13 @@ image-generative/
 workflow/
 ├── n8n/                 # n8n 워크플로우 자동화 (서브모듈)
 └── stable-diffusion/    # Stable Diffusion 워크플로우
+```
+
+### Web Servers
+
+```
+web-servers/
+└── caddy/               # Caddy 웹 서버 (서브모듈)
 ```
 
 ## 설정 파일

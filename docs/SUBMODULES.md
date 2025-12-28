@@ -49,6 +49,12 @@
 |----------|------|--------|----------|
 | n8n | `workflow/n8n` | master | n8n-io/n8n |
 
+### Web Servers
+
+| 서브모듈 | 경로 | 브랜치 | 업스트림 |
+|----------|------|--------|----------|
+| Caddy | `web-servers/caddy` | master | caddyserver/caddy |
+
 ## 서브모듈 업데이트
 
 ### 자동 업데이트 스크립트

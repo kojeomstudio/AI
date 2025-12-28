@@ -26,6 +26,8 @@ AI/
 │   └── stable-diffusion-webui/
 ├── workflow/                # 워크플로우 자동화
 │   └── n8n/                 # n8n
+├── web-servers/             # 웹 서버
+│   └── caddy/               # Caddy 웹 서버
 ├── game-engine/             # 게임 엔진
 ├── game-server/             # 게임 서버
 ├── reinforcement_learning/  # 강화학습
@@ -45,6 +47,7 @@ AI/
 | Search/Tools | local-deep-research, browser-use |
 | Image | ComfyUI, Stable Diffusion WebUI |
 | Workflow | n8n |
+| Web Servers | Caddy |
 
 ## Quick Start
 
