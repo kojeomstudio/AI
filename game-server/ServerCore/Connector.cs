@@ -10,7 +10,7 @@ namespace ServerCore
 {
     public class Connector
     {
-        private Func<Session> _sessionFactory;
+        private Func<Session> _sessionFactory = null;
 
         public void Connect(IPEndPoint endPoint, Func<Session> sessionFactory)
         {

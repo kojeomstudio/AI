@@ -9,8 +9,12 @@ namespace KojeomGameServer
         public override void OnConnected(EndPoint endPoint)
         {
             ServerLogger.Instance.Log(LogLevel.Info, $"OnConnected EndPoint : {endPoint}");
+           
+            ArraySegment<byte> openSegment = SendBufferHelper.Open(4096);
+            string testMessage = "Welcome to MMOPRG Server~!";
+            Array.Copy(Encoding.UTF8.GetBytes(testMessage), 0, openSegment.Array, openSegment.Offset, testMessage.Length);
+            ArraySegment<byte> sendBuffer = SendBufferHelper.Close(testMessage.Length);
 
-            byte[] sendBuffer = Encoding.UTF8.GetBytes("Welcome to MMOPRG Server~!");
             Send(sendBuffer);
 
             Thread.Sleep(1000);

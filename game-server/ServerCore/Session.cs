@@ -19,7 +19,7 @@ namespace ServerCore
         private SocketAsyncEventArgs _recvArgs = new SocketAsyncEventArgs();
 
         private object _lock = new object();
-        private Queue<byte[]> _sendQueue = new Queue<byte[]>();
+        private Queue<ArraySegment<byte>> _sendQueue = new Queue<ArraySegment<byte>>();
         private bool _pending = false;
 
         private List<ArraySegment<byte>> _pendinglist = new List<ArraySegment<byte>>();
@@ -43,7 +43,7 @@ namespace ServerCore
         public abstract void OnDisconnected(EndPoint endPoint);
         // ~Handlers.
 
-        public void Send(byte[] sendBuff)
+        public void Send(ArraySegment<byte> sendBuff)
         {
             lock(_lock)
             {
@@ -76,8 +76,8 @@ namespace ServerCore
             
             while (_sendQueue.Count > 0)
             {
-                byte[] buff = _sendQueue.Dequeue();
-                _pendinglist.Add(new ArraySegment<byte>(buff, 0, buff.Length));
+                ArraySegment<byte> buff = _sendQueue.Dequeue();
+                _pendinglist.Add(buff);
             }
             
             _sendArgs.BufferList = _pendinglist;
