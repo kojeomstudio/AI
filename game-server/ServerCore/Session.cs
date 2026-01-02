@@ -8,6 +8,39 @@ using System.Threading.Tasks;
 
 namespace ServerCore
 {
+    public abstract class PacketSession : Session
+    {
+        public static readonly int HeaderSize = 2;
+        public sealed override int OnRecv(ArraySegment<byte> buffer)
+        {
+            int processLen = 0;
+
+            while (true)
+            {
+                if(buffer.Count < HeaderSize)
+                {
+                    break;
+                }
+
+                // is packet successfully received?
+                ushort dataSize = BitConverter.ToUInt16(buffer.Array, buffer.Offset);
+                if (buffer.Count < dataSize)
+                {
+                    break;
+                }
+
+                OnRecvPacket(new ArraySegment<byte>(buffer.Array, buffer.Offset, dataSize));
+
+                processLen += dataSize;
+
+                buffer = new ArraySegment<byte>(buffer.Array, buffer.Offset + dataSize, buffer.Count - dataSize);
+            }
+
+            return processLen;
+        }
+
+        public abstract void OnRecvPacket(ArraySegment<byte> buffer);
+    }
     public abstract class Session
     {
         private Socket _socket;
@@ -21,7 +54,7 @@ namespace ServerCore
         private object _lock = new object();
         private Queue<ArraySegment<byte>> _sendQueue = new Queue<ArraySegment<byte>>();
         private bool _pending = false;
-
+        
         private List<ArraySegment<byte>> _pendinglist = new List<ArraySegment<byte>>();
 
         public void Start(Socket socket)
@@ -38,7 +71,7 @@ namespace ServerCore
         // Handlers.
         public abstract void OnConnected(EndPoint endPoint);
 
-        public abstract int OnReceive(ArraySegment<byte> buffer);
+        public abstract int OnRecv(ArraySegment<byte> buffer);
         public abstract void OnSend(int numOfBytes);
         public abstract void OnDisconnected(EndPoint endPoint);
         // ~Handlers.
@@ -151,8 +184,8 @@ namespace ServerCore
                         return;
                     }
 
-                    int processLen = OnReceive(_recvBuffer.ReadSegment);
-                    if(processLen < 0 || _recvBuffer.DataSize < processLen)
+                    int processLen = OnRecv(_recvBuffer.ReadSegment);
+                    if((processLen < 0) || (_recvBuffer.DataSize < processLen))
                     {
                         Disconnect();
                         return;

@@ -4,20 +4,32 @@ using System.Text;
 
 namespace KojeomGameServer
 {
-    class GameSession : Session
+    public class Packet
+    {
+        public ushort size;
+        public ushort packetId;
+    }
+
+    class GameSession : PacketSession
     {
         public override void OnConnected(EndPoint endPoint)
         {
             ServerLogger.Instance.Log(LogLevel.Info, $"OnConnected EndPoint : {endPoint}");
-           
-            ArraySegment<byte> openSegment = SendBufferHelper.Open(4096);
-            string testMessage = "Welcome to MMOPRG Server~!";
-            Array.Copy(Encoding.UTF8.GetBytes(testMessage), 0, openSegment.Array, openSegment.Offset, testMessage.Length);
-            ArraySegment<byte> sendBuffer = SendBufferHelper.Close(testMessage.Length);
 
-            Send(sendBuffer);
+            //Packet packet = new Packet() { size = 100, packetId = 10 };
 
-            Thread.Sleep(1000);
+            //ArraySegment<byte> openSegment = SendBufferHelper.Open(4096);
+
+            //byte[] sizeBuffer = BitConverter.GetBytes(packet.size);
+            //byte[] packetIdBuffer = BitConverter.GetBytes(packet.packetId);
+
+            //Array.Copy(sizeBuffer, 0, openSegment.Array, openSegment.Offset, sizeBuffer.Length);
+            //Array.Copy(packetIdBuffer, 0, openSegment.Array, openSegment.Offset + sizeBuffer.Length, packetIdBuffer.Length);
+            //ArraySegment<byte> sendBuffer = SendBufferHelper.Close(packet.size);
+
+            //Send(sendBuffer);
+
+            Thread.Sleep(5000);
 
             Disconnect();
         }
@@ -27,13 +39,12 @@ namespace KojeomGameServer
             ServerLogger.Instance.Log(LogLevel.Info, $"OnDisconnected EndPoint : {endPoint}");
         }
 
-        public override int OnReceive(ArraySegment<byte> buffer)
+        public override void OnRecvPacket(ArraySegment<byte> buffer)
         {
-
-            string recvData = Encoding.UTF8.GetString(buffer.Array, buffer.Offset, buffer.Count);
-            ServerLogger.Instance.Log(LogLevel.Info, $"[From Client] {recvData}");
-
-            return buffer.Count;
+            ushort size = BitConverter.ToUInt16(buffer.Array, buffer.Offset);
+            ushort packetId = BitConverter.ToUInt16(buffer.Array, buffer.Offset + PacketSession.HeaderSize);
+            
+            ServerLogger.Instance.Log(LogLevel.Info, $"RecvPacketId : {packetId}, Size : {size}");
         }
 
         public override void OnSend(int numOfBytes)
