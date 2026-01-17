@@ -75,4 +75,5 @@ namespace ServerCore
             _writePos += numOfBytes;
             return true;
         }
+    }
 }

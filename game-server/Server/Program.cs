@@ -1,44 +1,11 @@
-﻿using ServerCore;
+﻿using Server;
+using ServerCore;
 using System.Net;
 using System.Text;
 
 namespace KojeomGameServer
 {
-    class GameSession : Session
-    {
-        public override void OnConnected(EndPoint endPoint)
-        {
-            ServerLogger.Instance.Log(LogLevel.Info, $"OnConnected EndPoint : {endPoint}");
-
-            byte[] sendBuffer = Encoding.UTF8.GetBytes("Welcome to MMOPRG Server~!");
-            Send(sendBuffer);
-
-            Thread.Sleep(1000);
-
-            Disconnect();
-        }
-
-        public override void OnDisconnected(EndPoint endPoint)
-        {
-            ServerLogger.Instance.Log(LogLevel.Info, $"OnDisconnected EndPoint : {endPoint}");
-        }
-
-        public override int OnReceive(ArraySegment<byte> buffer)
-        {
-
-            string recvData = Encoding.UTF8.GetString(buffer.Array, buffer.Offset, buffer.Count);
-            ServerLogger.Instance.Log(LogLevel.Info, $"[From Client] {recvData}");
-
-            return buffer.Count;
-        }
-
-        public override void OnSend(int numOfBytes)
-        {
-            ServerLogger.Instance.Log(LogLevel.Info, $"Transferred Bytes : {numOfBytes}");
-        }
-    }
-
-    internal class Program
+    public class Program
     {
         static Listener _listener = new Listener();
 
@@ -53,7 +20,7 @@ namespace KojeomGameServer
                 7777
              );
 
-            _listener.Init(endPoint, () => { return new GameSession(); });
+            _listener.Init(endPoint, () => { return new ClientSession(); });
 
             while (true)
             {
