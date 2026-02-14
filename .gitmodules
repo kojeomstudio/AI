@@ -46,3 +46,6 @@
 [submodule "web-servers/caddy"]
 	path = web-servers/caddy
 	url = git@github.com:kojeomstudio/caddy.git
+[submodule "llm/agent/openclaw"]
+	path = llm/agent/openclaw
+	url = git@github.com:kojeomstudio/openclaw.git
