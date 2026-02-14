@@ -8,21 +8,65 @@ using System.Threading.Tasks;
 
 namespace Server
 {
-    public class Packet
+    public abstract class Packet
     {
         public ushort size;
         public ushort packetId;
+
+        public abstract ArraySegment<byte> Write();
+        public abstract void Read(ArraySegment<byte> segment);
     }
 
     public class PlayerInfoReq : Packet
     {
         public long playerId;
-    }
 
-    public class PlayerInfoOk : Packet
-    {
-        public int hp;
-        public int attack;
+        public PlayerInfoReq()
+        {
+            this.packetId = (ushort)PacketID.PlayerInfoReq;
+        }
+
+        public override void Read(ArraySegment<byte> segment)
+        {
+            ushort count = 0;
+
+            //ushort size = BitConverter.ToUInt16(segment.Array, segment.Offset + count);
+            count += 2;
+            //this.packetId = BitConverter.ToUInt16(segment.Array, segment.Offset + count);
+            count += 2;
+
+            this.playerId = BitConverter.ToInt64(new ReadOnlySpan<byte>(segment.Array, segment.Offset + count, segment.Count - count));
+            count += 8;
+        }
+
+        public override ArraySegment<byte> Write()
+        {
+            ArraySegment<byte> openSeg = SendBufferHelper.Open(4096);
+
+            byte[] sizeBuffer = BitConverter.GetBytes(this.size);
+            byte[] packetIdBuffer = BitConverter.GetBytes(this.packetId);
+            byte[] playerIdBuffer = BitConverter.GetBytes(this.playerId);
+
+            ushort count = 0;
+            bool success = true;
+
+            //success &= BitConverter.TryWriteBytes(new Span<byte>(openSeg.Array, openSeg.Offset, openSeg.Count), packet.size);
+            count += 2;
+            success &= BitConverter.TryWriteBytes(new Span<byte>(openSeg.Array, openSeg.Offset + count, openSeg.Count - count), this.packetId);
+            count += 2;
+            success &= BitConverter.TryWriteBytes(new Span<byte>(openSeg.Array, openSeg.Offset + count, openSeg.Count - count), this.playerId);
+            count += 8;
+            success &= BitConverter.TryWriteBytes(new Span<byte>(openSeg.Array, openSeg.Offset, openSeg.Count), count);
+
+            this.size = count;
+
+            if (success == false)
+            {
+                return null;
+            }
+
+            return SendBufferHelper.Close(this.size);
+        }
     }
 
     public enum PacketID
@@ -74,18 +118,10 @@ namespace Server
             {
                 case PacketID.PlayerInfoReq:
                     {
-                        long playerId = BitConverter.ToInt64(buffer.Array, buffer.Offset + count);
-                        count += 8;
-                        ServerLogger.Instance.Log(LogLevel.Info, $"PlayerInfoReq Recv : PlayerId : {playerId}");
-                    }
-                    break;
-                case PacketID.PlayerInfoOk:
-                    {
-                        int hp = BitConverter.ToInt32(buffer.Array, buffer.Offset + count);
-                        count += 4;
-                        int attack = BitConverter.ToInt32(buffer.Array, buffer.Offset + count);
-                        count += 4;
-                        ServerLogger.Instance.Log(LogLevel.Info, $"PlayerInfoOk Recv : Hp : {hp}, Attack : {attack}");
+                        PlayerInfoReq playerInfoReq = new PlayerInfoReq();
+                        playerInfoReq.Read(buffer);
+
+                        ServerLogger.Instance.Log(LogLevel.Info, $"PlayerInfoReq Recv : PlayerId : {playerInfoReq.playerId}");
                     }
                     break;
             }
