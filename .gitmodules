@@ -52,3 +52,6 @@
 [submodule "llm/mcp/noapi-google-search-mcp"]
 	path = llm/mcp/noapi-google-search-mcp
 	url = git@github.com:kojeomstudio/noapi-google-search-mcp.git
+[submodule "llm/agent/nanobot"]
+	path = llm/agent/nanobot
+	url = git@github.com:kojeomstudio/nanobot.git
