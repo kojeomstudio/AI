@@ -49,3 +49,6 @@
 [submodule "llm/agent/openclaw"]
 	path = llm/agent/openclaw
 	url = git@github.com:kojeomstudio/openclaw.git
+[submodule "llm/mcp/noapi-google-search-mcp"]
+	path = llm/mcp/noapi-google-search-mcp
+	url = git@github.com:kojeomstudio/noapi-google-search-mcp.git
