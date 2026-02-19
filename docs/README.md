@@ -9,6 +9,7 @@ AI 프로젝트 문서 모음입니다.
 | [Getting Started](./GETTING_STARTED.md) | 프로젝트 시작 가이드 |
 | [Project Structure](./PROJECT_STRUCTURE.md) | 프로젝트 구조 설명 |
 | [Submodules](./SUBMODULES.md) | Git 서브모듈 관리 가이드 |
+| [Docker Review: noapi-google-search-mcp](./DOCKER_REVIEW_NOAPI_GOOGLE_SEARCH_MCP.md) | noapi-google-search-mcp Docker 기술 검토 |
 
 ## 기존 문서 (documents/)
 
@@ -26,4 +27,5 @@ AI 프로젝트 문서 모음입니다.
   - 봇 (마비노기 모바일) 구조 추가
   - 학습 및 연구 코드 구조 추가
   - 설정 파일 목록 확장
+  - noapi-google-search-mcp Docker 기술 검토 문서 추가
 - 2025-12-28: 초기 문서 구조 생성 및 서브모듈 가이드 추가
