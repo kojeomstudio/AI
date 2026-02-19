@@ -59,6 +59,17 @@ update_submodules.bat
 ```bash
 cd llm/rag/r2r
 # R2R 문서 참조
+
+# Docker Compose로 실행
+cd docker
+docker-compose up -d
+```
+
+### R2R Client
+
+```bash
+cd llm/rag/r2r-client
+# 클라이언트 설정 및 실행
 ```
 
 ### ComfyUI
@@ -73,6 +84,35 @@ cd image-generative/comfyUI
 ```bash
 cd workflow/n8n
 # n8n 설정 문서 참조
+
+# Docker Compose로 실행
+cd docker
+docker-compose up -d
+```
+
+### OpenManus Agent
+
+```bash
+cd llm/agent/open-manus
+# OpenManus 설정 및 실행
+
+# Docker Compose로 실행
+cd dev
+docker-compose up -d
+```
+
+### 마비노기 모바일 봇
+
+```bash
+cd bot/mabinogi-mobile
+# 필요한 패키지 설치
+pip install -r requirements.txt
+
+# 설정 파일 수정
+# config/config.json
+
+# 봇 실행
+python app.py
 ```
 
 ## 환경 변수

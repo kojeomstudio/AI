@@ -10,6 +10,8 @@
 |----------|------|--------|----------|
 | OpenManus | `llm/agent/open-manus` | main | FoundationAgents/OpenManus |
 | OpenAgent | `llm/agent/open-agent` | master | - |
+| OpenClaw | `llm/agent/openclaw` | main | - |
+| NanoBot | `llm/agent/nanobot` | main | - |
 
 ### MCP (Model Context Protocol)
 
@@ -21,6 +23,7 @@
 | playwright-mcp | `llm/mcp/playwright-mcp` | main | - |
 | open-webSearch | `llm/mcp/open-webSearch` | main | - |
 | tavily-mcp | `llm/mcp/tavily-mcp` | main | - |
+| noapi-google-search-mcp | `llm/mcp/noapi-google-search-mcp` | main | - |
 
 ### RAG System
 
