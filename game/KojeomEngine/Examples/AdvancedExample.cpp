@@ -42,6 +42,13 @@ public:
             return E_FAIL;
         }
 
+        // Setup directional light (from upper-right-front)
+        FDirectionalLight light;
+        light.Direction    = XMFLOAT3(0.5f, -1.0f, 0.5f);
+        light.Color        = XMFLOAT4(1.0f, 0.95f, 0.9f, 1.0f);
+        light.AmbientColor = XMFLOAT4(0.1f, 0.1f, 0.15f, 1.0f);
+        renderer->SetDirectionalLight(light);
+
         // Setup camera position
         auto camera = GetCamera();
         if (camera)
@@ -91,24 +98,24 @@ protected:
         auto renderer = GetRenderer();
         auto camera = GetCamera();
 
-        // 1. Rotating cube at center
+        // 1. Rotating cube at center (lit)
         XMMATRIX cubeWorld = XMMatrixRotationY(XMConvertToRadians(m_rotationAngle)) *
             XMMatrixTranslation(0.0f, 0.0f, 0.0f);
-        renderer->RenderMeshBasic(m_cubeMesh, cubeWorld);
+        renderer->RenderMeshLit(m_cubeMesh, cubeWorld);
 
-        // 2. Rotating triangle on left
+        // 2. Rotating triangle on left (unlit - flat color)
         XMMATRIX triangleWorld = XMMatrixRotationZ(XMConvertToRadians(m_rotationAngle)) *
             XMMatrixScaling(2.0f, 2.0f, 1.0f) *
             XMMatrixTranslation(-4.0f, 0.0f, 0.0f);
         renderer->RenderMeshBasic(m_triangleMesh, triangleWorld);
 
-        // 3. Rotating sphere on right
+        // 3. Rotating sphere on right (lit)
         XMMATRIX sphereWorld = XMMatrixRotationX(XMConvertToRadians(m_rotationAngle * 0.5f)) *
             XMMatrixScaling(1.5f, 1.5f, 1.5f) *
             XMMatrixTranslation(4.0f, 0.0f, 0.0f);
-        renderer->RenderMeshBasic(m_sphereMesh, sphereWorld);
+        renderer->RenderMeshLit(m_sphereMesh, sphereWorld);
 
-        // 4. Small cubes orbiting above
+        // 4. Small cubes orbiting above (lit)
         for (int i = 0; i < 6; ++i)
         {
             float angle = (m_rotationAngle + i * 60.0f);
@@ -118,17 +125,14 @@ protected:
             XMMATRIX smallCubeWorld = XMMatrixScaling(0.3f, 0.3f, 0.3f) *
                 XMMatrixRotationY(XMConvertToRadians(angle * 2.0f)) *
                 XMMatrixTranslation(x, 3.0f, z);
-            renderer->RenderMeshBasic(m_cubeMesh, smallCubeWorld);
+            renderer->RenderMeshLit(m_cubeMesh, smallCubeWorld);
         }
 
-        // 5. Large rectangle on floor (grid-like)
+        // 5. Floor (lit with checkerboard texture)
         XMMATRIX floorWorld = XMMatrixScaling(10.0f, 0.1f, 10.0f) *
             XMMatrixTranslation(0.0f, -2.0f, 0.0f);
-
-        // Use checkerboard texture
-        auto textureManager = renderer->GetTextureManager();
-        auto checkerTexture = textureManager->GetCheckerboardTexture();
-        renderer->RenderMesh(m_cubeMesh, floorWorld, checkerTexture);
+        auto checkerTexture = renderer->GetTextureManager()->GetCheckerboardTexture();
+        renderer->RenderMeshLit(m_cubeMesh, floorWorld, checkerTexture);
     }
 
 private:

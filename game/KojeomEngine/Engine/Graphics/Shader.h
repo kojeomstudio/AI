@@ -111,6 +111,16 @@ public:
     HRESULT CreateBasicColorShader(ID3D11Device* Device);
 
     /**
+     * @brief Create Phong lighting shader program
+     *
+     * Uses cbuffer b0 (World/View/Projection) and b1 (LightBuffer).
+     * Vertex layout: POSITION(float3), COLOR(float4), NORMAL(float3)
+     * @param Device DirectX 11 device
+     * @return Success: S_OK
+     */
+    HRESULT CreatePhongShader(ID3D11Device* Device);
+
+    /**
      * @brief Add shader
      * @param Shader Shader to add
      */

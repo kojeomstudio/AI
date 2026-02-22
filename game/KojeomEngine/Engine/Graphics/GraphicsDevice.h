@@ -58,6 +58,7 @@ public:
     ID3D11DeviceContext* GetContext() const { return Context.Get(); }
     IDXGISwapChain* GetSwapChain() const { return SwapChain.Get(); }
     ID3D11RenderTargetView* GetRenderTargetView() const { return RenderTargetView.Get(); }
+    ID3D11DepthStencilView* GetDepthStencilView() const { return DepthStencilView.Get(); }
     
     UINT32 GetWidth() const { return Width; }
     UINT32 GetHeight() const { return Height; }
@@ -81,6 +82,11 @@ private:
     HRESULT CreateRenderTargetView();
 
     /**
+     * @brief Create depth stencil buffer
+     */
+    HRESULT CreateDepthStencilBuffer();
+
+    /**
      * @brief Setup viewport
      */
     void SetupViewport();
@@ -91,6 +97,8 @@ private:
     ComPtr<ID3D11DeviceContext> Context;
     ComPtr<IDXGISwapChain> SwapChain;
     ComPtr<ID3D11RenderTargetView> RenderTargetView;
+    ComPtr<ID3D11Texture2D> DepthStencilTexture;
+    ComPtr<ID3D11DepthStencilView> DepthStencilView;
 
     // Device settings
     // Debug interface
