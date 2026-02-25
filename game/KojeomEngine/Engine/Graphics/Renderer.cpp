@@ -39,6 +39,22 @@ void KRenderer::BeginFrame(KCamera* InCamera, const float ClearColor[4])
 
     // Begin frame on graphics device
     GraphicsDevice->BeginFrame(ClearColor);
+
+    // Upload light constant buffer to PS slot b1
+    if (LightConstantBuffer)
+    {
+        FLightBuffer LightData;
+        LightData.LightDirection  = DirectionalLight.Direction;
+        LightData.Padding0        = 0.0f;
+        LightData.LightColor      = DirectionalLight.Color;
+        LightData.AmbientColor    = DirectionalLight.AmbientColor;
+        LightData.CameraPosition  = CurrentCamera->GetPosition();
+        LightData.Padding1        = 0.0f;
+
+        ID3D11DeviceContext* Context = GraphicsDevice->GetContext();
+        Context->UpdateSubresource(LightConstantBuffer.Get(), 0, nullptr, &LightData, 0, 0);
+        Context->PSSetConstantBuffers(1, 1, LightConstantBuffer.GetAddressOf());
+    }
 }
 
 void KRenderer::EndFrame(bool bVSync)
@@ -117,11 +133,27 @@ void KRenderer::RenderMeshBasic(std::shared_ptr<KMesh> InMesh, const XMMATRIX& W
     RenderMesh(InMesh, WorldMatrix, nullptr);
 }
 
+void KRenderer::RenderMeshLit(std::shared_ptr<KMesh> InMesh, const XMMATRIX& WorldMatrix,
+                               std::shared_ptr<KTexture> InTexture)
+{
+    if (!LightShader)
+    {
+        RenderMesh(InMesh, WorldMatrix, InTexture);
+        return;
+    }
+
+    FRenderObject RO(InMesh, LightShader, InTexture);
+    RO.WorldMatrix = WorldMatrix;
+    KRenderer::RenderObject(RO);
+}
+
 void KRenderer::Cleanup()
 {
     LOG_INFO("Cleaning up Renderer...");
 
     // Cleanup resources
+    LightConstantBuffer.Reset();
+    LightShader.reset();
     BasicShader.reset();
     TextureManager.Cleanup();
 
@@ -174,17 +206,42 @@ std::shared_ptr<KMesh> KRenderer::CreateSphereMesh(UINT32 Slices, UINT32 Stacks)
 
 HRESULT KRenderer::InitializeDefaultResources()
 {
+    ID3D11Device* Device = GraphicsDevice->GetDevice();
+
     // Create basic shader program
     BasicShader = std::make_shared<KShaderProgram>();
-    HRESULT hr = BasicShader->CreateBasicColorShader(GraphicsDevice->GetDevice());
+    HRESULT hr = BasicShader->CreateBasicColorShader(Device);
     if (FAILED(hr))
     {
         KLogger::HResultError(hr, "Basic shader program creation failed");
         return hr;
     }
 
+    // Create Phong lighting shader program
+    LightShader = std::make_shared<KShaderProgram>();
+    hr = LightShader->CreatePhongShader(Device);
+    if (FAILED(hr))
+    {
+        KLogger::HResultError(hr, "Phong shader program creation failed");
+        return hr;
+    }
+
+    // Create light constant buffer (register b1)
+    D3D11_BUFFER_DESC LightCBDesc = {};
+    LightCBDesc.Usage          = D3D11_USAGE_DEFAULT;
+    LightCBDesc.ByteWidth      = sizeof(FLightBuffer);
+    LightCBDesc.BindFlags      = D3D11_BIND_CONSTANT_BUFFER;
+    LightCBDesc.CPUAccessFlags = 0;
+
+    hr = Device->CreateBuffer(&LightCBDesc, nullptr, &LightConstantBuffer);
+    if (FAILED(hr))
+    {
+        KLogger::HResultError(hr, "Light constant buffer creation failed");
+        return hr;
+    }
+
     // Initialize texture manager
-    hr = TextureManager.CreateDefaultTextures(GraphicsDevice->GetDevice());
+    hr = TextureManager.CreateDefaultTextures(Device);
     if (FAILED(hr))
     {
         KLogger::HResultError(hr, "Default texture creation failed");

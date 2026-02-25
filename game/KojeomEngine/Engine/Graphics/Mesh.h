@@ -18,6 +18,10 @@ struct FVertex
 
     FVertex(const XMFLOAT3& InPosition, const XMFLOAT4& InColor = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f))
         : Position(InPosition), Color(InColor), Normal(0.0f, 1.0f, 0.0f), TexCoord(0.0f, 0.0f) {}
+
+    FVertex(const XMFLOAT3& InPosition, const XMFLOAT4& InColor,
+            const XMFLOAT3& InNormal, const XMFLOAT2& InTexCoord)
+        : Position(InPosition), Color(InColor), Normal(InNormal), TexCoord(InTexCoord) {}
 };
 
 /**

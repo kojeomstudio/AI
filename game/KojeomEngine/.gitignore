@@ -31,6 +31,19 @@
 *.out
 *.app
 
+# Debug symbols
+*.pdb
+*.ilk
+
+# Build output directories
+bin/
+lib/
+
+# Intermediate build directories (MSBuild)
+x64/
+*_x64/
+
 # folder
 Debug/
+Release/
 .vs/

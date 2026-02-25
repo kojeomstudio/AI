@@ -160,13 +160,13 @@ std::string KShader::GetProfileString(EShaderType InType) const
 {
     switch (InType)
     {
-    case EShaderType::Vertex:   return "vs_4_0";
-    case EShaderType::Pixel:    return "ps_4_0";
-    case EShaderType::Geometry: return "gs_4_0";
+    case EShaderType::Vertex:   return "vs_5_0";
+    case EShaderType::Pixel:    return "ps_5_0";
+    case EShaderType::Geometry: return "gs_5_0";
     case EShaderType::Hull:     return "hs_5_0";
     case EShaderType::Domain:   return "ds_5_0";
-    case EShaderType::Compute:  return "cs_4_0";
-    default:                    return "vs_4_0";
+    case EShaderType::Compute:  return "cs_5_0";
+    default:                    return "vs_5_0";
     }
 }
 
@@ -305,6 +305,100 @@ HRESULT KShaderProgram::CreateBasicColorShader(ID3D11Device* Device)
     if (FAILED(hr)) return hr;
 
     LOG_INFO("Basic color shader creation completed");
+    return S_OK;
+}
+
+HRESULT KShaderProgram::CreatePhongShader(ID3D11Device* Device)
+{
+    const std::string ShaderSource = R"(
+        cbuffer TransformBuffer : register(b0)
+        {
+            matrix World;
+            matrix View;
+            matrix Projection;
+        }
+
+        cbuffer LightBuffer : register(b1)
+        {
+            float3 LightDirection;
+            float  Padding0;
+            float4 LightColor;
+            float4 AmbientColor;
+            float3 CameraPosition;
+            float  Padding1;
+        }
+
+        struct VS_INPUT
+        {
+            float3 Pos    : POSITION;
+            float4 Color  : COLOR;
+            float3 Normal : NORMAL;
+        };
+
+        struct PS_INPUT
+        {
+            float4 Pos      : SV_POSITION;
+            float4 Color    : COLOR;
+            float3 Normal   : NORMAL;
+            float3 WorldPos : TEXCOORD0;
+        };
+
+        PS_INPUT VS(VS_INPUT input)
+        {
+            PS_INPUT output = (PS_INPUT)0;
+            float4 worldPos  = mul(float4(input.Pos, 1.0f), World);
+            float4 viewPos   = mul(worldPos, View);
+            output.Pos       = mul(viewPos, Projection);
+            output.Color     = input.Color;
+            output.Normal    = mul(input.Normal, (float3x3)World);
+            output.WorldPos  = worldPos.xyz;
+            return output;
+        }
+
+        float4 PS(PS_INPUT input) : SV_Target
+        {
+            float3 normal   = normalize(input.Normal);
+            float3 lightDir = normalize(-LightDirection);
+
+            // Ambient
+            float4 ambient  = AmbientColor * input.Color;
+
+            // Diffuse (Lambert)
+            float  diff     = max(dot(normal, lightDir), 0.0f);
+            float4 diffuse  = diff * LightColor * input.Color;
+
+            // Specular (Blinn-Phong)
+            float3 viewDir  = normalize(CameraPosition - input.WorldPos);
+            float3 halfDir  = normalize(lightDir + viewDir);
+            float  spec     = pow(max(dot(normal, halfDir), 0.0f), 32.0f);
+            float4 specular = spec * LightColor * 0.4f;
+
+            return saturate(ambient + diffuse + specular);
+        }
+    )";
+
+    auto VS = std::make_shared<KShader>();
+    HRESULT hr = VS->CompileFromString(Device, ShaderSource, "VS", EShaderType::Vertex);
+    if (FAILED(hr)) return hr;
+
+    auto PS = std::make_shared<KShader>();
+    hr = PS->CompileFromString(Device, ShaderSource, "PS", EShaderType::Pixel);
+    if (FAILED(hr)) return hr;
+
+    AddShader(VS);
+    AddShader(PS);
+
+    D3D11_INPUT_ELEMENT_DESC Layout[] =
+    {
+        { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT,   0,  0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+        { "COLOR",    0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+        { "NORMAL",   0, DXGI_FORMAT_R32G32B32_FLOAT,   0, 28, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+    };
+
+    hr = CreateInputLayout(Device, Layout, ARRAYSIZE(Layout));
+    if (FAILED(hr)) return hr;
+
+    LOG_INFO("Phong shader creation completed");
     return S_OK;
 }
 

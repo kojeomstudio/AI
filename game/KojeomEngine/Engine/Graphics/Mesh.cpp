@@ -185,34 +185,82 @@ std::unique_ptr<KMesh> KMesh::CreateQuad(ID3D11Device* Device)
 
 std::unique_ptr<KMesh> KMesh::CreateCube(ID3D11Device* Device)
 {
-    // Cube vertex data (same as legacy PrimitiveModel but using new Vertex structure)
-    FVertex Vertices[] = {
-        // Top face
-        FVertex(XMFLOAT3(-1.0f, 1.0f, -1.0f), XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f)),
-        FVertex(XMFLOAT3(1.0f, 1.0f, -1.0f), XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f)),
-        FVertex(XMFLOAT3(1.0f, 1.0f, 1.0f), XMFLOAT4(0.0f, 1.0f, 1.0f, 1.0f)),
-        FVertex(XMFLOAT3(-1.0f, 1.0f, 1.0f), XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f)),
-        
-        // Bottom face
-        FVertex(XMFLOAT3(-1.0f, -1.0f, -1.0f), XMFLOAT4(1.0f, 0.0f, 1.0f, 1.0f)),
-        FVertex(XMFLOAT3(1.0f, -1.0f, -1.0f), XMFLOAT4(1.0f, 1.0f, 0.0f, 1.0f)),
-        FVertex(XMFLOAT3(1.0f, -1.0f, 1.0f), XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f)),
-        FVertex(XMFLOAT3(-1.0f, -1.0f, 1.0f), XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f))
+    // Cube with per-face normals: 24 vertices (4 per face * 6 faces)
+    // Winding order: CW when viewed from outside (DX11 default front-face)
+
+    // Face colors: Top=Blue, Bottom=Red, Front=Green, Back=Orange, Left=Yellow, Right=Purple
+    const XMFLOAT4 TopCol    = { 0.2f, 0.5f, 1.0f, 1.0f };
+    const XMFLOAT4 BotCol    = { 0.8f, 0.2f, 0.2f, 1.0f };
+    const XMFLOAT4 FrontCol  = { 0.2f, 0.8f, 0.3f, 1.0f };
+    const XMFLOAT4 BackCol   = { 1.0f, 0.5f, 0.1f, 1.0f };
+    const XMFLOAT4 LeftCol   = { 0.9f, 0.9f, 0.2f, 1.0f };
+    const XMFLOAT4 RightCol  = { 0.6f, 0.2f, 0.9f, 1.0f };
+
+    const XMFLOAT3 NUp   = {  0, 1, 0 };
+    const XMFLOAT3 NDown = {  0,-1, 0 };
+    const XMFLOAT3 NFwd  = {  0, 0,-1 };
+    const XMFLOAT3 NBack = {  0, 0, 1 };
+    const XMFLOAT3 NLeft = { -1, 0, 0 };
+    const XMFLOAT3 NRgt  = {  1, 0, 0 };
+
+    FVertex Vertices[24] =
+    {
+        // Top face (Y=+1)  -- CW from above: 0,2,1 / 3,2,0
+        { {-1, 1,-1}, TopCol, NUp,   {0,0} },  // 0
+        { { 1, 1,-1}, TopCol, NUp,   {1,0} },  // 1
+        { { 1, 1, 1}, TopCol, NUp,   {1,1} },  // 2
+        { {-1, 1, 1}, TopCol, NUp,   {0,1} },  // 3
+
+        // Bottom face (Y=-1) -- CW from below: 4,6,5 / 4,7,6
+        { {-1,-1, 1}, BotCol, NDown, {0,0} },  // 4
+        { { 1,-1, 1}, BotCol, NDown, {1,0} },  // 5
+        { { 1,-1,-1}, BotCol, NDown, {1,1} },  // 6
+        { {-1,-1,-1}, BotCol, NDown, {0,1} },  // 7
+
+        // Front face (Z=-1) -- CW from front: 8,9,10 / 8,10,11
+        { {-1, 1,-1}, FrontCol, NFwd, {0,0} }, // 8
+        { { 1, 1,-1}, FrontCol, NFwd, {1,0} }, // 9
+        { { 1,-1,-1}, FrontCol, NFwd, {1,1} }, // 10
+        { {-1,-1,-1}, FrontCol, NFwd, {0,1} }, // 11
+
+        // Back face (Z=+1) -- CW from back: 12,13,14 / 12,14,15
+        { { 1, 1, 1}, BackCol, NBack, {0,0} }, // 12
+        { {-1, 1, 1}, BackCol, NBack, {1,0} }, // 13
+        { {-1,-1, 1}, BackCol, NBack, {1,1} }, // 14
+        { { 1,-1, 1}, BackCol, NBack, {0,1} }, // 15
+
+        // Left face (X=-1) -- CW from left: 16,17,18 / 16,18,19
+        { {-1, 1, 1}, LeftCol, NLeft, {0,0} }, // 16
+        { {-1, 1,-1}, LeftCol, NLeft, {1,0} }, // 17
+        { {-1,-1,-1}, LeftCol, NLeft, {1,1} }, // 18
+        { {-1,-1, 1}, LeftCol, NLeft, {0,1} }, // 19
+
+        // Right face (X=+1) -- CW from right: 20,21,22 / 20,22,23
+        { { 1, 1,-1}, RightCol, NRgt, {0,0} }, // 20
+        { { 1, 1, 1}, RightCol, NRgt, {1,0} }, // 21
+        { { 1,-1, 1}, RightCol, NRgt, {1,1} }, // 22
+        { { 1,-1,-1}, RightCol, NRgt, {0,1} }, // 23
     };
 
-    // Cube index data (same as legacy)
-    UINT32 Indices[] = {
-        3,1,0,  2,1,3,  // Top
-        0,5,4,  1,5,0,  // Front
-        3,4,7,  0,4,3,  // Left
-        1,6,5,  2,6,1,  // Right
-        2,7,6,  3,7,2,  // Back
-        6,4,5,  7,4,6,  // Bottom
+    UINT32 Indices[] =
+    {
+        // Top
+        0, 2, 1,   3, 2, 0,
+        // Bottom
+        4, 6, 5,   4, 7, 6,
+        // Front
+        8, 9,10,   8,10,11,
+        // Back
+       12,13,14,  12,14,15,
+        // Left
+       16,17,18,  16,18,19,
+        // Right
+       20,21,22,  20,22,23,
     };
 
     auto Mesh = std::make_unique<KMesh>();
-    HRESULT hr = Mesh->Initialize(Device, Vertices, 8, Indices, 36);
-    
+    HRESULT hr = Mesh->Initialize(Device, Vertices, 24, Indices, 36);
+
     if (FAILED(hr))
     {
         LOG_ERROR("Cube mesh creation failed");

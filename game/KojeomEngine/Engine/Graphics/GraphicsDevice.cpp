@@ -38,6 +38,14 @@ HRESULT KGraphicsDevice::Initialize(HWND InWindowHandle, UINT32 InWidth, UINT32 
         return hr;
     }
 
+    // Create depth stencil buffer
+    hr = CreateDepthStencilBuffer();
+    if (FAILED(hr))
+    {
+        KLogger::HResultError(hr, "Depth stencil buffer creation failed");
+        return hr;
+    }
+
     // Setup viewport
     SetupViewport();
 
@@ -52,6 +60,8 @@ void KGraphicsDevice::Cleanup()
         Context->ClearState();
     }
 
+    DepthStencilView.Reset();
+    DepthStencilTexture.Reset();
     RenderTargetView.Reset();
     SwapChain.Reset();
     Context.Reset();
@@ -71,8 +81,11 @@ void KGraphicsDevice::BeginFrame(const float ClearColor[4])
     // Clear render target
     Context->ClearRenderTargetView(RenderTargetView.Get(), ClearColor);
 
-    // Set render target
-    Context->OMSetRenderTargets(1, RenderTargetView.GetAddressOf(), nullptr);
+    // Clear depth stencil
+    Context->ClearDepthStencilView(DepthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+
+    // Set render target with depth stencil
+    Context->OMSetRenderTargets(1, RenderTargetView.GetAddressOf(), DepthStencilView.Get());
 }
 
 void KGraphicsDevice::EndFrame(bool bVSync)
@@ -94,8 +107,10 @@ HRESULT KGraphicsDevice::ResizeBuffers(UINT32 NewWidth, UINT32 NewHeight)
     Width = NewWidth;
     Height = NewHeight;
 
-    // Release render target view
+    // Release render target and depth stencil views
     Context->OMSetRenderTargets(0, nullptr, nullptr);
+    DepthStencilView.Reset();
+    DepthStencilTexture.Reset();
     RenderTargetView.Reset();
 
     // Resize swap chain buffers
@@ -111,6 +126,14 @@ HRESULT KGraphicsDevice::ResizeBuffers(UINT32 NewWidth, UINT32 NewHeight)
     if (FAILED(hr))
     {
         KLogger::HResultError(hr, "Render target view recreation failed");
+        return hr;
+    }
+
+    // Recreate depth stencil buffer
+    hr = CreateDepthStencilBuffer();
+    if (FAILED(hr))
+    {
+        KLogger::HResultError(hr, "Depth stencil buffer recreation failed");
         return hr;
     }
 
@@ -229,6 +252,44 @@ HRESULT KGraphicsDevice::CreateRenderTargetView()
     }
 
     LOG_INFO("Render target view created successfully");
+    return S_OK;
+}
+
+HRESULT KGraphicsDevice::CreateDepthStencilBuffer()
+{
+    // Create depth stencil texture
+    D3D11_TEXTURE2D_DESC DepthDesc = {};
+    DepthDesc.Width              = Width;
+    DepthDesc.Height             = Height;
+    DepthDesc.MipLevels          = 1;
+    DepthDesc.ArraySize          = 1;
+    DepthDesc.Format             = DXGI_FORMAT_D24_UNORM_S8_UINT;
+    DepthDesc.SampleDesc.Count   = 1;
+    DepthDesc.SampleDesc.Quality = 0;
+    DepthDesc.Usage              = D3D11_USAGE_DEFAULT;
+    DepthDesc.BindFlags          = D3D11_BIND_DEPTH_STENCIL;
+
+    HRESULT hr = Device->CreateTexture2D(&DepthDesc, nullptr, &DepthStencilTexture);
+    if (FAILED(hr))
+    {
+        LOG_ERROR("Failed to create depth stencil texture");
+        return hr;
+    }
+
+    // Create depth stencil view
+    D3D11_DEPTH_STENCIL_VIEW_DESC DSVDesc = {};
+    DSVDesc.Format             = DXGI_FORMAT_D24_UNORM_S8_UINT;
+    DSVDesc.ViewDimension      = D3D11_DSV_DIMENSION_TEXTURE2D;
+    DSVDesc.Texture2D.MipSlice = 0;
+
+    hr = Device->CreateDepthStencilView(DepthStencilTexture.Get(), &DSVDesc, &DepthStencilView);
+    if (FAILED(hr))
+    {
+        LOG_ERROR("Failed to create depth stencil view");
+        return hr;
+    }
+
+    LOG_INFO("Depth stencil buffer created successfully");
     return S_OK;
 }
 

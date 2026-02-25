@@ -7,6 +7,7 @@
 #include "Shader.h"
 #include "Mesh.h"
 #include "Texture.h"
+#include "Light.h"
 
 /**
  * @brief Render object containing all rendering components
@@ -81,6 +82,24 @@ public:
     void RenderMeshBasic(std::shared_ptr<KMesh> InMesh, const XMMATRIX& WorldMatrix);
 
     /**
+     * @brief Render mesh with Phong lighting shader
+     * @param InMesh Mesh
+     * @param WorldMatrix World matrix
+     * @param InTexture Texture (optional)
+     */
+    void RenderMeshLit(std::shared_ptr<KMesh> InMesh, const XMMATRIX& WorldMatrix,
+                       std::shared_ptr<KTexture> InTexture = nullptr);
+
+    /**
+     * @brief Set directional light for lit rendering
+     * @param Light Directional light
+     */
+    void SetDirectionalLight(const FDirectionalLight& Light) { DirectionalLight = Light; }
+
+    // Getters
+    KShaderProgram* GetLightShader() const { return LightShader.get(); }
+
+    /**
      * @brief Cleanup resources
      */
     void Cleanup();
@@ -108,7 +127,12 @@ private:
 
     // Rendering resources
     std::shared_ptr<KShaderProgram> BasicShader;
+    std::shared_ptr<KShaderProgram> LightShader;
     KTextureManager TextureManager;
+
+    // Lighting
+    FDirectionalLight DirectionalLight;
+    ComPtr<ID3D11Buffer> LightConstantBuffer;
 
     // Current frame state
     bool bInFrame = false;
