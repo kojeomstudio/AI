@@ -1,7 +1,16 @@
 @echo off
 set ROOT_DIR=%~dp0
-set VERSION=v1.0.0
+set PROJECT_FILE="%ROOT_DIR%mod\casc-viewer-wpf\CascViewerWPF.csproj"
+
 echo ==========================================
+echo Detecting Project Version...
+for /f "tokens=*" %%i in ('powershell -NoProfile -Command "([xml](Get-Content %PROJECT_FILE%)).Project.PropertyGroup.Version"') do set VERSION=v%%i
+
+if "%VERSION%"=="v" (
+    set VERSION=v1.0.0
+    echo [WARNING] Could not detect version, defaulting to v1.0.0
+)
+
 echo Building CascViewerWPF Full Tool %VERSION%
 echo ==========================================
 
@@ -13,7 +22,7 @@ if %ERRORLEVEL% NEQ 0 (
 )
 
 echo Starting dotnet build...
-dotnet build "%ROOT_DIR%mod\casc-viewer-wpf\CascViewerWPF.csproj" -c Release
+dotnet build %PROJECT_FILE% -c Release
 
 if %ERRORLEVEL% NEQ 0 (
     echo.
