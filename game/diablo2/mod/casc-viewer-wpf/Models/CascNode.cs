@@ -86,6 +86,5 @@ namespace CascViewerWPF.Models
         /// UI helper to provide an icon based on the node type.
         /// </summary>
         public string Icon => IsFile ? "📄" : "📁";
-
     }
 }
