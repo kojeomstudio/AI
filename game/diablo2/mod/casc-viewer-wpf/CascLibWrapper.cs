@@ -23,7 +23,7 @@ namespace CascViewerWPF
         public unsafe struct CASC_FIND_DATA
         {
             [FieldOffset(0)]
-            public fixed byte _szFileName[260];
+            public fixed byte _szFileName[260]; // MAX_PATH = 260
 
             [FieldOffset(260)]
             public fixed byte CKey[16];
@@ -31,8 +31,7 @@ namespace CascViewerWPF
             [FieldOffset(276)]
             public fixed byte EKey[16];
 
-            // Padding 4 bytes here for 8-byte alignment of next field (292 -> 296)
-
+            // Padding 4 bytes for 8-byte alignment of next field on x64 (292 -> 296)
             [FieldOffset(296)]
             public ulong TagBitMask;
 
@@ -54,8 +53,10 @@ namespace CascViewerWPF
             [FieldOffset(332)]
             public uint dwSpanCount;
 
-            [FieldOffset(336)]
-            public uint bFileAvailable;
+            // Bit-field and Enum following...
+            // Since we only care about szFileName and FileSize for tree building,
+            // we've ensured those offsets are correct. 
+            // Total size should be around 352 bytes on x64.
 
             public string szFileName
             {

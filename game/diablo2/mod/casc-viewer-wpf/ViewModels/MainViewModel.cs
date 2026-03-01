@@ -265,25 +265,42 @@ namespace CascViewerWPF.ViewModels
             if (hFind != IntPtr.Zero)
             {
                 int processed = 0;
+                int namedFiles = 0;
                 var tempRootNodes = new List<CascNode>();
                 var tempRootLookup = new Dictionary<string, CascNode>(StringComparer.OrdinalIgnoreCase);
 
-                do
+                try
                 {
-                    if (!string.IsNullOrEmpty(findData.szFileName))
+                    do
                     {
-                        AddFileToInternalTree(tempRootNodes, tempRootLookup, findData.szFileName, findData.FileSize);
-                    }
-                    processed++;
-                    
-                    // Periodic UI update to show progress without overwhelming the dispatcher.
-                    if (processed % 5000 == 0)
-                    {
-                        UpdateStatusOnUI(processed);
-                    }
-                } while (CascLibWrapper.CascFindNextFile(hFind, ref findData));
+                        string fileName = findData.szFileName;
+                        if (!string.IsNullOrEmpty(fileName))
+                        {
+                            AddFileToInternalTree(tempRootNodes, tempRootLookup, fileName, findData.FileSize);
+                            namedFiles++;
+                        }
+                        
+                        processed++;
+                        
+                        // Periodic UI update to show progress without overwhelming the dispatcher.
+                        if (processed % 10000 == 0)
+                        {
+                            UpdateStatusOnUI(processed);
+                        }
 
-                CascLibWrapper.CascFindClose(hFind);
+                        // Safety break: If we exceed a reasonable number of files (e.g., 10 million), 
+                        // something is likely wrong with the storage or finding logic.
+                        if (processed > 10_000_000)
+                        {
+                            LogService.Instance.Log("Safety break triggered: processed over 10 million entries. Stopping scan.", LogLevel.Warning);
+                            break;
+                        }
+                    } while (CascLibWrapper.CascFindNextFile(hFind, ref findData));
+                }
+                finally
+                {
+                    CascLibWrapper.CascFindClose(hFind);
+                }
                 
                 // Finalize the tree on the UI thread.
                 System.Windows.Application.Current.Dispatcher.Invoke(() => 
@@ -294,8 +311,8 @@ namespace CascViewerWPF.ViewModels
                     }
                     CurrentFiles = processed;
                     ProgressValue = 100;
-                    StatusText = $"Load Complete. {processed} files mapped.";
-                    LogService.Instance.Log($"Mapping complete. {processed} files added to tree.");
+                    StatusText = $"Load Complete. {processed} entries ( {namedFiles} named files) mapped.";
+                    LogService.Instance.Log($"Mapping complete. Processed {processed} entries, found {namedFiles} named files.");
                 });
             }
             else
