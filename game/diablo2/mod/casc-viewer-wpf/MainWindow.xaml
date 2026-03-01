@@ -8,6 +8,8 @@
     <Grid Margin="10">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="2*"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
@@ -67,8 +69,35 @@
             </Grid>
         </Grid>
 
+        <!-- Splitter for Logs -->
+        <GridSplitter Grid.Row="2" Height="5" HorizontalAlignment="Stretch" VerticalAlignment="Center" Background="LightGray" Margin="0,5"/>
+
+        <!-- Log Viewer -->
+        <GroupBox Grid.Row="3" Header="Logs">
+            <ListBox ItemsSource="{Binding Logs}" ScrollViewer.VerticalScrollBarVisibility="Auto">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding DisplayText}">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Level}" Value="Error">
+                                            <Setter Property="Foreground" Value="Red"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding Level}" Value="Warning">
+                                            <Setter Property="Foreground" Value="Orange"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </GroupBox>
+
         <!-- Status Bar -->
-        <StatusBar Grid.Row="2" Margin="0,10,0,0">
+        <StatusBar Grid.Row="4" Margin="0,5,0,0">
             <StatusBarItem>
                 <TextBlock Text="{Binding StatusText}"/>
             </StatusBarItem>

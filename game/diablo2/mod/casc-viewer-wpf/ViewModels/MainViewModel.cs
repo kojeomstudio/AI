@@ -7,6 +7,8 @@ using System.Windows.Input;
 using CascViewerWPF.Commands;
 using CascViewerWPF.Models;
 
+using CascViewerWPF.Services;
+
 namespace CascViewerWPF.ViewModels
 {
     public class MainViewModel : ViewModelBase
@@ -16,6 +18,9 @@ namespace CascViewerWPF.ViewModels
         private bool _isLoading;
         private CascNode? _selectedNode;
 
+        public ObservableCollection<LogEntry> Logs => LogService.Instance.Logs;
+        
+        // ... (rest of properties)
         public string D2RPath
         {
             get => _d2rPath;
@@ -67,6 +72,8 @@ namespace CascViewerWPF.ViewModels
             BrowseCommand = new RelayCommand(_ => Browse());
             LoadCommand = new RelayCommand(_ => LoadCasc(), _ => !string.IsNullOrEmpty(D2RPath) && !IsLoading);
             ExtractCommand = new RelayCommand(_ => ExtractSelected(), _ => CanExtract);
+            
+            LogService.Instance.Log("MainViewModel initialized.");
         }
 
         private void Browse()
@@ -75,6 +82,7 @@ namespace CascViewerWPF.ViewModels
             if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
                 D2RPath = dialog.SelectedPath;
+                LogService.Instance.Log($"Path selected: {D2RPath}");
             }
         }
 
@@ -88,6 +96,7 @@ namespace CascViewerWPF.ViewModels
 
             IsLoading = true;
             StatusText = "Opening CASC storage...";
+            LogService.Instance.Log($"Loading CASC from {D2RPath}...");
             CascNodes.Clear();
 
             try
@@ -97,14 +106,17 @@ namespace CascViewerWPF.ViewModels
                     IntPtr hStorage;
                     if (CascLibWrapper.CascOpenStorage(D2RPath, CascLibWrapper.CASC_OPEN_LOCAL, out hStorage))
                     {
+                        LogService.Instance.Log("CASC storage opened successfully.");
                         UpdateStatus("Scanning files...");
                         PopulateTree(hStorage);
                         CascLibWrapper.CascCloseStorage(hStorage);
                         UpdateStatus("CASC Loaded Successfully.");
+                        LogService.Instance.Log("CASC loading and scanning completed.");
                     }
                     else
                     {
                         UpdateStatus("Failed to open CASC storage.");
+                        LogService.Instance.Log("Failed to open CASC storage.", LogLevel.Error);
                     }
                 });
             }
@@ -112,6 +124,7 @@ namespace CascViewerWPF.ViewModels
             {
                 StatusText = $"Error: {ex.Message}";
                 System.Windows.MessageBox.Show($"Error: {ex.Message}");
+                LogService.Instance.Log($"Critical error during loading: {ex.Message}", LogLevel.Error);
             }
             finally
             {
@@ -126,6 +139,7 @@ namespace CascViewerWPF.ViewModels
 
         private void PopulateTree(IntPtr hStorage)
         {
+            int fileCount = 0;
             CascLibWrapper.CASC_FIND_DATA findData = new CascLibWrapper.CASC_FIND_DATA();
             IntPtr hFind = CascLibWrapper.CascFindFirstFile(hStorage, "*", ref findData, null);
 
@@ -138,11 +152,13 @@ namespace CascViewerWPF.ViewModels
                         var fileName = findData.szFileName;
                         var fileSize = findData.dwFileSize;
                         System.Windows.Application.Current.Dispatcher.Invoke(() => AddFileToTree(fileName, fileSize));
+                        fileCount++;
                     }
                 } while (CascLibWrapper.CascFindNextFile(hFind, ref findData));
 
                 CascLibWrapper.CascFindClose(hFind);
             }
+            LogService.Instance.Log($"Scan completed. Total files found: {fileCount}");
         }
 
         private void AddFileToTree(string filePath, uint fileSize)
@@ -209,6 +225,7 @@ namespace CascViewerWPF.ViewModels
             if (saveDialog.ShowDialog() == true)
             {
                 StatusText = $"Extracting {SelectedNode.Name}...";
+                LogService.Instance.Log($"Extracting {SelectedNode.FullPath} to {saveDialog.FileName}...");
                 
                 IntPtr hStorage;
                 if (CascLibWrapper.CascOpenStorage(D2RPath, CascLibWrapper.CASC_OPEN_LOCAL, out hStorage))
@@ -220,12 +237,18 @@ namespace CascViewerWPF.ViewModels
                     {
                         StatusText = "Extraction Complete.";
                         System.Windows.MessageBox.Show("File extracted successfully.");
+                        LogService.Instance.Log("Extraction successful.");
                     }
                     else
                     {
                         StatusText = "Extraction Failed.";
                         System.Windows.MessageBox.Show("Failed to extract file.");
+                        LogService.Instance.Log($"Extraction failed for: {SelectedNode.FullPath}", LogLevel.Error);
                     }
+                }
+                else
+                {
+                    LogService.Instance.Log("Failed to open storage for extraction.", LogLevel.Error);
                 }
             }
         }
