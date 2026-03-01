@@ -55,3 +55,6 @@
 [submodule "llm/agent/nanobot"]
 	path = llm/agent/nanobot
 	url = git@github.com:kojeomstudio/nanobot.git
+[submodule "game/diablo2/casc-lib"]
+	path = game/diablo2/casc-lib
+	url = git@github.com:kojeomstudio/CascLib.git
