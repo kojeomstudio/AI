@@ -14,6 +14,7 @@ namespace CascViewerWPF.ViewModels
     public class MainViewModel : ViewModelBase
     {
         private string _d2rPath = string.Empty;
+        private string _searchMask = "data\\*";
         private string _statusText = "Ready";
         private bool _isLoading;
         private CascNode? _selectedNode;
@@ -30,12 +31,19 @@ namespace CascViewerWPF.ViewModels
             set => SetProperty(ref _d2rPath, value);
         }
 
+        public string SearchMask
+        {
+            get => _searchMask;
+            set => SetProperty(ref _searchMask, value);
+        }
+
         public string StatusText
         {
             get => _statusText;
             set => SetProperty(ref _statusText, value);
         }
-
+        
+        // ... (rest of loading related properties)
         public bool IsLoading
         {
             get => _isLoading;
@@ -119,7 +127,7 @@ namespace CascViewerWPF.ViewModels
 
             IsLoading = true;
             StatusText = "Opening CASC storage...";
-            LogService.Instance.Log($"Loading CASC from {D2RPath}...");
+            LogService.Instance.Log($"Loading CASC (Mask: {SearchMask}) from {D2RPath}...");
             CascNodes.Clear();
             ProgressValue = 0;
             CurrentFiles = 0;
@@ -131,16 +139,16 @@ namespace CascViewerWPF.ViewModels
                     IntPtr hStorage;
                     if (CascLibWrapper.CascOpenStorage(D2RPath, CascLibWrapper.CASC_OPEN_LOCAL, out hStorage))
                     {
-                        // Get Total File Count
+                        // Get Initial Estimate (Physical Files)
                         uint lengthNeeded;
                         byte[] buffer = new byte[4];
                         if (CascLibWrapper.CascGetStorageInfo(hStorage, CascLibWrapper.CascStorageTotalFileCount, buffer, 4, out lengthNeeded))
                         {
                             TotalFiles = BitConverter.ToInt32(buffer, 0);
-                            LogService.Instance.Log($"Total files in storage: {TotalFiles}");
+                            LogService.Instance.Log($"Storage block count (estimate): {TotalFiles}");
                         }
 
-                        UpdateStatus("Scanning files...");
+                        UpdateStatus("Scanning virtual file system...");
                         PopulateTree(hStorage);
                         CascLibWrapper.CascCloseStorage(hStorage);
                         UpdateStatus("CASC Loaded Successfully.");
@@ -172,7 +180,7 @@ namespace CascViewerWPF.ViewModels
         private void PopulateTree(IntPtr hStorage)
         {
             CascLibWrapper.CASC_FIND_DATA findData = new CascLibWrapper.CASC_FIND_DATA();
-            IntPtr hFind = CascLibWrapper.CascFindFirstFile(hStorage, "*", ref findData, null);
+            IntPtr hFind = CascLibWrapper.CascFindFirstFile(hStorage, SearchMask, ref findData, null);
 
             if (hFind != IntPtr.Zero)
             {
@@ -187,19 +195,34 @@ namespace CascViewerWPF.ViewModels
                     }
                     processed++;
                     
-                    if (processed % 100 == 0 || processed == TotalFiles)
+                    if (processed % 100 == 0)
                     {
-                        double progress = TotalFiles > 0 ? (double)processed / TotalFiles * 100 : 0;
+                        // Dynamically adjust total if exceeded
+                        int maxForProgress = Math.Max(TotalFiles, processed);
+                        double progress = maxForProgress > 0 ? (double)processed / maxForProgress * 100 : 0;
+                        if (progress >= 100 && processed < TotalFiles) progress = 99.9;
+
                         System.Windows.Application.Current.Dispatcher.Invoke(() => 
                         {
                             CurrentFiles = processed;
                             ProgressValue = progress;
-                            StatusText = $"Scanning: {processed} / {TotalFiles} ({progress:F1}%)";
+                            StatusText = $"Scanning: {processed} / {maxForProgress} ({progress:F1}%)";
                         });
                     }
                 } while (CascLibWrapper.CascFindNextFile(hFind, ref findData));
 
                 CascLibWrapper.CascFindClose(hFind);
+                
+                System.Windows.Application.Current.Dispatcher.Invoke(() => 
+                {
+                    CurrentFiles = processed;
+                    ProgressValue = 100;
+                    StatusText = $"Load Complete. {processed} files found.";
+                });
+            }
+            else
+            {
+                LogService.Instance.Log($"No files found matching mask: {SearchMask}", LogLevel.Warning);
             }
         }
 

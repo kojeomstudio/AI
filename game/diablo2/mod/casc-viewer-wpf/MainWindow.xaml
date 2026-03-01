@@ -14,12 +14,21 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- Top Bar: Path Selection -->
-        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
-            <TextBox x:Name="PathTextBox" Text="{Binding D2RPath, UpdateSourceTrigger=PropertyChanged}" Width="600" Margin="0,0,10,0" VerticalContentAlignment="Center"/>
-            <Button Content="Browse" Command="{Binding BrowseCommand}" Width="80" Margin="0,0,10,0"/>
-            <Button Content="Load CASC" Command="{Binding LoadCommand}" Width="100"/>
-        </StackPanel>
+        <!-- Top Bar: Path Selection and Mask -->
+        <Grid Grid.Row="0" Margin="0,0,0,10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="150"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            
+            <TextBox Grid.Column="0" Text="{Binding D2RPath, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,5,0" VerticalContentAlignment="Center" ToolTip="D2R Installation Directory"/>
+            <Button Grid.Column="1" Content="Browse" Command="{Binding BrowseCommand}" Width="70" Margin="0,0,10,0"/>
+            
+            <TextBox Grid.Column="2" Text="{Binding SearchMask, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,5,0" VerticalContentAlignment="Center" ToolTip="Search Mask (e.g., data\*)"/>
+            <Button Grid.Column="3" Content="Load CASC" Command="{Binding LoadCommand}" Width="90"/>
+        </Grid>
 
         <!-- Main Area: TreeView and Details -->
         <Grid Grid.Row="1">
