@@ -115,6 +115,7 @@ namespace CascViewerWPF.ViewModels
         public ICommand ExtractCommand { get; }
         public ICommand CopyPathCommand { get; }
         public ICommand ClearLogsCommand { get; }
+        public ICommand OpenLogFolderCommand { get; }
         #endregion
 
         public MainViewModel()
@@ -124,11 +125,28 @@ namespace CascViewerWPF.ViewModels
             ExtractCommand = new RelayCommand(_ => ExtractSelected(), _ => CanExtract);
             CopyPathCommand = new RelayCommand(_ => CopyPath(), _ => SelectedNode != null);
             ClearLogsCommand = new RelayCommand(_ => LogService.Instance.Logs.Clear());
+            OpenLogFolderCommand = new RelayCommand(_ => OpenLogFolder());
             
             LogService.Instance.Log("MainViewModel initialized.");
         }
 
         #region Methods
+        private void OpenLogFolder()
+        {
+            try
+            {
+                string logFile = LogService.Instance.LogFilePath;
+                string? folder = Path.GetDirectoryName(logFile);
+                if (folder != null && Directory.Exists(folder))
+                {
+                    System.Diagnostics.Process.Start("explorer.exe", folder);
+                }
+            }
+            catch (Exception ex)
+            {
+                LogService.Instance.Log($"Failed to open log folder: {ex.Message}", LogLevel.Error);
+            }
+        }
         private void Browse()
         {
             var dialog = new System.Windows.Forms.FolderBrowserDialog();

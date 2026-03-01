@@ -11,6 +11,7 @@ namespace CascViewerWPF.Services
         public static LogService Instance => _instance ??= new LogService();
 
         private readonly string _logFilePath;
+        public string LogFilePath => _logFilePath;
         public ObservableCollection<LogEntry> Logs { get; } = new ObservableCollection<LogEntry>();
 
         private LogService()
