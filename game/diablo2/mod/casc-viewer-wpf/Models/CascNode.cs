@@ -8,6 +8,9 @@ namespace CascViewerWPF.Models
     /// </summary>
     public class CascNode
     {
+        private ObservableCollection<CascNode>? _children;
+        private Dictionary<string, CascNode>? _childrenLookup;
+
         /// <summary>
         /// Display name of the node (file name or folder name).
         /// </summary>
@@ -39,29 +42,42 @@ namespace CascViewerWPF.Models
         public bool IsFolder => !IsFile;
 
         /// <summary>
-        /// Collection of child nodes (sub-folders and files).
+        /// Collection of child nodes. Lazily initialized to save memory for file nodes.
         /// </summary>
-        public ObservableCollection<CascNode> Children { get; } = new ObservableCollection<CascNode>();
+        public ObservableCollection<CascNode> Children
+        {
+            get
+            {
+                if (_children == null)
+                    _children = new ObservableCollection<CascNode>();
+                return _children;
+            }
+        }
         
         /// <summary>
         /// Fast lookup dictionary to manage child nodes during tree construction.
-        /// This avoids O(N) searches when building large hierarchies.
+        /// Lazily initialized to save memory for file nodes.
         /// </summary>
-        private readonly Dictionary<string, CascNode> _childrenLookup = new Dictionary<string, CascNode>(System.StringComparer.OrdinalIgnoreCase);
+        private Dictionary<string, CascNode> ChildrenLookup
+        {
+            get
+            {
+                if (_childrenLookup == null)
+                    _childrenLookup = new Dictionary<string, CascNode>(System.StringComparer.OrdinalIgnoreCase);
+                return _childrenLookup;
+            }
+        }
 
         /// <summary>
         /// Retrieves an existing child node by name or creates a new one if it doesn't exist.
         /// </summary>
-        /// <param name="name">Name of the child node.</param>
-        /// <param name="isFile">Whether the child is a file or folder.</param>
-        /// <returns>The found or created CascNode.</returns>
         public CascNode? GetOrCreateChild(string name, bool isFile)
         {
-            if (_childrenLookup.TryGetValue(name, out var existing))
+            if (ChildrenLookup.TryGetValue(name, out var existing))
                 return existing;
 
             var newNode = new CascNode { Name = name, IsFile = isFile };
-            _childrenLookup[name] = newNode;
+            ChildrenLookup[name] = newNode;
             Children.Add(newNode);
             return newNode;
         }

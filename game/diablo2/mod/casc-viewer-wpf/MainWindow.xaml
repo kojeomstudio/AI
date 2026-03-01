@@ -41,7 +41,9 @@
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
 
-                    <TreeView x:Name="CascTreeView" ItemsSource="{Binding CascNodes}" Grid.Column="0" SelectedItemChanged="CascTreeView_SelectedItemChanged">
+                    <TreeView x:Name="CascTreeView" ItemsSource="{Binding CascNodes}" Grid.Column="0" SelectedItemChanged="CascTreeView_SelectedItemChanged"
+                              VirtualizingStackPanel.IsVirtualizing="True"
+                              VirtualizingStackPanel.VirtualizationMode="Recycling">
                         <TreeView.Resources>
                             <ContextMenu x:Key="ItemContextMenu">
                                 <MenuItem Header="Extract File/Folder" Command="{Binding DataContext.ExtractCommand, RelativeSource={RelativeSource AncestorType=Window}}" Foreground="Blue">
