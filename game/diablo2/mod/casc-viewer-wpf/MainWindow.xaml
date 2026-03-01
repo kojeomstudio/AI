@@ -24,7 +24,17 @@
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
-            <TreeView x:Name="CascTreeView" Grid.Column="0">
+            <TreeView x:Name="CascTreeView" Grid.Column="0" SelectedItemChanged="CascTreeView_SelectedItemChanged">
+                <TreeView.Resources>
+                    <ContextMenu x:Key="ItemContextMenu">
+                        <MenuItem Header="Extract File" Click="ExtractFile_Click"/>
+                    </ContextMenu>
+                </TreeView.Resources>
+                <TreeView.ItemContainerStyle>
+                    <Style TargetType="{x:Type TreeViewItem}">
+                        <Setter Property="ContextMenu" Value="{StaticResource ItemContextMenu}"/>
+                    </Style>
+                </TreeView.ItemContainerStyle>
                 <TreeView.ItemTemplate>
                     <HierarchicalDataTemplate ItemsSource="{Binding Children}">
                         <StackPanel Orientation="Horizontal">
@@ -41,6 +51,7 @@
                 <TextBlock x:Name="FileNameText" Text="Name: -"/>
                 <TextBlock x:Name="FileSizeText" Text="Size: -"/>
                 <TextBlock x:Name="FileTypeText" Text="Type: -"/>
+                <Button x:Name="ExtractButton" Content="Extract Selected" Margin="0,20,0,0" Width="120" HorizontalAlignment="Left" Click="ExtractFile_Click" IsEnabled="False"/>
             </StackPanel>
         </Grid>
 

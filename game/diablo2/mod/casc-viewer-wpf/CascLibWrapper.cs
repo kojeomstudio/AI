@@ -34,12 +34,24 @@ namespace CascViewerWPF
         }
 
         [DllImport(CascLibDll, CharSet = CharSet.Ansi, SetLastError = true)]
-        public static extern IntPtr CascFindFirstFile(IntPtr hStorage, string szMask, ref CASC_FIND_DATA pFindData, string szListFile);
+        public static extern IntPtr CascFindFirstFile(IntPtr hStorage, string szMask, ref CASC_FIND_DATA pFindData, string? szListFile);
 
         [DllImport(CascLibDll, SetLastError = true)]
         public static extern bool CascFindNextFile(IntPtr hFind, ref CASC_FIND_DATA pFindData);
 
         [DllImport(CascLibDll, SetLastError = true)]
         public static extern bool CascFindClose(IntPtr hFind);
+
+        [DllImport(CascLibDll, CharSet = CharSet.Ansi, SetLastError = true)]
+        public static extern bool CascOpenFile(IntPtr hStorage, string szFileName, uint dwLocaleFlags, uint dwOpenFlags, out IntPtr phFile);
+
+        [DllImport(CascLibDll, SetLastError = true)]
+        public static extern bool CascReadFile(IntPtr hFile, byte[] lpBuffer, uint dwToRead, out uint pdwRead);
+
+        [DllImport(CascLibDll, SetLastError = true)]
+        public static extern bool CascCloseFile(IntPtr hFile);
+
+        [DllImport(CascLibDll, CharSet = CharSet.Ansi, SetLastError = true)]
+        public static extern bool CascExtractFile(IntPtr hStorage, string szFileName, string szLocalFileName, uint dwLocaleFlags);
     }
 }

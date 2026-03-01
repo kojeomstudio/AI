@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "WebFetch(domain:d2runewizard.com)",
+      "WebFetch(domain:diablo2.inven.co.kr)",
+      "WebFetch(domain:www.icy-veins.com)",
+      "WebFetch(domain:www.purediablo.com)",
+      "WebFetch(domain:namu.wiki)",
+      "Bash(pip install:*)",
+      "Bash(python create_runeword_excel.py:*)",
+      "Bash(start \"\" \"D2R_룬워드_목록.xlsx\")"
+    ]
+  }
+}
