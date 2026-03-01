@@ -177,6 +177,8 @@ namespace CascViewerWPF.ViewModels
             System.Windows.Application.Current.Dispatcher.Invoke(() => StatusText = message);
         }
 
+        private readonly Dictionary<string, CascNode> _rootLookup = new Dictionary<string, CascNode>(StringComparer.OrdinalIgnoreCase);
+
         private void PopulateTree(IntPtr hStorage)
         {
             CascLibWrapper.CASC_FIND_DATA findData = new CascLibWrapper.CASC_FIND_DATA();
@@ -185,29 +187,26 @@ namespace CascViewerWPF.ViewModels
             if (hFind != IntPtr.Zero)
             {
                 int processed = 0;
+                _rootLookup.Clear();
+
                 do
                 {
                     if (!string.IsNullOrEmpty(findData.szFileName))
                     {
                         var fileName = findData.szFileName;
                         var fileSize = findData.dwFileSize;
-                        System.Windows.Application.Current.Dispatcher.Invoke(() => AddFileToTree(fileName, fileSize));
+                        // Build tree logic (fast)
+                        AddFileToTreeOptimized(fileName, fileSize);
                     }
                     processed++;
                     
-                    if (processed % 100 == 0)
+                    if (processed % 1000 == 0) // Reduced UI update frequency
                     {
-                        // Dynamically adjust total if exceeded
                         int maxForProgress = Math.Max(TotalFiles, processed);
                         double progress = maxForProgress > 0 ? (double)processed / maxForProgress * 100 : 0;
                         if (progress >= 100 && processed < TotalFiles) progress = 99.9;
 
-                        System.Windows.Application.Current.Dispatcher.Invoke(() => 
-                        {
-                            CurrentFiles = processed;
-                            ProgressValue = progress;
-                            StatusText = $"Scanning: {processed} / {maxForProgress} ({progress:F1}%)";
-                        });
+                        UpdateStatusOnUI(processed, maxForProgress, progress);
                     }
                 } while (CascLibWrapper.CascFindNextFile(hFind, ref findData));
 
@@ -220,46 +219,55 @@ namespace CascViewerWPF.ViewModels
                     StatusText = $"Load Complete. {processed} files found.";
                 });
             }
-            else
-            {
-                LogService.Instance.Log($"No files found matching mask: {SearchMask}", LogLevel.Warning);
-            }
         }
 
-        private void AddFileToTree(string filePath, uint fileSize)
+        private void UpdateStatusOnUI(int processed, int max, double progress)
+        {
+            System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() => 
+            {
+                CurrentFiles = processed;
+                ProgressValue = progress;
+                StatusText = $"Scanning virtual files: {processed} / {max} ({progress:F1}%)";
+            }));
+        }
+
+        private void AddFileToTreeOptimized(string filePath, uint fileSize)
         {
             string[] parts = filePath.Split(new char[] { '\\', '/' }, StringSplitOptions.RemoveEmptyEntries);
-            ObservableCollection<CascNode> currentLevel = CascNodes;
+            if (parts.Length == 0) return;
 
-            for (int i = 0; i < parts.Length; i++)
+            // Handle Root Level on UI Thread only when creating new top-level nodes
+            CascNode? currentNode = null;
+            string firstPart = parts[0];
+
+            System.Windows.Application.Current.Dispatcher.Invoke(() => 
+            {
+                if (!_rootLookup.TryGetValue(firstPart, out currentNode))
+                {
+                    currentNode = new CascNode { Name = firstPart, IsFile = (parts.Length == 1) };
+                    _rootLookup[firstPart] = currentNode;
+                    CascNodes.Add(currentNode);
+                }
+            });
+
+            // Handle Sub-levels
+            for (int i = 1; i < parts.Length; i++)
             {
                 string part = parts[i];
                 bool isFile = (i == parts.Length - 1);
 
-                CascNode? node = null;
-                foreach (var n in currentLevel)
+                // This is now safe and fast due to internal Dictionary in CascNode
+                System.Windows.Application.Current.Dispatcher.Invoke(() => 
                 {
-                    if (n.Name == part)
-                    {
-                        node = n;
-                        break;
-                    }
-                }
+                    currentNode = currentNode?.GetOrCreateChild(part, isFile);
+                });
 
-                if (node == null)
+                if (isFile && currentNode != null)
                 {
-                    node = new CascNode { Name = part };
-                    if (isFile)
-                    {
-                        node.Size = FormatSize(fileSize);
-                        node.Type = Path.GetExtension(part).ToUpper().TrimStart('.');
-                        node.FullPath = filePath;
-                        node.IsFile = true;
-                    }
-                    currentLevel.Add(node);
+                    currentNode.Size = FormatSize(fileSize);
+                    currentNode.Type = Path.GetExtension(part).ToUpper().TrimStart('.');
+                    currentNode.FullPath = filePath;
                 }
-
-                currentLevel = node.Children;
             }
         }
 
