@@ -41,7 +41,17 @@
             <TreeView x:Name="CascTreeView" ItemsSource="{Binding CascNodes}" Grid.Column="0" SelectedItemChanged="CascTreeView_SelectedItemChanged">
                 <TreeView.Resources>
                     <ContextMenu x:Key="ItemContextMenu">
-                        <MenuItem Header="Extract File" Command="{Binding DataContext.ExtractCommand, RelativeSource={RelativeSource AncestorType=Window}}"/>
+                        <MenuItem Header="Extract File/Folder" Command="{Binding DataContext.ExtractCommand, RelativeSource={RelativeSource AncestorType=Window}}" Foreground="Blue">
+                            <MenuItem.Icon>
+                                <TextBlock Text="💾"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <Separator/>
+                        <MenuItem Header="Copy Full Path" Command="{Binding DataContext.CopyPathCommand, RelativeSource={RelativeSource AncestorType=Window}}">
+                            <MenuItem.Icon>
+                                <TextBlock Text="📋"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
                     </ContextMenu>
                 </TreeView.Resources>
                 <TreeView.ItemContainerStyle>
@@ -86,7 +96,13 @@
         <GridSplitter Grid.Row="2" Height="5" HorizontalAlignment="Stretch" VerticalAlignment="Center" Background="LightGray" Margin="0,5"/>
 
         <!-- Log Viewer -->
-        <GroupBox Grid.Row="3" Header="Logs">
+        <GroupBox Grid.Row="3">
+            <GroupBox.Header>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="Logs" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                    <Button Content="Clear Logs" Command="{Binding ClearLogsCommand}" Padding="5,0" FontSize="10"/>
+                </StackPanel>
+            </GroupBox.Header>
             <ListBox ItemsSource="{Binding Logs}" ScrollViewer.VerticalScrollBarVisibility="Auto">
                 <ListBox.ItemTemplate>
                     <DataTemplate>
