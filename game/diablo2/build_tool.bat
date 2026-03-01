@@ -49,4 +49,3 @@ echo ==========================================
 echo Output Directory: %ROOT_DIR%build
 echo Archive Directory: %ROOT_DIR%archive\%VERSION%
 echo.
-pause
