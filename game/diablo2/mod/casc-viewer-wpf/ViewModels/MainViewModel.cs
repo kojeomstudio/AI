@@ -134,7 +134,7 @@ namespace CascViewerWPF.ViewModels
                         // Get Total File Count
                         uint lengthNeeded;
                         byte[] buffer = new byte[4];
-                        if (CascLibWrapper.CascGetStorageInfo(hStorage, CascLibWrapper.CascStorageFileCount, buffer, 4, out lengthNeeded))
+                        if (CascLibWrapper.CascGetStorageInfo(hStorage, CascLibWrapper.CascStorageTotalFileCount, buffer, 4, out lengthNeeded))
                         {
                             TotalFiles = BitConverter.ToInt32(buffer, 0);
                             LogService.Instance.Log($"Total files in storage: {TotalFiles}");
