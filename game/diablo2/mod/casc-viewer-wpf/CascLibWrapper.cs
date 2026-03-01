@@ -19,18 +19,54 @@ namespace CascViewerWPF
         [DllImport(CascLibDll, SetLastError = true)]
         public static extern bool CascCloseStorage(IntPtr hStorage);
 
-        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
-        public struct CASC_FIND_DATA
+        [StructLayout(LayoutKind.Explicit, CharSet = CharSet.Ansi)]
+        public unsafe struct CASC_FIND_DATA
         {
-            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 260)]
-            public string szFileName;
-            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 260)]
-            public string szPlainName;
-            public uint dwFileIndex;
-            public uint dwFileSize;
-            public uint dwFileAttributes;
+            [FieldOffset(0)]
+            public fixed byte _szFileName[260];
+
+            [FieldOffset(260)]
+            public fixed byte CKey[16];
+
+            [FieldOffset(276)]
+            public fixed byte EKey[16];
+
+            // Padding 4 bytes here for 8-byte alignment of next field (292 -> 296)
+
+            [FieldOffset(296)]
+            public ulong TagBitMask;
+
+            [FieldOffset(304)]
+            public ulong FileSize;
+
+            [FieldOffset(312)]
+            public IntPtr szPlainName;
+
+            [FieldOffset(320)]
+            public uint dwFileDataId;
+
+            [FieldOffset(324)]
             public uint dwLocaleFlags;
+
+            [FieldOffset(328)]
             public uint dwContentFlags;
+
+            [FieldOffset(332)]
+            public uint dwSpanCount;
+
+            [FieldOffset(336)]
+            public uint bFileAvailable;
+
+            public string szFileName
+            {
+                get
+                {
+                    fixed (byte* p = _szFileName)
+                    {
+                        return Marshal.PtrToStringAnsi((IntPtr)p) ?? string.Empty;
+                    }
+                }
+            }
         }
 
         [DllImport(CascLibDll, CharSet = CharSet.Ansi, SetLastError = true)]

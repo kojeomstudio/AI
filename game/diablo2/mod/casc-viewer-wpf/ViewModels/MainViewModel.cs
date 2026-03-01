@@ -202,7 +202,7 @@ namespace CascViewerWPF.ViewModels
                 {
                     if (!string.IsNullOrEmpty(findData.szFileName))
                     {
-                        AddFileToInternalTree(tempRootNodes, tempRootLookup, findData.szFileName, findData.dwFileSize);
+                        AddFileToInternalTree(tempRootNodes, tempRootLookup, findData.szFileName, findData.FileSize);
                     }
                     processed++;
                     
@@ -241,7 +241,7 @@ namespace CascViewerWPF.ViewModels
             }));
         }
 
-        private void AddFileToInternalTree(List<CascNode> rootList, Dictionary<string, CascNode> rootLookup, string filePath, uint fileSize)
+        private void AddFileToInternalTree(List<CascNode> rootList, Dictionary<string, CascNode> rootLookup, string filePath, ulong fileSize)
         {
             string[] parts = filePath.Split(new char[] { '\\', '/' }, StringSplitOptions.RemoveEmptyEntries);
             if (parts.Length == 0) return;
@@ -275,7 +275,7 @@ namespace CascViewerWPF.ViewModels
             }
         }
 
-        private string FormatSize(uint bytes)
+        private string FormatSize(ulong bytes)
         {
             string[] units = { "B", "KB", "MB", "GB" };
             double size = bytes;
