@@ -147,6 +147,7 @@ namespace CascViewerWPF.ViewModels
                 LogService.Instance.Log($"Failed to open log folder: {ex.Message}", LogLevel.Error);
             }
         }
+
         private void Browse()
         {
             var dialog = new System.Windows.Forms.FolderBrowserDialog();
@@ -357,6 +358,8 @@ namespace CascViewerWPF.ViewModels
 
         private void ExtractSingleFile(CascNode node)
         {
+            if (string.IsNullOrEmpty(node.FullPath)) return;
+
             var saveDialog = new Microsoft.Win32.SaveFileDialog
             {
                 FileName = node.Name,
@@ -372,7 +375,7 @@ namespace CascViewerWPF.ViewModels
                     IntPtr hStorage;
                     if (CascLibWrapper.CascOpenStorage(D2RPath, CascLibWrapper.CASC_OPEN_LOCAL, out hStorage))
                     {
-                        bool success = CascLibWrapper.CascExtractFile(hStorage, node.FullPath!, saveDialog.FileName, 0);
+                        bool success = ExtractFileInternal(hStorage, node.FullPath, saveDialog.FileName);
                         CascLibWrapper.CascCloseStorage(hStorage);
                         
                         if (success)
@@ -382,20 +385,59 @@ namespace CascViewerWPF.ViewModels
                         }
                         else
                         {
-                            LogService.Instance.Log($"CascExtractFile returned false. Win32Error: {Marshal.GetLastWin32Error()}", LogLevel.Error);
+                            LogService.Instance.Log($"Extraction failed for: {node.FullPath}", LogLevel.Error);
                             System.Windows.MessageBox.Show("Extraction failed. Check logs.");
                         }
                     }
-                }
-                catch (EntryPointNotFoundException ex)
-                {
-                    LogService.Instance.Log($"Method 'CascExtractFile' not found in DLL: {ex.Message}", LogLevel.Error);
-                    System.Windows.MessageBox.Show("DLL does not support extraction.");
                 }
                 catch (Exception ex)
                 {
                     LogService.Instance.Log($"Unexpected error during extraction: {ex.Message}", LogLevel.Error);
                 }
+            }
+        }
+
+        /// <summary>
+        /// Manually extracts a file by opening, reading and writing it to disk.
+        /// CascLib.dll doesn't always export a single 'Extract' function.
+        /// </summary>
+        private bool ExtractFileInternal(IntPtr hStorage, string fileName, string targetPath)
+        {
+            IntPtr hFile = IntPtr.Zero;
+            try
+            {
+                // LocaleFlags = 0, OpenFlags = 0
+                if (CascLibWrapper.CascOpenFile(hStorage, fileName, 0, 0, out hFile))
+                {
+                    // Ensure directory exists
+                    string? dir = Path.GetDirectoryName(targetPath);
+                    if (dir != null) Directory.CreateDirectory(dir);
+
+                    using (var fs = new FileStream(targetPath, FileMode.Create, FileAccess.Write))
+                    {
+                        byte[] buffer = new byte[64 * 1024]; // 64KB buffer
+                        uint bytesRead;
+                        while (CascLibWrapper.CascReadFile(hFile, buffer, (uint)buffer.Length, out bytesRead) && bytesRead > 0)
+                        {
+                            fs.Write(buffer, 0, (int)bytesRead);
+                        }
+                    }
+                    return true;
+                }
+                else
+                {
+                    LogService.Instance.Log($"CascOpenFile failed for {fileName}. Win32Error: {Marshal.GetLastWin32Error()}", LogLevel.Error);
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                LogService.Instance.Log($"Error in ExtractFileInternal for {fileName}: {ex.Message}", LogLevel.Error);
+                return false;
+            }
+            finally
+            {
+                if (hFile != IntPtr.Zero) CascLibWrapper.CascCloseFile(hFile);
             }
         }
 
@@ -435,16 +477,7 @@ namespace CascViewerWPF.ViewModels
             if (node.IsFile)
             {
                 if (string.IsNullOrEmpty(node.FullPath)) return;
-                Directory.CreateDirectory(Path.GetDirectoryName(targetPath)!);
-                try 
-                {
-                    CascLibWrapper.CascExtractFile(hStorage, node.FullPath, targetPath, 0);
-                }
-                catch (EntryPointNotFoundException ex)
-                {
-                    LogService.Instance.Log($"Method not found: {ex.Message}", LogLevel.Error);
-                    throw;
-                }
+                ExtractFileInternal(hStorage, node.FullPath, targetPath);
             }
             else
             {

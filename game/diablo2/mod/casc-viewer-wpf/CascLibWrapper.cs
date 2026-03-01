@@ -88,9 +88,6 @@ namespace CascViewerWPF
         [DllImport(CascLibDll, SetLastError = true)]
         public static extern bool CascCloseFile(IntPtr hFile);
 
-        [DllImport(CascLibDll, CharSet = CharSet.Ansi, SetLastError = true)]
-        public static extern bool CascExtractFile(IntPtr hStorage, string szFileName, string szLocalFileName, uint dwLocaleFlags);
-
         // CASC_STORAGE_INFO_CLASS
         public const int CascStorageLocalFileCount   = 0;
         public const int CascStorageTotalFileCount   = 1;
