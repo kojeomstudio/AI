@@ -1,4 +1,5 @@
 @echo off
+chcp 65001 > nul
 set ROOT_DIR=%~dp0
 set PROJECT_FILE="%ROOT_DIR%mod\casc-viewer-wpf\CascViewerWPF.csproj"
 

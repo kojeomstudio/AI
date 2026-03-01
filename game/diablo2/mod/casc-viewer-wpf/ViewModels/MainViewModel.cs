@@ -20,7 +20,7 @@ namespace CascViewerWPF.ViewModels
     {
         #region Fields
         private string _d2rPath = string.Empty;
-        private string _searchMask = "data\\*";
+        private string _searchMask = "*";
         private string _statusText = "Ready";
         private string _loadingStage = "Ready";
         private bool _isLoading;
