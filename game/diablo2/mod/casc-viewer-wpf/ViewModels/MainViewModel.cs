@@ -127,7 +127,7 @@ namespace CascViewerWPF.ViewModels
         {
             if (!Directory.Exists(D2RPath))
             {
-                MessageBox.Show("Please select a valid D2R directory.");
+                System.Windows.MessageBox.Show("Please select a valid D2R directory.");
                 return;
             }
 
@@ -155,7 +155,7 @@ namespace CascViewerWPF.ViewModels
                             TotalFiles = BitConverter.ToInt32(buffer, 0);
                         }
 
-                        Application.Current.Dispatcher.Invoke(() => LoadingStage = "Phase 2: Mapping Virtual Files...");
+                        System.Windows.Application.Current.Dispatcher.Invoke(() => LoadingStage = "Phase 2: Mapping Virtual Files...");
                         UpdateStatus("Building file hierarchy...");
                         
                         PopulateTreeOptimized(hStorage);
@@ -172,7 +172,7 @@ namespace CascViewerWPF.ViewModels
             catch (Exception ex)
             {
                 UpdateStatus($"Error: {ex.Message}");
-                MessageBox.Show($"Error: {ex.Message}");
+                System.Windows.MessageBox.Show($"Error: {ex.Message}");
                 LogService.Instance.Log($"Critical error: {ex.Message}", LogLevel.Error);
             }
             finally
@@ -184,7 +184,7 @@ namespace CascViewerWPF.ViewModels
 
         private void UpdateStatus(string message)
         {
-            Application.Current.Dispatcher.Invoke(() => StatusText = message);
+            System.Windows.Application.Current.Dispatcher.Invoke(() => StatusText = message);
         }
 
         private void PopulateTreeOptimized(IntPtr hStorage)
@@ -214,7 +214,7 @@ namespace CascViewerWPF.ViewModels
 
                 CascLibWrapper.CascFindClose(hFind);
                 
-                Application.Current.Dispatcher.Invoke(() => 
+                System.Windows.Application.Current.Dispatcher.Invoke(() => 
                 {
                     foreach (var node in tempRootNodes)
                     {
@@ -234,7 +234,7 @@ namespace CascViewerWPF.ViewModels
 
         private void UpdateStatusOnUI(int processed)
         {
-            Application.Current.Dispatcher.BeginInvoke(new Action(() => 
+            System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() => 
             {
                 CurrentFiles = processed;
                 StatusText = $"Discovered {processed} assets...";
