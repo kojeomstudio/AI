@@ -53,5 +53,13 @@ namespace CascViewerWPF
 
         [DllImport(CascLibDll, CharSet = CharSet.Ansi, SetLastError = true)]
         public static extern bool CascExtractFile(IntPtr hStorage, string szFileName, string szLocalFileName, uint dwLocaleFlags);
+
+        // CASC_STORAGE_INFO_CLASS
+        public const int CascStorageFileCount = 0;
+        public const int CascStorageFeatures  = 1;
+        public const int CascStorageGameInfo  = 2;
+
+        [DllImport(CascLibDll, SetLastError = true)]
+        public static extern bool CascGetStorageInfo(IntPtr hStorage, int InfoClass, byte[] pvStorageInfo, uint cbStorageInfo, out uint pcbLengthNeeded);
     }
 }

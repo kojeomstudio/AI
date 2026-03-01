@@ -17,10 +17,12 @@ namespace CascViewerWPF.ViewModels
         private string _statusText = "Ready";
         private bool _isLoading;
         private CascNode? _selectedNode;
+        private int _totalFiles;
+        private int _currentFiles;
+        private double _progressValue;
 
         public ObservableCollection<LogEntry> Logs => LogService.Instance.Logs;
-        
-        // ... (rest of properties)
+
         public string D2RPath
         {
             get => _d2rPath;
@@ -41,11 +43,31 @@ namespace CascViewerWPF.ViewModels
                 if (SetProperty(ref _isLoading, value))
                 {
                     OnPropertyChanged(nameof(IsBusy));
+                    OnPropertyChanged(nameof(CanBrowse));
                 }
             }
         }
 
         public bool IsBusy => IsLoading;
+        public bool CanBrowse => !IsLoading;
+
+        public int TotalFiles
+        {
+            get => _totalFiles;
+            set => SetProperty(ref _totalFiles, value);
+        }
+
+        public int CurrentFiles
+        {
+            get => _currentFiles;
+            set => SetProperty(ref _currentFiles, value);
+        }
+
+        public double ProgressValue
+        {
+            get => _progressValue;
+            set => SetProperty(ref _progressValue, value);
+        }
 
         public CascNode? SelectedNode
         {
@@ -59,7 +81,7 @@ namespace CascViewerWPF.ViewModels
             }
         }
 
-        public bool CanExtract => SelectedNode?.IsFile ?? false;
+        public bool CanExtract => SelectedNode != null;
 
         public ObservableCollection<CascNode> CascNodes { get; } = new ObservableCollection<CascNode>();
 
@@ -69,7 +91,7 @@ namespace CascViewerWPF.ViewModels
 
         public MainViewModel()
         {
-            BrowseCommand = new RelayCommand(_ => Browse());
+            BrowseCommand = new RelayCommand(_ => Browse(), _ => CanBrowse);
             LoadCommand = new RelayCommand(_ => LoadCasc(), _ => !string.IsNullOrEmpty(D2RPath) && !IsLoading);
             ExtractCommand = new RelayCommand(_ => ExtractSelected(), _ => CanExtract);
             
@@ -98,6 +120,8 @@ namespace CascViewerWPF.ViewModels
             StatusText = "Opening CASC storage...";
             LogService.Instance.Log($"Loading CASC from {D2RPath}...");
             CascNodes.Clear();
+            ProgressValue = 0;
+            CurrentFiles = 0;
 
             try
             {
@@ -106,12 +130,19 @@ namespace CascViewerWPF.ViewModels
                     IntPtr hStorage;
                     if (CascLibWrapper.CascOpenStorage(D2RPath, CascLibWrapper.CASC_OPEN_LOCAL, out hStorage))
                     {
-                        LogService.Instance.Log("CASC storage opened successfully.");
+                        // Get Total File Count
+                        uint lengthNeeded;
+                        byte[] buffer = new byte[4];
+                        if (CascLibWrapper.CascGetStorageInfo(hStorage, CascLibWrapper.CascStorageFileCount, buffer, 4, out lengthNeeded))
+                        {
+                            TotalFiles = BitConverter.ToInt32(buffer, 0);
+                            LogService.Instance.Log($"Total files in storage: {TotalFiles}");
+                        }
+
                         UpdateStatus("Scanning files...");
                         PopulateTree(hStorage);
                         CascLibWrapper.CascCloseStorage(hStorage);
                         UpdateStatus("CASC Loaded Successfully.");
-                        LogService.Instance.Log("CASC loading and scanning completed.");
                     }
                     else
                     {
@@ -122,9 +153,9 @@ namespace CascViewerWPF.ViewModels
             }
             catch (Exception ex)
             {
-                StatusText = $"Error: {ex.Message}";
+                UpdateStatus($"Error: {ex.Message}");
                 System.Windows.MessageBox.Show($"Error: {ex.Message}");
-                LogService.Instance.Log($"Critical error during loading: {ex.Message}", LogLevel.Error);
+                LogService.Instance.Log($"Critical error: {ex.Message}", LogLevel.Error);
             }
             finally
             {
@@ -139,12 +170,12 @@ namespace CascViewerWPF.ViewModels
 
         private void PopulateTree(IntPtr hStorage)
         {
-            int fileCount = 0;
             CascLibWrapper.CASC_FIND_DATA findData = new CascLibWrapper.CASC_FIND_DATA();
             IntPtr hFind = CascLibWrapper.CascFindFirstFile(hStorage, "*", ref findData, null);
 
             if (hFind != IntPtr.Zero)
             {
+                int processed = 0;
                 do
                 {
                     if (!string.IsNullOrEmpty(findData.szFileName))
@@ -152,13 +183,23 @@ namespace CascViewerWPF.ViewModels
                         var fileName = findData.szFileName;
                         var fileSize = findData.dwFileSize;
                         System.Windows.Application.Current.Dispatcher.Invoke(() => AddFileToTree(fileName, fileSize));
-                        fileCount++;
+                    }
+                    processed++;
+                    
+                    if (processed % 100 == 0 || processed == TotalFiles)
+                    {
+                        double progress = TotalFiles > 0 ? (double)processed / TotalFiles * 100 : 0;
+                        System.Windows.Application.Current.Dispatcher.Invoke(() => 
+                        {
+                            CurrentFiles = processed;
+                            ProgressValue = progress;
+                            StatusText = $"Scanning: {processed} / {TotalFiles} ({progress:F1}%)";
+                        });
                     }
                 } while (CascLibWrapper.CascFindNextFile(hFind, ref findData));
 
                 CascLibWrapper.CascFindClose(hFind);
             }
-            LogService.Instance.Log($"Scan completed. Total files found: {fileCount}");
         }
 
         private void AddFileToTree(string filePath, uint fileSize)
@@ -211,44 +252,81 @@ namespace CascViewerWPF.ViewModels
             return $"{size:F2} {units[unitIndex]}";
         }
 
-        private void ExtractSelected()
+        private async void ExtractSelected()
         {
-            if (SelectedNode == null || !SelectedNode.IsFile || string.IsNullOrEmpty(SelectedNode.FullPath))
-                return;
+            if (SelectedNode == null) return;
 
+            if (SelectedNode.IsFile)
+            {
+                ExtractSingleFile(SelectedNode);
+            }
+            else
+            {
+                await ExtractFolder(SelectedNode);
+            }
+        }
+
+        private void ExtractSingleFile(CascNode node)
+        {
             var saveDialog = new Microsoft.Win32.SaveFileDialog
             {
-                FileName = SelectedNode.Name,
+                FileName = node.Name,
                 Filter = $"All Files (*.*)|*.*"
             };
 
             if (saveDialog.ShowDialog() == true)
             {
-                StatusText = $"Extracting {SelectedNode.Name}...";
-                LogService.Instance.Log($"Extracting {SelectedNode.FullPath} to {saveDialog.FileName}...");
-                
+                LogService.Instance.Log($"Extracting file: {node.FullPath}");
                 IntPtr hStorage;
                 if (CascLibWrapper.CascOpenStorage(D2RPath, CascLibWrapper.CASC_OPEN_LOCAL, out hStorage))
                 {
-                    bool success = CascLibWrapper.CascExtractFile(hStorage, SelectedNode.FullPath!, saveDialog.FileName, 0);
+                    bool success = CascLibWrapper.CascExtractFile(hStorage, node.FullPath!, saveDialog.FileName, 0);
                     CascLibWrapper.CascCloseStorage(hStorage);
-
-                    if (success)
-                    {
-                        StatusText = "Extraction Complete.";
-                        System.Windows.MessageBox.Show("File extracted successfully.");
-                        LogService.Instance.Log("Extraction successful.");
-                    }
-                    else
-                    {
-                        StatusText = "Extraction Failed.";
-                        System.Windows.MessageBox.Show("Failed to extract file.");
-                        LogService.Instance.Log($"Extraction failed for: {SelectedNode.FullPath}", LogLevel.Error);
-                    }
+                    if (success) System.Windows.MessageBox.Show("File extracted.");
                 }
-                else
+            }
+        }
+
+        private async Task ExtractFolder(CascNode folderNode)
+        {
+            var dialog = new System.Windows.Forms.FolderBrowserDialog
+            {
+                Description = $"Select target folder to extract '{folderNode.Name}'"
+            };
+
+            if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            {
+                string targetBase = Path.Combine(dialog.SelectedPath, folderNode.Name!);
+                IsLoading = true;
+                StatusText = $"Extracting folder: {folderNode.Name}...";
+                
+                await Task.Run(() => 
                 {
-                    LogService.Instance.Log("Failed to open storage for extraction.", LogLevel.Error);
+                    IntPtr hStorage;
+                    if (CascLibWrapper.CascOpenStorage(D2RPath, CascLibWrapper.CASC_OPEN_LOCAL, out hStorage))
+                    {
+                        ExtractNodeRecursive(hStorage, folderNode, targetBase);
+                        CascLibWrapper.CascCloseStorage(hStorage);
+                        UpdateStatus("Folder extraction complete.");
+                    }
+                });
+                IsLoading = false;
+                System.Windows.MessageBox.Show("Folder extraction complete.");
+            }
+        }
+
+        private void ExtractNodeRecursive(IntPtr hStorage, CascNode node, string targetPath)
+        {
+            if (node.IsFile)
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(targetPath)!);
+                CascLibWrapper.CascExtractFile(hStorage, node.FullPath!, targetPath, 0);
+            }
+            else
+            {
+                foreach (var child in node.Children)
+                {
+                    ExtractNodeRecursive(hStorage, child, Path.Combine(targetPath, child.Name!));
                 }
             }
         }
