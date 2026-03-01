@@ -21,6 +21,7 @@ namespace CascViewerWPF.ViewModels
         private int _currentFiles;
         private double _progressValue;
 
+        public string Version => "v1.0.0";
         public ObservableCollection<LogEntry> Logs => LogService.Instance.Logs;
 
         public string D2RPath

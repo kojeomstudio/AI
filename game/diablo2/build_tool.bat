@@ -1,7 +1,8 @@
 @echo off
 set ROOT_DIR=%~dp0
+set VERSION=v1.0.0
 echo ==========================================
-echo Building CascViewerWPF Full Tool
+echo Building CascViewerWPF Full Tool %VERSION%
 echo ==========================================
 
 rem Check if dotnet is available
@@ -22,8 +23,20 @@ if %ERRORLEVEL% NEQ 0 (
 
 echo.
 echo ==========================================
-echo Build Successful!
+echo Archiving binaries to version %VERSION%
+echo ==========================================
+if not exist "%ROOT_DIR%archive\%VERSION%" mkdir "%ROOT_DIR%archive\%VERSION%"
+
+copy /Y "%ROOT_DIR%build\CascViewerWPF.exe" "%ROOT_DIR%archive\%VERSION%\"
+copy /Y "%ROOT_DIR%build\CascViewerWPF.dll" "%ROOT_DIR%archive\%VERSION%\"
+copy /Y "%ROOT_DIR%build\CascViewerWPF.pdb" "%ROOT_DIR%archive\%VERSION%\"
+copy /Y "%ROOT_DIR%build\CascLib.dll" "%ROOT_DIR%archive\%VERSION%\"
+
+echo.
+echo ==========================================
+echo Build and Archive Successful!
 echo ==========================================
 echo Output Directory: %ROOT_DIR%build
+echo Archive Directory: %ROOT_DIR%archive\%VERSION%
 echo.
 pause
