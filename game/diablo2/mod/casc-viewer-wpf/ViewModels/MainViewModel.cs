@@ -318,7 +318,7 @@ namespace CascViewerWPF.ViewModels
                 {
                     bool success = CascLibWrapper.CascExtractFile(hStorage, node.FullPath!, saveDialog.FileName, 0);
                     CascLibWrapper.CascCloseStorage(hStorage);
-                    if (success) MessageBox.Show("File extracted.");
+                    if (success) System.Windows.MessageBox.Show("File extracted.");
                 }
             }
         }
@@ -347,7 +347,7 @@ namespace CascViewerWPF.ViewModels
                     }
                 });
                 IsLoading = false;
-                MessageBox.Show("Folder extraction complete.");
+                System.Windows.MessageBox.Show("Folder extraction complete.");
             }
         }
 
