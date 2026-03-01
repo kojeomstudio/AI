@@ -24,7 +24,6 @@ echo.
 echo ==========================================
 echo Build Successful!
 echo ==========================================
-echo Output Directory: %ROOT_DIR%mod\casc-viewer-wpf\bin\Release
-et8.0-windows
+echo Output Directory: %ROOT_DIR%build
 echo.
 pause

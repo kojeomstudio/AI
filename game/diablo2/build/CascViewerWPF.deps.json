@@ -1,0 +1,23 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v8.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v8.0": {
+      "CascViewerWPF/1.0.0": {
+        "runtime": {
+          "CascViewerWPF.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "CascViewerWPF/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}
