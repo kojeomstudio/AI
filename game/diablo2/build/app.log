@@ -22,3 +22,8 @@
 [2026-03-01 17:12:49] [Info] Path selected: C:\Program Files (x86)\Steam\steamapps\common\Diablo II Resurrected\data
 [2026-03-01 17:12:54] [Info] Loading CASC (Mask: data\*) from C:\Program Files (x86)\Steam\steamapps\common\Diablo II Resurrected\data...
 [2026-03-01 17:12:54] [Info] Storage block count (estimate): 176213
+[2026-03-01 17:16:58] [Info] Logger initialized.
+[2026-03-01 17:16:58] [Info] MainViewModel initialized.
+[2026-03-01 17:17:03] [Info] Path selected: C:\Program Files (x86)\Steam\steamapps\common\Diablo II Resurrected\data
+[2026-03-01 17:17:04] [Info] Loading CASC (Mask: data\*) from C:\Program Files (x86)\Steam\steamapps\common\Diablo II Resurrected\data...
+[2026-03-01 17:17:05] [Info] Storage block count (estimate): 176213
