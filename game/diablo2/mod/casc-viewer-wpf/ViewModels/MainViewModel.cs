@@ -24,6 +24,7 @@ namespace CascViewerWPF.ViewModels
         private string _searchMask = "*";
         private string _statusText = "Ready";
         private string _loadingStage = "Ready";
+        private string _previewText = string.Empty;
         private bool _isLoading;
         private CascNode? _selectedNode;
         private int _totalFiles;
@@ -57,6 +58,12 @@ namespace CascViewerWPF.ViewModels
         {
             get => _loadingStage;
             set => SetProperty(ref _loadingStage, value);
+        }
+
+        public string PreviewText
+        {
+            get => _previewText;
+            set => SetProperty(ref _previewText, value);
         }
 
         public bool IsLoading
@@ -101,7 +108,65 @@ namespace CascViewerWPF.ViewModels
                 if (SetProperty(ref _selectedNode, value))
                 {
                     OnPropertyChanged(nameof(CanExtract));
+                    UpdatePreview();
                 }
+            }
+        }
+
+        private async void UpdatePreview()
+        {
+            if (SelectedNode == null || !SelectedNode.IsFile || string.IsNullOrEmpty(SelectedNode.FullPath))
+            {
+                PreviewText = string.Empty;
+                return;
+            }
+
+            string ext = Path.GetExtension(SelectedNode.FullPath).ToLower();
+            if (ext == ".json" || ext == ".txt" || ext == ".text" || ext == ".xml")
+            {
+                PreviewText = "Loading preview...";
+                try
+                {
+                    await Task.Run(() =>
+                    {
+                        IntPtr hStorage;
+                        if (CascLibWrapper.CascOpenStorage(D2RPath, CascLibWrapper.CASC_OPEN_LOCAL, out hStorage))
+                        {
+                            IntPtr hFile;
+                            if (CascLibWrapper.CascOpenFile(hStorage, SelectedNode.FullPath, 0, 0, out hFile))
+                            {
+                                byte[] buffer = new byte[128 * 1024]; // Max 128KB for preview
+                                uint bytesRead;
+                                if (CascLibWrapper.CascReadFile(hFile, buffer, (uint)buffer.Length, out bytesRead))
+                                {
+                                    string content = System.Text.Encoding.UTF8.GetString(buffer, 0, (int)bytesRead);
+                                    
+                                    if (ext == ".json")
+                                    {
+                                        try
+                                        {
+                                            using var doc = System.Text.Json.JsonDocument.Parse(content);
+                                            content = System.Text.Json.JsonSerializer.Serialize(doc, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+                                        }
+                                        catch { /* Not valid JSON, show raw */ }
+                                    }
+                                    
+                                    System.Windows.Application.Current.Dispatcher.Invoke(() => PreviewText = content);
+                                }
+                                CascLibWrapper.CascCloseFile(hFile);
+                            }
+                            CascLibWrapper.CascCloseStorage(hStorage);
+                        }
+                    });
+                }
+                catch (Exception ex)
+                {
+                    PreviewText = $"Error loading preview: {ex.Message}";
+                }
+            }
+            else
+            {
+                PreviewText = $"(Preview not available for {ext} files)";
             }
         }
 
@@ -417,9 +482,39 @@ namespace CascViewerWPF.ViewModels
                     {
                         byte[] buffer = new byte[64 * 1024]; // 64KB buffer
                         uint bytesRead;
-                        while (CascLibWrapper.CascReadFile(hFile, buffer, (uint)buffer.Length, out bytesRead) && bytesRead > 0)
+                        
+                        // Check if it's a JSON file to format it
+                        string ext = Path.GetExtension(fileName).ToLower();
+                        if (ext == ".json")
                         {
-                            fs.Write(buffer, 0, (int)bytesRead);
+                            var ms = new MemoryStream();
+                            while (CascLibWrapper.CascReadFile(hFile, buffer, (uint)buffer.Length, out bytesRead) && bytesRead > 0)
+                            {
+                                ms.Write(buffer, 0, (int)bytesRead);
+                            }
+                            
+                            string rawJson = System.Text.Encoding.UTF8.GetString(ms.ToArray());
+                            try
+                            {
+                                using var doc = System.Text.Json.JsonDocument.Parse(rawJson);
+                                string formattedJson = System.Text.Json.JsonSerializer.Serialize(doc, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+                                byte[] formattedBytes = System.Text.Encoding.UTF8.GetBytes(formattedJson);
+                                fs.Write(formattedBytes, 0, formattedBytes.Length);
+                            }
+                            catch
+                            {
+                                // If not valid JSON, write raw
+                                byte[] rawBytes = ms.ToArray();
+                                fs.Write(rawBytes, 0, rawBytes.Length);
+                            }
+                        }
+                        else
+                        {
+                            // Standard streaming for other files
+                            while (CascLibWrapper.CascReadFile(hFile, buffer, (uint)buffer.Length, out bytesRead) && bytesRead > 0)
+                            {
+                                fs.Write(buffer, 0, (int)bytesRead);
+                            }
                         }
                     }
                     return true;
