@@ -29,6 +29,7 @@ namespace CascViewerWPF.ViewModels
         private CascNode? _selectedNode;
         private int _totalFiles;
         private int _currentFiles;
+        private double _progressValue;
         private bool _useHierarchy = true;
         #endregion
 
