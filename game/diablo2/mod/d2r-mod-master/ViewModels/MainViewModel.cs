@@ -31,7 +31,7 @@ namespace D2RModMaster.ViewModels
         private int _currentFiles;
         private double _progressValue;
         private string _modName = "MyMod";
-        private string _modSavePath = "MyMod/";
+        private string _modSavePath = "../";
         private bool _useHierarchy = true;
         #endregion
 
