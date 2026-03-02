@@ -444,6 +444,19 @@ namespace CascViewerWPF.ViewModels
             }
         }
 
+        /// <summary>
+        /// Sanitizes a virtual path for the local file system.
+        /// Replaces invalid characters like ':' with '_'.
+        /// </summary>
+        private string SanitizeLocalPath(string path)
+        {
+            if (string.IsNullOrEmpty(path)) return path;
+            
+            // Replace ':' which is common in D2R CASC paths (e.g. data:data)
+            // but illegal in Windows filenames.
+            return path.Replace(':', '_');
+        }
+
         private void ExtractSingleFile(CascNode node)
         {
             if (string.IsNullOrEmpty(node.FullPath)) return;
@@ -459,7 +472,8 @@ namespace CascViewerWPF.ViewModels
 
                 if (folderDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
                 {
-                    targetPath = Path.Combine(folderDialog.SelectedPath, node.FullPath);
+                    string safeFullPath = SanitizeLocalPath(node.FullPath);
+                    targetPath = Path.Combine(folderDialog.SelectedPath, safeFullPath);
                 }
                 else return;
             }
@@ -467,7 +481,7 @@ namespace CascViewerWPF.ViewModels
             {
                 var saveDialog = new Microsoft.Win32.SaveFileDialog
                 {
-                    FileName = node.Name,
+                    FileName = SanitizeLocalPath(node.Name ?? "extracted_file"),
                     Filter = "All Files (*.*)|*.*",
                     Title = $"Extract {node.Name}"
                 };
@@ -624,7 +638,8 @@ namespace CascViewerWPF.ViewModels
             {
                 foreach (var child in node.Children.ToList())
                 {
-                    ExtractNodeRecursive(hStorage, child, Path.Combine(targetPath, child.Name!));
+                    string safeName = SanitizeLocalPath(child.Name ?? "unknown");
+                    ExtractNodeRecursive(hStorage, child, Path.Combine(targetPath, safeName));
                 }
             }
         }
