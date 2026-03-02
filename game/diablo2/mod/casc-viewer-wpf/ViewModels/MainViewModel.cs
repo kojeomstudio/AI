@@ -192,7 +192,15 @@ namespace CascViewerWPF.ViewModels
             ClearLogsCommand = new RelayCommand(_ => LogService.Instance.Logs.Clear());
             OpenLogFolderCommand = new RelayCommand(_ => OpenLogFolder());
             
-            LogService.Instance.Log("MainViewModel initialized.");
+            // Load saved settings
+            var settings = SettingsService.Instance.Settings;
+            if (!string.IsNullOrEmpty(settings.LastD2RPath) && Directory.Exists(settings.LastD2RPath))
+            {
+                _d2rPath = settings.LastD2RPath;
+            }
+            _searchMask = settings.LastSearchMask ?? "*";
+
+            LogService.Instance.Log("MainViewModel initialized with cached settings.");
         }
 
         #region Methods
@@ -251,7 +259,8 @@ namespace CascViewerWPF.ViewModels
                         {
                             LogService.Instance.Log("CASC storage opened successfully.");
                             
-                            uint lengthNeeded;
+                            // Save successful settings
+                            SettingsService.Instance.Save(D2RPath, SearchMask);
                             byte[] buffer = new byte[4];
                             if (CascLibWrapper.CascGetStorageInfo(hStorage, CascLibWrapper.CascStorageTotalFileCount, buffer, 4, out lengthNeeded))
                             {

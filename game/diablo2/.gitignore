@@ -2,3 +2,4 @@
 build/
 archive/
 *.log
+settings.json
