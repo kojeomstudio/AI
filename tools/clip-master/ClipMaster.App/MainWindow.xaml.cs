@@ -87,6 +87,7 @@ namespace ClipMaster.App
             double volume = VolumeSlider.Value;
             string audioPath = AudioPathTxt.Text;
             string outputDir = OutputPathTxt.Text;
+            string suffix = SuffixTxt.Text;
 
             GlobalProgressBar.Value = 0;
             GlobalProgressBar.Maximum = _videos.Count;
@@ -101,7 +102,7 @@ namespace ClipMaster.App
                 {
                     string fileName = Path.GetFileNameWithoutExtension(video);
                     string ext = Path.GetExtension(video);
-                    string outputPath = Path.Combine(outputDir, $"{fileName}_edited{ext}");
+                    string outputPath = Path.Combine(outputDir, $"{fileName}_{suffix}{ext}");
 
                     double duration = await _ffmpeg.GetDurationAsync(video);
                     bool success = await _ffmpeg.MergeAudioToVideoAsync(video, audioPath, outputPath, volume, fadeIn, fadeOut, duration);

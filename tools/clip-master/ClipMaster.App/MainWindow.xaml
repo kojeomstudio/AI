@@ -72,6 +72,9 @@
                         <Label Content="Fade Out (seconds)"/>
                         <TextBox x:Name="FadeOutTxt" Text="0" Margin="0,0,0,10" Padding="5"/>
 
+                        <Label Content="Output File Suffix"/>
+                        <TextBox x:Name="SuffixTxt" Text="merged" Margin="0,0,0,10" Padding="5"/>
+
                         <Separator Margin="0,20"/>
                         
                         <Button Content="START BATCH PROCESSING" Height="50" FontWeight="Bold" Background="#007ACC" Foreground="White" Click="StartBatch_Click"/>
