@@ -33,19 +33,7 @@ if %ERRORLEVEL% NEQ 0 (
 
 echo.
 echo ==========================================
-echo Archiving binaries to version %VERSION%
-echo ==========================================
-if not exist "%ROOT_DIR%archive\%VERSION%" mkdir "%ROOT_DIR%archive\%VERSION%"
-
-copy /Y "%ROOT_DIR%build\CascViewerWPF.exe" "%ROOT_DIR%archive\%VERSION%\"
-copy /Y "%ROOT_DIR%build\CascViewerWPF.dll" "%ROOT_DIR%archive\%VERSION%\"
-copy /Y "%ROOT_DIR%build\CascViewerWPF.pdb" "%ROOT_DIR%archive\%VERSION%\"
-copy /Y "%ROOT_DIR%build\CascLib.dll" "%ROOT_DIR%archive\%VERSION%\"
-
-echo.
-echo ==========================================
-echo Build and Archive Successful!
+echo Build Successful!
 echo ==========================================
 echo Output Directory: %ROOT_DIR%build
-echo Archive Directory: %ROOT_DIR%archive\%VERSION%
 echo.
