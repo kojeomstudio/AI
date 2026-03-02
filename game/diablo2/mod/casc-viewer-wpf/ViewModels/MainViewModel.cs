@@ -188,6 +188,7 @@ namespace CascViewerWPF.ViewModels
         public ICommand CopyPathCommand { get; }
         public ICommand ClearLogsCommand { get; }
         public ICommand OpenLogFolderCommand { get; }
+        public ICommand CopyPreviewCommand { get; }
         #endregion
 
         public MainViewModel()
@@ -198,6 +199,7 @@ namespace CascViewerWPF.ViewModels
             CopyPathCommand = new RelayCommand(_ => CopyPath(), _ => SelectedNode != null);
             ClearLogsCommand = new RelayCommand(_ => LogService.Instance.Logs.Clear());
             OpenLogFolderCommand = new RelayCommand(_ => OpenLogFolder());
+            CopyPreviewCommand = new RelayCommand(_ => CopyPreviewToClipboard(), _ => !string.IsNullOrEmpty(PreviewText));
             
             // Load saved settings
             var settings = SettingsService.Instance.Settings;
@@ -435,12 +437,21 @@ namespace CascViewerWPF.ViewModels
             else await ExtractFolder(SelectedNode);
         }
 
-        private void CopyPath()
+        public void CopyPath()
         {
             if (SelectedNode?.FullPath != null)
             {
                 System.Windows.Clipboard.SetText(SelectedNode.FullPath);
                 LogService.Instance.Log($"Path copied to clipboard: {SelectedNode.FullPath}");
+            }
+        }
+
+        private void CopyPreviewToClipboard()
+        {
+            if (!string.IsNullOrEmpty(PreviewText))
+            {
+                System.Windows.Clipboard.SetText(PreviewText);
+                LogService.Instance.Log("Preview content copied to clipboard.");
             }
         }
 
