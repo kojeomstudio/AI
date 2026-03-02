@@ -445,16 +445,33 @@ namespace CascViewerWPF.ViewModels
         }
 
         /// <summary>
-        /// Sanitizes a virtual path for the local file system.
-        /// Replaces invalid characters like ':' with '_'.
+        /// Sanitizes and normalizes a virtual path for the local file system.
+        /// Replaces ':' with folder separators and handles D2R specific prefixes
+        /// to make the extracted structure "Mod-Ready".
         /// </summary>
         private string SanitizeLocalPath(string path)
         {
             if (string.IsNullOrEmpty(path)) return path;
             
-            // Replace ':' which is common in D2R CASC paths (e.g. data:data)
-            // but illegal in Windows filenames.
-            return path.Replace(':', '_');
+            // 1. Replace ':' with directory separator to treat providers as folders
+            string safePath = path.Replace(':', Path.DirectorySeparatorChar);
+
+            // 2. D2R Modding Specific: 
+            // 'data:data\hd\...' should become 'data\hd\...' for the game to recognize it.
+            // If it starts with 'data\data\', we remove the first 'data\' part.
+            string dataDataPrefix = $"data{Path.DirectorySeparatorChar}data{Path.DirectorySeparatorChar}";
+            if (safePath.StartsWith(dataDataPrefix, StringComparison.OrdinalIgnoreCase))
+            {
+                safePath = safePath.Substring(5); // Remove "data\" (including separator)
+            }
+            
+            // 3. Final safety check: remove any other characters that might be illegal in Windows
+            foreach (char c in Path.GetInvalidPathChars())
+            {
+                safePath = safePath.Replace(c, '_');
+            }
+
+            return safePath;
         }
 
         private void ExtractSingleFile(CascNode node)
