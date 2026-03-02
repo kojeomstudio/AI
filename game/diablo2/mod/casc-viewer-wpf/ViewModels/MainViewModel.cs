@@ -314,6 +314,11 @@ namespace CascViewerWPF.ViewModels
         private void PopulateTreeOptimized(IntPtr hStorage)
         {
             CascLibWrapper.CASC_FIND_DATA findData = new CascLibWrapper.CASC_FIND_DATA();
+            // Initialize arrays to avoid nulls
+            findData.CKey = new byte[16];
+            findData.EKey = new byte[16];
+            findData.szFileName = new string('\0', 260);
+            
             IntPtr hFind = IntPtr.Zero;
             
             try 

@@ -19,55 +19,30 @@ namespace CascViewerWPF
         [DllImport(CascLibDll, SetLastError = true)]
         public static extern bool CascCloseStorage(IntPtr hStorage);
 
-        [StructLayout(LayoutKind.Explicit, CharSet = CharSet.Ansi)]
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
         public unsafe struct CASC_FIND_DATA
         {
-            [FieldOffset(0)]
-            public fixed byte _szFileName[260]; // MAX_PATH = 260
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 260)]
+            public string szFileName;
 
-            [FieldOffset(260)]
-            public fixed byte CKey[16];
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 16)]
+            public byte[] CKey;
 
-            [FieldOffset(276)]
-            public fixed byte EKey[16];
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 16)]
+            public byte[] EKey;
 
-            // Padding 4 bytes for 8-byte alignment of next field on x64 (292 -> 296)
-            [FieldOffset(296)]
             public ulong TagBitMask;
-
-            [FieldOffset(304)]
             public ulong FileSize;
-
-            [FieldOffset(312)]
             public IntPtr szPlainName;
-
-            [FieldOffset(320)]
             public uint dwFileDataId;
-
-            [FieldOffset(324)]
             public uint dwLocaleFlags;
-
-            [FieldOffset(328)]
             public uint dwContentFlags;
-
-            [FieldOffset(332)]
             public uint dwSpanCount;
-
-            // Bit-field and Enum following...
-            // Since we only care about szFileName and FileSize for tree building,
-            // we've ensured those offsets are correct. 
-            // Total size should be around 352 bytes on x64.
-
-            public string szFileName
-            {
-                get
-                {
-                    fixed (byte* p = _szFileName)
-                    {
-                        return Marshal.PtrToStringAnsi((IntPtr)p) ?? string.Empty;
-                    }
-                }
-            }
+            
+            // Bit-field and other trailing members can be omitted if not accessed
+            // but we need enough padding for the structure size
+            private uint _bitFields;
+            private uint _nameType;
         }
 
         [DllImport(CascLibDll, CharSet = CharSet.Ansi, SetLastError = true)]
