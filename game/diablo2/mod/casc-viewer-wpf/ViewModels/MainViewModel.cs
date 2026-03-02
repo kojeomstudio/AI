@@ -261,6 +261,8 @@ namespace CascViewerWPF.ViewModels
                             
                             // Save successful settings
                             SettingsService.Instance.Save(D2RPath, SearchMask);
+                            
+                            uint lengthNeeded;
                             byte[] buffer = new byte[4];
                             if (CascLibWrapper.CascGetStorageInfo(hStorage, CascLibWrapper.CascStorageTotalFileCount, buffer, 4, out lengthNeeded))
                             {
