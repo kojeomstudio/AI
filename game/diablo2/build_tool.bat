@@ -1,7 +1,7 @@
 @echo off
 chcp 65001 > nul
 set ROOT_DIR=%~dp0
-set PROJECT_FILE="%ROOT_DIR%mod\casc-viewer-wpf\CascViewerWPF.csproj"
+set PROJECT_FILE="%ROOT_DIR%mod\d2r-mod-master\D2RModMaster.csproj"
 
 echo ==========================================
 echo Detecting Project Version...
@@ -12,7 +12,7 @@ if "%VERSION%"=="v" (
     echo [WARNING] Could not detect version, defaulting to v1.0.0
 )
 
-echo Building CascViewerWPF Full Tool %VERSION%
+echo Building D2R Mod Master %VERSION%
 echo ==========================================
 
 rem Check if dotnet is available

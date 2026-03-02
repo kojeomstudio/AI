@@ -1,26 +1,24 @@
-# D2R CASC Explorer & Modding Guide
+# D2R Mod Master (Integrated Modding Tool)
 
-이 문서는 **CASC Viewer** 도구의 구조, 기반 라이브러리인 **CascLib**의 아키텍처, 그리고 실제 **디아블로 2 레저렉션(D2R)**에 모드를 적용하는 방법을 통합하여 설명합니다.
+이 문서는 **D2R Mod Master** 도구의 구조, 기반 라이브러리인 **CascLib**의 아키텍처, 그리고 실제 **디아블로 2 레저렉션(D2R)**에 모드를 적용하는 방법을 통합하여 설명합니다.
 
 ---
 
-## 1. 도구 아키텍처 (Casc Viewer Architecture)
+## 1. 도구 아키텍처 (D2R Mod Master Architecture)
 
-본 프로젝트의 `casc-viewer-wpf`는 D2R의 자산(Asset)을 탐색하고 추출하기 위해 설계된 Windows 데스크톱 애플리케이션입니다.
+본 프로젝트는 D2R의 자산(Asset) 탐색, 추출 및 모드 설정 생성을 위한 통합 도구입니다.
 
 ### 1.1 기술 스택
-- **Framework**: .NET 6.0 / WPF (Windows Presentation Foundation)
+- **Framework**: .NET 8.0 / WPF
 - **Pattern**: MVVM (Model-View-ViewModel)
-- **Interoperability**: P/Invoke를 통한 C++ (CascLib.dll) 연동
-- **Storage**: JSON 기반 로컬 설정 캐싱 (SettingsService)
+- **Interoperability**: P/Invoke를 통한 C++ (CascLib.dll) x64 연동
+- **Storage**: JSON 기반 로컬 설정 캐싱
 
-### 1.2 주요 컴포넌트
-- **View (MainWindow)**: 트리 뷰(TreeView)를 통해 CASC 내부의 가상 파일 시스템을 시각화합니다.
-- **ViewModel (MainViewModel)**: 비동기 작업(Task)을 통해 CASC 스토리지를 열고, 파일 목록을 스캔하며 추출 로직을 제어합니다.
-- **Wrapper (CascLibWrapper)**: C++로 작성된 `CascLib.dll`의 함수들을 C#에서 사용할 수 있도록 매핑한 브릿지 클래스입니다.
-- **Services**:
-    - `LogService`: 실시간 작업 로그 기록 및 파일 저장.
-    - `SettingsService`: 마지막 사용 경로 및 검색 마스크 자동 저장/불러오기.
+### 1.2 주요 기능
+- **CASC Explorer**: D2R의 모든 내부 자산을 계층 구조로 탐색.
+- **Asset Preview**: JSON, TXT 등 텍스트 기반 에셋의 즉시 미리보기 및 클립보드 복사.
+- **Smart Extraction**: 모딩 규격에 맞게 계층 구조를 유지하며 자산 추출.
+- **Mod Management**: `modinfo.json` 생성 및 표준 모드 폴더 구조 자동 구축.
 
 ---
 
