@@ -29,10 +29,16 @@ namespace CascViewerWPF.ViewModels
         private CascNode? _selectedNode;
         private int _totalFiles;
         private int _currentFiles;
-        private double _progressValue;
+        private bool _useHierarchy = true;
         #endregion
 
         #region Properties
+        public bool UseHierarchy
+        {
+            get => _useHierarchy;
+            set => SetProperty(ref _useHierarchy, value);
+        }
+        
         public string Version => $"v{System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "1.0.0"}";
         public ObservableCollection<LogEntry> Logs => LogService.Instance.Logs;
 
@@ -441,43 +447,63 @@ namespace CascViewerWPF.ViewModels
         {
             if (string.IsNullOrEmpty(node.FullPath)) return;
 
-            var saveDialog = new Microsoft.Win32.SaveFileDialog
-            {
-                FileName = node.Name,
-                Filter = "All Files (*.*)|*.*",
-                Title = $"Extract {node.Name}"
-            };
+            string targetPath = string.Empty;
 
-            if (saveDialog.ShowDialog() == true)
+            if (UseHierarchy)
             {
-                LogService.Instance.Log($"Attempting to extract file: {node.FullPath}");
-                try 
+                var folderDialog = new System.Windows.Forms.FolderBrowserDialog
                 {
-                    IntPtr hStorage;
-                    if (CascLibWrapper.CascOpenStorage(D2RPath, CascLibWrapper.CASC_OPEN_LOCAL, out hStorage))
-                    {
-                        string? targetPath = saveDialog.FileName;
-                        if (string.IsNullOrEmpty(targetPath)) return;
+                    Description = "Select Base Extraction Folder (Hierarchy will be preserved)"
+                };
 
-                        bool success = ExtractFileInternal(hStorage, node.FullPath, targetPath);
-                        CascLibWrapper.CascCloseStorage(hStorage);
-                        
-                        if (success)
-                        {
-                            LogService.Instance.Log($"Extraction successful: {saveDialog.FileName}");
-                            System.Windows.MessageBox.Show("File extracted successfully.");
-                        }
-                        else
-                        {
-                            LogService.Instance.Log($"Extraction failed for: {node.FullPath}", LogLevel.Error);
-                            System.Windows.MessageBox.Show("Extraction failed. Check logs.");
-                        }
+                if (folderDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                {
+                    targetPath = Path.Combine(folderDialog.SelectedPath, node.FullPath);
+                }
+                else return;
+            }
+            else
+            {
+                var saveDialog = new Microsoft.Win32.SaveFileDialog
+                {
+                    FileName = node.Name,
+                    Filter = "All Files (*.*)|*.*",
+                    Title = $"Extract {node.Name}"
+                };
+
+                if (saveDialog.ShowDialog() == true)
+                {
+                    targetPath = saveDialog.FileName;
+                }
+                else return;
+            }
+
+            if (string.IsNullOrEmpty(targetPath)) return;
+
+            LogService.Instance.Log($"Attempting to extract file: {node.FullPath} to {targetPath}");
+            try 
+            {
+                IntPtr hStorage;
+                if (CascLibWrapper.CascOpenStorage(D2RPath, CascLibWrapper.CASC_OPEN_LOCAL, out hStorage))
+                {
+                    bool success = ExtractFileInternal(hStorage, node.FullPath, targetPath);
+                    CascLibWrapper.CascCloseStorage(hStorage);
+                    
+                    if (success)
+                    {
+                        LogService.Instance.Log($"Extraction successful: {targetPath}");
+                        System.Windows.MessageBox.Show("File extracted successfully.");
+                    }
+                    else
+                    {
+                        LogService.Instance.Log($"Extraction failed for: {node.FullPath}", LogLevel.Error);
+                        System.Windows.MessageBox.Show("Extraction failed. Check logs.");
                     }
                 }
-                catch (Exception ex)
-                {
-                    LogService.Instance.Log($"Unexpected error during extraction: {ex.Message}", LogLevel.Error);
-                }
+            }
+            catch (Exception ex)
+            {
+                LogService.Instance.Log($"Unexpected error during extraction: {ex.Message}", LogLevel.Error);
             }
         }
 
