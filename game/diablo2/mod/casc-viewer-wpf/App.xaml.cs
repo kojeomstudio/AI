@@ -20,7 +20,7 @@ namespace CascViewerWPF
 
             if (IntPtr.Size != 8)
             {
-                MessageBox.Show("This application must run as a 64-bit process to work with CascLib.dll.", "Architecture Mismatch", MessageBoxButton.OK, MessageBoxImage.Error);
+                System.Windows.MessageBox.Show("This application must run as a 64-bit process to work with CascLib.dll.", "Architecture Mismatch", MessageBoxButton.OK, MessageBoxImage.Error);
                 System.Windows.Application.Current.Shutdown();
             }
         }
@@ -28,7 +28,7 @@ namespace CascViewerWPF
         private void LogFatalError(Exception? ex, string source)
         {
             string message = ex?.ToString() ?? "Unknown error";
-            MessageBox.Show($"A fatal error occurred ({source}):\n\n{message}", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            System.Windows.MessageBox.Show($"A fatal error occurred ({source}):\n\n{message}", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 }

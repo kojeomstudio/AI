@@ -456,7 +456,10 @@ namespace CascViewerWPF.ViewModels
                     IntPtr hStorage;
                     if (CascLibWrapper.CascOpenStorage(D2RPath, CascLibWrapper.CASC_OPEN_LOCAL, out hStorage))
                     {
-                        bool success = ExtractFileInternal(hStorage, node.FullPath, saveDialog.FileName);
+                        string? targetPath = saveDialog.FileName;
+                        if (string.IsNullOrEmpty(targetPath)) return;
+
+                        bool success = ExtractFileInternal(hStorage, node.FullPath, targetPath);
                         CascLibWrapper.CascCloseStorage(hStorage);
                         
                         if (success)
