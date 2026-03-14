@@ -2,5 +2,9 @@ Submodule update process started at #오후
 ==========================================
 #오후 - Failed in submodule: llm/mcp/mcp-use
 ---
+#오후 - Failed in submodule: llm/mcp/noapi-google-search-mcp
+---
 #오후 - Failed in submodule: llm/mcp/serena
+---
+#오후 - Failed in submodule: llm/search/local-deep-research
 ---
