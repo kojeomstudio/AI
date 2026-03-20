@@ -78,7 +78,8 @@ namespace ClipMaster.App
                 return;
             }
 
-            if (!double.TryParse(FadeInTxt.Text, out double fadeIn) || !double.TryParse(FadeOutTxt.Text, out double fadeOut))
+            if (!double.TryParse(FadeInTxt.Text, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double fadeIn) || 
+                !double.TryParse(FadeOutTxt.Text, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double fadeOut))
             {
                 MessageBox.Show("Invalid Fade values.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;

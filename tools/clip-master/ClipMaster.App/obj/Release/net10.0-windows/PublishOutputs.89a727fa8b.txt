@@ -1,0 +1,5 @@
+C:\workspaces\AI\tools\bin\clip-master\ClipMaster.App.exe
+C:\workspaces\AI\tools\bin\clip-master\ClipMaster.App.dll
+C:\workspaces\AI\tools\bin\clip-master\ClipMaster.App.deps.json
+C:\workspaces\AI\tools\bin\clip-master\ClipMaster.App.runtimeconfig.json
+C:\workspaces\AI\tools\bin\clip-master\ClipMaster.App.pdb

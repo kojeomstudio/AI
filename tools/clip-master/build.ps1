@@ -1,9 +1,11 @@
 # ClipMaster Build Script
 $ErrorActionPreference = "Stop"
 
-$root = Get-Location
+$root = $PSScriptRoot
 $appProject = Join-Path $root "ClipMaster.App"
-$outputDir = Join-Path $root "bin"
+# Binaries should be created in tools/bin/<tool-name>
+$parentDir = Split-Path $root -Parent
+$outputDir = Join-Path $parentDir "bin\clip-master"
 
 Write-Host "Cleaning up bin directory..." -ForegroundColor Cyan
 if (Test-Path $outputDir) {

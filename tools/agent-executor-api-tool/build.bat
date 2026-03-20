@@ -158,7 +158,10 @@ echo %INFO% Build mode: One folder (with dependencies)
 echo %INFO% This may take several minutes...
 echo.
 
-pyinstaller --clean --noconfirm agent-executor-api.spec
+set "DIST_DIR=..\bin\agent-executor-api"
+if exist "%DIST_DIR%" rmdir /s /q "%DIST_DIR%"
+
+pyinstaller --clean --noconfirm --distpath "..\bin" agent-executor-api.spec
 
 if errorlevel 1 (
     echo.
@@ -179,15 +182,15 @@ echo                         Build Verification
 echo ========================================================================
 echo.
 
-if exist "dist\agent-executor-api\agent-executor-api.exe" (
+if exist "..\bin\agent-executor-api\agent-executor-api.exe" (
     echo %SUCCESS% Executable created successfully!
     echo.
-    echo Location: %cd%\dist\agent-executor-api\
+    echo Location: %cd%\..\bin\agent-executor-api\
     echo Executable: agent-executor-api.exe
     echo.
 
     REM Get file size
-    for %%A in ("dist\agent-executor-api\agent-executor-api.exe") do (
+    for %%A in ("..\bin\agent-executor-api\agent-executor-api.exe") do (
         set SIZE=%%~zA
         set /a SIZE_MB=!SIZE! / 1048576
         echo File size: !SIZE_MB! MB
@@ -195,7 +198,7 @@ if exist "dist\agent-executor-api\agent-executor-api.exe" (
 
     echo.
     echo %INFO% Additional files in distribution:
-    dir /b "dist\agent-executor-api" | findstr /v "agent-executor-api.exe"
+    dir /b "..\bin\agent-executor-api" | findstr /v "agent-executor-api.exe"
 
 ) else (
     echo %ERROR% Executable not found in expected location
@@ -213,8 +216,10 @@ echo                    Copying Configuration Files
 echo ========================================================================
 echo.
 
+set "FINAL_DIST_DIR=..\bin\agent-executor-api"
+
 echo %INFO% Copying config.json.example to distribution...
-copy /y "config.json.example" "dist\agent-executor-api\config.json.example" >nul
+copy /y "config.json.example" "%FINAL_DIST_DIR%\config.json.example" >nul
 if errorlevel 1 (
     echo %WARN% Failed to copy config.json.example
 ) else (
@@ -223,7 +228,7 @@ if errorlevel 1 (
 
 echo %INFO% Copying config.json file...
 if exist "config.json" (
-    copy /y "config.json" "dist\agent-executor-api\config.json" >nul
+    copy /y "config.json" "%FINAL_DIST_DIR%\config.json" >nul
     if errorlevel 1 (
         echo %WARN% Failed to copy config.json
     ) else (
@@ -231,7 +236,7 @@ if exist "config.json" (
     )
 ) else (
     echo %INFO% config.json not found, creating from example...
-    copy /y "config.json.example" "dist\agent-executor-api\config.json" >nul
+    copy /y "config.json.example" "%FINAL_DIST_DIR%\config.json" >nul
     if errorlevel 1 (
         echo %WARN% Failed to create config.json
     ) else (
@@ -242,8 +247,8 @@ if exist "config.json" (
 echo.
 echo %INFO% Copying prompts directory to distribution...
 if exist "prompts\" (
-    mkdir "dist\agent-executor-api\prompts" 2>nul
-    xcopy /y /e /i "prompts\*" "dist\agent-executor-api\prompts\" >nul
+    mkdir "%FINAL_DIST_DIR%\prompts" 2>nul
+    xcopy /y /e /i "prompts\*" "%FINAL_DIST_DIR%\prompts\" >nul
     if errorlevel 1 (
         echo %WARN% Failed to copy prompts directory
     ) else (

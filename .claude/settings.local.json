@@ -5,7 +5,9 @@
       "Bash(git submodule:*)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(cd:*)",
+      "Bash(\"$MSBUILD\" $SLN:*)"
     ],
     "deny": [],
     "ask": []

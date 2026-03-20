@@ -189,7 +189,10 @@ log_info "Build mode: One folder (with dependencies)"
 log_info "This may take several minutes..."
 echo ""
 
-pyinstaller --clean --noconfirm agent-executor-api.spec
+DIST_DIR="../bin/agent-executor-api"
+rm -rf "$DIST_DIR"
+
+pyinstaller --clean --noconfirm --distpath "../bin" agent-executor-api.spec
 
 if [ $? -ne 0 ]; then
     echo ""
@@ -210,21 +213,21 @@ echo "                       Build Verification"
 print_separator
 echo ""
 
-if [ -f "dist/agent-executor-api/agent-executor-api" ]; then
+if [ -f "../bin/agent-executor-api/agent-executor-api" ]; then
     log_success "Executable created successfully!"
     echo ""
-    echo "Location: $(pwd)/dist/agent-executor-api/"
+    echo "Location: $(pwd)/../bin/agent-executor-api/"
     echo "Executable: agent-executor-api"
     echo ""
 
     # Get file size
-    SIZE=$(stat -f%z "dist/agent-executor-api/agent-executor-api" 2>/dev/null || stat -c%s "dist/agent-executor-api/agent-executor-api" 2>/dev/null)
+    SIZE=$(stat -f%z "../bin/agent-executor-api/agent-executor-api" 2>/dev/null || stat -c%s "../bin/agent-executor-api/agent-executor-api" 2>/dev/null)
     SIZE_MB=$((SIZE / 1048576))
     echo "File size: ${SIZE_MB} MB"
 
     echo ""
     log_info "Additional files in distribution:"
-    ls -1 "dist/agent-executor-api" | grep -v "agent-executor-api$"
+    ls -1 "../bin/agent-executor-api" | grep -v "agent-executor-api$"
 
 else
     log_error "Executable not found in expected location"
@@ -242,24 +245,50 @@ echo "                  Copying Configuration Files"
 print_separator
 echo ""
 
-log_info "Copying .env.example to distribution..."
-cp -f ".env.example" "dist/agent-executor-api/.env.example"
+FINAL_DIST_DIR="../bin/agent-executor-api"
+
+log_info "Copying config.json.example to distribution..."
+cp -f "config.json.example" "$FINAL_DIST_DIR/config.json.example"
 if [ $? -ne 0 ]; then
-    log_warn "Failed to copy .env.example"
+    log_warn "Failed to copy config.json.example"
 else
-    log_success ".env.example copied"
+    log_success "config.json.example copied"
 fi
 
-log_info "Creating default .env file..."
-cp -f ".env.example" "dist/agent-executor-api/.env"
-if [ $? -ne 0 ]; then
-    log_warn "Failed to create .env"
+log_info "Copying config.json file..."
+if [ -f "config.json" ]; then
+    cp -f "config.json" "$FINAL_DIST_DIR/config.json"
+    if [ $? -ne 0 ]; then
+        log_warn "Failed to copy config.json"
+    else
+        log_success "config.json copied"
+    fi
 else
-    log_success ".env created"
+    log_info "config.json not found, creating from example..."
+    cp -f "config.json.example" "$FINAL_DIST_DIR/config.json"
+    if [ $? -ne 0 ]; then
+        log_warn "Failed to create config.json"
+    else
+        log_success "config.json created from example"
+    fi
+fi
+
+# Copy prompts directory
+log_info "Copying prompts directory to distribution..."
+if [ -d "prompts" ]; then
+    mkdir -p "$FINAL_DIST_DIR/prompts"
+    cp -rf prompts/* "$FINAL_DIST_DIR/prompts/"
+    if [ $? -ne 0 ]; then
+        log_warn "Failed to copy prompts directory"
+    else
+        log_success "prompts directory copied"
+    fi
+else
+    log_warn "prompts directory not found, skipping"
 fi
 
 # Make executable runnable
-chmod +x "dist/agent-executor-api/agent-executor-api"
+chmod +x "$FINAL_DIST_DIR/agent-executor-api"
 log_success "Executable permissions set"
 
 echo ""
@@ -273,15 +302,15 @@ print_separator
 echo ""
 log_success "Build completed successfully!"
 echo ""
-echo "Distribution directory: $(pwd)/dist/agent-executor-api/"
+echo "Distribution directory: $(pwd)/../bin/agent-executor-api/"
 echo ""
 echo "To run the application:"
-echo "  1. Navigate to: dist/agent-executor-api/"
-echo "  2. Edit .env file if needed"
+echo "  1. Navigate to: ../bin/agent-executor-api/"
+echo "  2. Edit config.json file if needed"
 echo "  3. Run: ./agent-executor-api"
 echo ""
 echo "To test the build:"
-echo "  cd dist/agent-executor-api"
+echo "  cd ../bin/agent-executor-api"
 echo "  ./agent-executor-api"
 echo ""
 print_separator
