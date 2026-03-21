@@ -1,11 +1,12 @@
 <Window x:Class="YoutubeExtractor.App.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Youtube Extractor" Height="500" Width="800">
+        Title="Youtube Extractor" Height="550" Width="800">
     <Grid Margin="10">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
@@ -14,12 +15,18 @@
         <TextBox x:Name="UrlListTxt" Grid.Row= "1" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" Margin="0,0,0,10"/>
 
         <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,0,0,10">
+            <TextBlock Text="Download Option:" VerticalAlignment="Center" Margin="0,0,10,0"/>
+            <RadioButton x:Name="VideoRb" Content="Video (Highest Quality)" IsChecked="True" VerticalAlignment="Center" Margin="0,0,10,0"/>
+            <RadioButton x:Name="AudioRb" Content="Audio (MP3)" VerticalAlignment="Center"/>
+        </StackPanel>
+
+        <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="0,0,0,10">
             <TextBlock Text="Save to:" VerticalAlignment="Center" Margin="0,0,10,0"/>
             <TextBox x:Name="OutputPathTxt" Width="600" VerticalAlignment="Center" IsReadOnly="True"/>
             <Button Content="Browse" Click="Browse_Click" Width="80" Margin="10,0,0,0"/>
         </StackPanel>
 
-        <StackPanel Grid.Row="3">
+        <StackPanel Grid.Row="4">
             <ProgressBar x:Name="DownloadProgress" Height="20" Margin="0,0,0,5"/>
             <Grid>
                 <TextBlock x:Name="StatusTxt" Text="Ready" HorizontalAlignment="Left"/>

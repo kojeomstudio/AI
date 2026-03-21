@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -14,11 +15,25 @@ namespace YoutubeExtractor.App
     public partial class MainWindow : Window
     {
         private readonly YoutubeClient _youtube = new YoutubeClient();
+        private string _ffmpegPath = "ffmpeg";
 
         public MainWindow()
         {
             InitializeComponent();
             OutputPathTxt.Text = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyVideos), "YoutubeExtractor");
+            DetectFFMpeg();
+        }
+
+        private void DetectFFMpeg()
+        {
+            // Try to find ffmpeg in tools/bin/clip-master
+            string baseDir = AppDomain.CurrentDomain.BaseDirectory;
+            string clipMasterBin = Path.GetFullPath(Path.Combine(baseDir, "..", "clip-master", "ffmpeg.exe"));
+            
+            if (File.Exists(clipMasterBin))
+            {
+                _ffmpegPath = clipMasterBin;
+            }
         }
 
         private void Browse_Click(object sender, RoutedEventArgs e)
@@ -49,6 +64,7 @@ namespace YoutubeExtractor.App
                 Directory.CreateDirectory(outputDir);
             }
 
+            bool isAudioOnly = AudioRb.IsChecked == true;
             ((Button)sender).IsEnabled = false;
             DownloadProgress.Value = 0;
             DownloadProgress.Maximum = urls.Count;
@@ -60,31 +76,22 @@ namespace YoutubeExtractor.App
             {
                 try
                 {
-                    StatusTxt.Text = $"Downloading: {url}";
+                    StatusTxt.Text = $"Getting metadata: {url}";
                     var video = await _youtube.Videos.GetAsync(url);
+                    string sanitizedTitle = string.Join("_", video.Title.Split(Path.GetInvalidFileNameChars()));
                     
-                    // Sanitize file name
-                    string fileName = string.Join("_", video.Title.Split(Path.GetInvalidFileNameChars())) + ".mp4";
-                    string filePath = Path.Combine(outputDir, fileName);
-
                     var streamManifest = await _youtube.Videos.Streams.GetManifestAsync(video.Id);
-                    
-                    // Get highest quality muxed stream (video + audio in one file)
-                    // For 1080p+, you'd need FFmpeg to mux separate video/audio streams.
-                    // This library provides muxed streams up to 720p usually.
-                    var streamInfo = streamManifest.GetMuxedStreams().GetWithHighestVideoQuality();
 
-                    if (streamInfo != null)
+                    if (isAudioOnly)
                     {
-                        await _youtube.Videos.Streams.DownloadAsync(streamInfo, filePath, new Progress<double>(p => {
-                            // Individual progress could be shown here if needed
-                        }));
-                        successCount++;
+                        await DownloadAudioAsync(streamManifest, sanitizedTitle, outputDir);
                     }
                     else
                     {
-                        failCount++;
+                        await DownloadHighestVideoAsync(streamManifest, sanitizedTitle, outputDir);
                     }
+
+                    successCount++;
                 }
                 catch (Exception ex)
                 {
@@ -98,6 +105,64 @@ namespace YoutubeExtractor.App
             StatusTxt.Text = "Finished";
             ((Button)sender).IsEnabled = true;
             MessageBox.Show($"Download Complete.\nSuccess: {successCount}\nFailed: {failCount}", "Complete", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        private async Task DownloadAudioAsync(StreamManifest manifest, string title, string outputDir)
+        {
+            StatusTxt.Text = $"Downloading Audio: {title}";
+            var audioStream = manifest.GetAudioOnlyStreams().GetWithHighestBitrate();
+            string tempAudio = Path.Combine(outputDir, $"{Guid.NewGuid()}.tmp");
+            string finalPath = Path.Combine(outputDir, $"{title}.mp3");
+
+            await _youtube.Videos.Streams.DownloadAsync(audioStream, tempAudio);
+
+            // Convert to MP3 using FFmpeg
+            string args = $"-i \"{tempAudio}\" -q:a 0 -map a -y \"{finalPath}\"";
+            await RunFFMpegAsync(args);
+
+            if (File.Exists(tempAudio)) File.Delete(tempAudio);
+        }
+
+        private async Task DownloadHighestVideoAsync(StreamManifest manifest, string title, string outputDir)
+        {
+            StatusTxt.Text = $"Downloading Video & Audio: {title}";
+            var videoStream = manifest.GetVideoOnlyStreams().GetWithHighestVideoQuality();
+            var audioStream = manifest.GetAudioOnlyStreams().GetWithHighestBitrate();
+
+            string tempVid = Path.Combine(outputDir, $"{Guid.NewGuid()}_v.tmp");
+            string tempAud = Path.Combine(outputDir, $"{Guid.NewGuid()}_a.tmp");
+            string finalPath = Path.Combine(outputDir, $"{title}.mp4");
+
+            var downloadVideoTask = _youtube.Videos.Streams.DownloadAsync(videoStream, tempVid).AsTask();
+            var downloadAudioTask = _youtube.Videos.Streams.DownloadAsync(audioStream, tempAud).AsTask();
+
+            await Task.WhenAll(downloadVideoTask, downloadAudioTask);
+
+            StatusTxt.Text = $"Muxing: {title}";
+            // Mux video and audio using FFmpeg
+            string args = $"-i \"{tempVid}\" -i \"{tempAud}\" -c copy -y \"{finalPath}\"";
+            await RunFFMpegAsync(args);
+
+            if (File.Exists(tempVid)) File.Delete(tempVid);
+            if (File.Exists(tempAud)) File.Delete(tempAud);
+        }
+
+        private async Task RunFFMpegAsync(string arguments)
+        {
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = _ffmpegPath,
+                Arguments = arguments,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                RedirectStandardError = true
+            };
+
+            using (var process = new Process { StartInfo = startInfo })
+            {
+                process.Start();
+                await process.WaitForExitAsync();
+            }
         }
     }
 }
