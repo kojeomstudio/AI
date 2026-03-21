@@ -58,3 +58,6 @@
 [submodule "game/diablo2/casc-lib"]
 	path = game/diablo2/casc-lib
 	url = git@github.com:kojeomstudio/CascLib.git
+[submodule "tools/FFmpeg"]
+	path = tools/FFmpeg
+	url = git@github.com:kojeomstudio/FFmpeg.git

@@ -12,3 +12,10 @@
 [2026-03-21 09:01:39] FFprobe Exception: An error occurred trying to start process 'ffprobe' with working directory 'C:\workspaces\AI'. 지정된 파일을 찾을 수 없습니다.
 [2026-03-21 09:01:39] Re-calculated Duration: 0
 [2026-03-21 09:01:39] Running FFmpeg with args: -i "tools\clip-master\ClipMaster.App\sample\clip\sample_clip.mp4" -i "tools\clip-master\ClipMaster.App\sample\sound\sample_sound.mp3" -filter_complex "[1:a]volume=0.5,afade=t=in:st=0:d=1.0[aout]" -map 0:v -map "[aout]" -c:v copy -c:a aac -shortest -y "tools\clip-master\ClipMaster.App\sample\test_output\sample_clip_test_merged.mp4"
+[2026-03-21 09:07:59] Running FFprobe: ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "H:\GoogleDrive\AI_Workspace\clip\0afb8c01-2d80-449d-ae1b-bdc99698814d.mp4"
+[2026-03-21 09:07:59] FFprobe Exception: An error occurred trying to start process 'ffprobe' with working directory 'C:\workspaces\AI\tools\bin\clip-master'. 지정된 파일을 찾을 수 없습니다.
+[2026-03-21 09:07:59] Starting Merge: Video=H:\GoogleDrive\AI_Workspace\clip\0afb8c01-2d80-449d-ae1b-bdc99698814d.mp4, Audio=H:\GoogleDrive\AI_Workspace\sound\Pixel_Paradise_Arcade.mp3, Output=H:\GoogleDrive\AI_Workspace\clip\merged\0afb8c01-2d80-449d-ae1b-bdc99698814d_merged.mp4
+[2026-03-21 09:07:59] Running FFprobe: ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "H:\GoogleDrive\AI_Workspace\clip\0afb8c01-2d80-449d-ae1b-bdc99698814d.mp4"
+[2026-03-21 09:07:59] FFprobe Exception: An error occurred trying to start process 'ffprobe' with working directory 'C:\workspaces\AI\tools\bin\clip-master'. 지정된 파일을 찾을 수 없습니다.
+[2026-03-21 09:07:59] Re-calculated Duration: 0
+[2026-03-21 09:07:59] Running FFmpeg with args: -i "H:\GoogleDrive\AI_Workspace\clip\0afb8c01-2d80-449d-ae1b-bdc99698814d.mp4" -i "H:\GoogleDrive\AI_Workspace\sound\Pixel_Paradise_Arcade.mp3" -filter_complex "[1:a]volume=1.0[aout]" -map 0:v -map "[aout]" -c:v copy -c:a aac -shortest -y "H:\GoogleDrive\AI_Workspace\clip\merged\0afb8c01-2d80-449d-ae1b-bdc99698814d_merged.mp4"
