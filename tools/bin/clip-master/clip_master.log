@@ -1,0 +1,14 @@
+[2026-03-21 09:01:22] Running FFprobe: ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "tools\clip-master\ClipMaster.App\sample\clip\sample_clip.mp4"
+[2026-03-21 09:01:22] FFprobe Exception: An error occurred trying to start process 'ffprobe' with working directory 'C:\workspaces\AI'. 지정된 파일을 찾을 수 없습니다.
+[2026-03-21 09:01:22] Starting Merge: Video=tools\clip-master\ClipMaster.App\sample\clip\sample_clip.mp4, Audio=tools\clip-master\ClipMaster.App\sample\sound\sample_sound.mp3, Output=tools\clip-master\ClipMaster.App\sample\test_output\sample_clip_test_merged.mp4
+[2026-03-21 09:01:22] Running FFprobe: ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "tools\clip-master\ClipMaster.App\sample\clip\sample_clip.mp4"
+[2026-03-21 09:01:22] FFprobe Exception: An error occurred trying to start process 'ffprobe' with working directory 'C:\workspaces\AI'. 지정된 파일을 찾을 수 없습니다.
+[2026-03-21 09:01:22] Re-calculated Duration: 0
+[2026-03-21 09:01:22] Running FFmpeg with args: -i "tools\clip-master\ClipMaster.App\sample\clip\sample_clip.mp4" -i "tools\clip-master\ClipMaster.App\sample\sound\sample_sound.mp3" -filter_complex "[1:a]volume=0.5,afade=t=in:st=0:d=1.0[aout]" -map 0:v -map "[aout]" -c:v copy -c:a aac -shortest -y "tools\clip-master\ClipMaster.App\sample\test_output\sample_clip_test_merged.mp4"
+[2026-03-21 09:01:39] Running FFprobe: ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "tools\clip-master\ClipMaster.App\sample\clip\sample_clip.mp4"
+[2026-03-21 09:01:39] FFprobe Exception: An error occurred trying to start process 'ffprobe' with working directory 'C:\workspaces\AI'. 지정된 파일을 찾을 수 없습니다.
+[2026-03-21 09:01:39] Starting Merge: Video=tools\clip-master\ClipMaster.App\sample\clip\sample_clip.mp4, Audio=tools\clip-master\ClipMaster.App\sample\sound\sample_sound.mp3, Output=tools\clip-master\ClipMaster.App\sample\test_output\sample_clip_test_merged.mp4
+[2026-03-21 09:01:39] Running FFprobe: ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "tools\clip-master\ClipMaster.App\sample\clip\sample_clip.mp4"
+[2026-03-21 09:01:39] FFprobe Exception: An error occurred trying to start process 'ffprobe' with working directory 'C:\workspaces\AI'. 지정된 파일을 찾을 수 없습니다.
+[2026-03-21 09:01:39] Re-calculated Duration: 0
+[2026-03-21 09:01:39] Running FFmpeg with args: -i "tools\clip-master\ClipMaster.App\sample\clip\sample_clip.mp4" -i "tools\clip-master\ClipMaster.App\sample\sound\sample_sound.mp3" -filter_complex "[1:a]volume=0.5,afade=t=in:st=0:d=1.0[aout]" -map 0:v -map "[aout]" -c:v copy -c:a aac -shortest -y "tools\clip-master\ClipMaster.App\sample\test_output\sample_clip_test_merged.mp4"

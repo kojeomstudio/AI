@@ -14,8 +14,26 @@ namespace ClipMaster.App.Core
 
         public FFMpegHelper(string ffmpegPath)
         {
-            _ffmpegPath = ffmpegPath;
             string baseDir = AppDomain.CurrentDomain.BaseDirectory;
+            
+            // If just "ffmpeg" is passed, try to find it in the app directory
+            if (ffmpegPath == "ffmpeg")
+            {
+                string localFFMpeg = Path.Combine(baseDir, "ffmpeg.exe");
+                if (File.Exists(localFFMpeg))
+                {
+                    _ffmpegPath = localFFMpeg;
+                }
+                else
+                {
+                    _ffmpegPath = ffmpegPath; // Fallback to system PATH
+                }
+            }
+            else
+            {
+                _ffmpegPath = ffmpegPath;
+            }
+
             _logPath = Path.Combine(baseDir, "clip_master.log");
         }
 
