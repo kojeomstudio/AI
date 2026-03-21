@@ -1,0 +1,30 @@
+<Window x:Class="YoutubeExtractor.App.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Youtube Extractor" Height="500" Width="800">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Text="YouTube URLs (one per line):" Margin="0,0,0,5"/>
+        <TextBox x:Name="UrlListTxt" Grid.Row= "1" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" Margin="0,0,0,10"/>
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,0,0,10">
+            <TextBlock Text="Save to:" VerticalAlignment="Center" Margin="0,0,10,0"/>
+            <TextBox x:Name="OutputPathTxt" Width="600" VerticalAlignment="Center" IsReadOnly="True"/>
+            <Button Content="Browse" Click="Browse_Click" Width="80" Margin="10,0,0,0"/>
+        </StackPanel>
+
+        <StackPanel Grid.Row="3">
+            <ProgressBar x:Name="DownloadProgress" Height="20" Margin="0,0,0,5"/>
+            <Grid>
+                <TextBlock x:Name="StatusTxt" Text="Ready" HorizontalAlignment="Left"/>
+                <Button Content="Start Download" Click="StartDownload_Click" HorizontalAlignment="Right" Width="120" Padding="5"/>
+            </Grid>
+        </StackPanel>
+    </Grid>
+</Window>

@@ -1,0 +1,9 @@
+C:\workspaces\AI\tools\bin\youtube-extractor\YoutubeExtractor.App.exe
+C:\workspaces\AI\tools\bin\youtube-extractor\YoutubeExtractor.App.dll
+C:\workspaces\AI\tools\bin\youtube-extractor\YoutubeExtractor.App.deps.json
+C:\workspaces\AI\tools\bin\youtube-extractor\YoutubeExtractor.App.runtimeconfig.json
+C:\workspaces\AI\tools\bin\youtube-extractor\YoutubeExtractor.App.pdb
+C:\workspaces\AI\tools\bin\youtube-extractor\AngleSharp.dll
+C:\workspaces\AI\tools\bin\youtube-extractor\Microsoft.Extensions.DependencyInjection.dll
+C:\workspaces\AI\tools\bin\youtube-extractor\Microsoft.Extensions.DependencyInjection.Abstractions.dll
+C:\workspaces\AI\tools\bin\youtube-extractor\YoutubeExplode.dll
