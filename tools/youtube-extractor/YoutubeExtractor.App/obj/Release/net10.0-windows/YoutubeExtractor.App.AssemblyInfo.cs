@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("YoutubeExtractor.App")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+957b467a4472fcf70f561f9d9c487de8233bb2a5")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ce8f47c2ebbd56e65b7f4a3c2c97d8d289fedb64")]
 [assembly: System.Reflection.AssemblyProductAttribute("YoutubeExtractor.App")]
 [assembly: System.Reflection.AssemblyTitleAttribute("YoutubeExtractor.App")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -11,7 +11,11 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <TextBlock Text="YouTube URLs (one per line):" Margin="0,0,0,5"/>
+        <DockPanel Grid.Row="0" LastChildFill="False" Margin="0,0,0,5">
+            <TextBlock Text="YouTube URLs (one per line):" VerticalAlignment="Center"/>
+            <Button Content="Load JSON" Click="LoadJson_Click" Width="100" DockPanel.Dock="Right"/>
+        </DockPanel>
+        
         <TextBox x:Name="UrlListTxt" Grid.Row= "1" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" Margin="0,0,0,10"/>
 
         <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,0,0,10">

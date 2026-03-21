@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -43,6 +44,73 @@ namespace YoutubeExtractor.App
             {
                 OutputPathTxt.Text = dialog.FolderName;
             }
+        }
+
+        private void LoadJson_Click(object sender, RoutedEventArgs e)
+        {
+            var openFileDialog = new OpenFileDialog
+            {
+                Filter = "JSON files (*.json)|*.json|All files (*.*)|*.*"
+            };
+
+            if (openFileDialog.ShowDialog() == true)
+            {
+                try
+                {
+                    string jsonContent = File.ReadAllText(openFileDialog.FileName);
+                    var urls = ParseUrlsFromJson(jsonContent);
+
+                    if (urls.Any())
+                    {
+                        UrlListTxt.Text = string.Join(Environment.NewLine, urls);
+                        StatusTxt.Text = $"Loaded {urls.Count} URLs from {Path.GetFileName(openFileDialog.FileName)}";
+                    }
+                    else
+                    {
+                        MessageBox.Show("No valid URLs found in the JSON file.", "Information", MessageBoxButton.OK, MessageBoxImage.Information);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error loading JSON: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+
+        private List<string> ParseUrlsFromJson(string json)
+        {
+            var urls = new List<string>();
+            try
+            {
+                using var document = JsonDocument.Parse(json);
+                var root = document.RootElement;
+
+                if (root.ValueKind == JsonValueKind.Array)
+                {
+                    foreach (var element in root.EnumerateArray())
+                    {
+                        if (element.ValueKind == JsonValueKind.String)
+                            urls.Add(element.GetString());
+                    }
+                }
+                else if (root.ValueKind == JsonValueKind.Object)
+                {
+                    // Try to find a property that looks like a list of strings
+                    foreach (var property in root.EnumerateObject())
+                    {
+                        if (property.Value.ValueKind == JsonValueKind.Array)
+                        {
+                            foreach (var element in property.Value.EnumerateArray())
+                            {
+                                if (element.ValueKind == JsonValueKind.String)
+                                    urls.Add(element.GetString());
+                            }
+                        }
+                    }
+                }
+            }
+            catch { }
+            return urls.Where(u => !string.IsNullOrEmpty(u)).ToList();
         }
 
         private async void StartDownload_Click(object sender, RoutedEventArgs e)
