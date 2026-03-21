@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("ClipMaster.App")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+fa55f0266bc2a7327eb7663603156f1795d57b93")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+c3dd1fcaa7896c2b32d1fb9379d26127f96f5cd7")]
 [assembly: System.Reflection.AssemblyProductAttribute("ClipMaster.App")]
 [assembly: System.Reflection.AssemblyTitleAttribute("ClipMaster.App")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

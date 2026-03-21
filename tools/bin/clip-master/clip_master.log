@@ -1,21 +1,52 @@
-[2026-03-21 09:01:22] Running FFprobe: ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "tools\clip-master\ClipMaster.App\sample\clip\sample_clip.mp4"
-[2026-03-21 09:01:22] FFprobe Exception: An error occurred trying to start process 'ffprobe' with working directory 'C:\workspaces\AI'. 지정된 파일을 찾을 수 없습니다.
-[2026-03-21 09:01:22] Starting Merge: Video=tools\clip-master\ClipMaster.App\sample\clip\sample_clip.mp4, Audio=tools\clip-master\ClipMaster.App\sample\sound\sample_sound.mp3, Output=tools\clip-master\ClipMaster.App\sample\test_output\sample_clip_test_merged.mp4
-[2026-03-21 09:01:22] Running FFprobe: ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "tools\clip-master\ClipMaster.App\sample\clip\sample_clip.mp4"
-[2026-03-21 09:01:22] FFprobe Exception: An error occurred trying to start process 'ffprobe' with working directory 'C:\workspaces\AI'. 지정된 파일을 찾을 수 없습니다.
-[2026-03-21 09:01:22] Re-calculated Duration: 0
-[2026-03-21 09:01:22] Running FFmpeg with args: -i "tools\clip-master\ClipMaster.App\sample\clip\sample_clip.mp4" -i "tools\clip-master\ClipMaster.App\sample\sound\sample_sound.mp3" -filter_complex "[1:a]volume=0.5,afade=t=in:st=0:d=1.0[aout]" -map 0:v -map "[aout]" -c:v copy -c:a aac -shortest -y "tools\clip-master\ClipMaster.App\sample\test_output\sample_clip_test_merged.mp4"
-[2026-03-21 09:01:39] Running FFprobe: ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "tools\clip-master\ClipMaster.App\sample\clip\sample_clip.mp4"
-[2026-03-21 09:01:39] FFprobe Exception: An error occurred trying to start process 'ffprobe' with working directory 'C:\workspaces\AI'. 지정된 파일을 찾을 수 없습니다.
-[2026-03-21 09:01:39] Starting Merge: Video=tools\clip-master\ClipMaster.App\sample\clip\sample_clip.mp4, Audio=tools\clip-master\ClipMaster.App\sample\sound\sample_sound.mp3, Output=tools\clip-master\ClipMaster.App\sample\test_output\sample_clip_test_merged.mp4
-[2026-03-21 09:01:39] Running FFprobe: ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "tools\clip-master\ClipMaster.App\sample\clip\sample_clip.mp4"
-[2026-03-21 09:01:39] FFprobe Exception: An error occurred trying to start process 'ffprobe' with working directory 'C:\workspaces\AI'. 지정된 파일을 찾을 수 없습니다.
-[2026-03-21 09:01:39] Re-calculated Duration: 0
-[2026-03-21 09:01:39] Running FFmpeg with args: -i "tools\clip-master\ClipMaster.App\sample\clip\sample_clip.mp4" -i "tools\clip-master\ClipMaster.App\sample\sound\sample_sound.mp3" -filter_complex "[1:a]volume=0.5,afade=t=in:st=0:d=1.0[aout]" -map 0:v -map "[aout]" -c:v copy -c:a aac -shortest -y "tools\clip-master\ClipMaster.App\sample\test_output\sample_clip_test_merged.mp4"
-[2026-03-21 09:07:59] Running FFprobe: ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "H:\GoogleDrive\AI_Workspace\clip\0afb8c01-2d80-449d-ae1b-bdc99698814d.mp4"
-[2026-03-21 09:07:59] FFprobe Exception: An error occurred trying to start process 'ffprobe' with working directory 'C:\workspaces\AI\tools\bin\clip-master'. 지정된 파일을 찾을 수 없습니다.
-[2026-03-21 09:07:59] Starting Merge: Video=H:\GoogleDrive\AI_Workspace\clip\0afb8c01-2d80-449d-ae1b-bdc99698814d.mp4, Audio=H:\GoogleDrive\AI_Workspace\sound\Pixel_Paradise_Arcade.mp3, Output=H:\GoogleDrive\AI_Workspace\clip\merged\0afb8c01-2d80-449d-ae1b-bdc99698814d_merged.mp4
-[2026-03-21 09:07:59] Running FFprobe: ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "H:\GoogleDrive\AI_Workspace\clip\0afb8c01-2d80-449d-ae1b-bdc99698814d.mp4"
-[2026-03-21 09:07:59] FFprobe Exception: An error occurred trying to start process 'ffprobe' with working directory 'C:\workspaces\AI\tools\bin\clip-master'. 지정된 파일을 찾을 수 없습니다.
-[2026-03-21 09:07:59] Re-calculated Duration: 0
-[2026-03-21 09:07:59] Running FFmpeg with args: -i "H:\GoogleDrive\AI_Workspace\clip\0afb8c01-2d80-449d-ae1b-bdc99698814d.mp4" -i "H:\GoogleDrive\AI_Workspace\sound\Pixel_Paradise_Arcade.mp3" -filter_complex "[1:a]volume=1.0[aout]" -map 0:v -map "[aout]" -c:v copy -c:a aac -shortest -y "H:\GoogleDrive\AI_Workspace\clip\merged\0afb8c01-2d80-449d-ae1b-bdc99698814d_merged.mp4"
+[2026-03-21 09:27:37] Running FFprobe: C:\workspaces\AI\tools\bin\clip-master\ffprobe.exe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "tools\clip-master\ClipMaster.App\sample\clip\sample_clip.mp4"
+[2026-03-21 09:27:38] Starting Merge: Video=tools\clip-master\ClipMaster.App\sample\clip\sample_clip.mp4, Audio=tools\clip-master\ClipMaster.App\sample\sound\sample_sound.mp3, Output=tools\clip-master\ClipMaster.App\sample\test_output\sample_clip_test_merged.mp4
+[2026-03-21 09:27:38] Running FFmpeg with args: -i "tools\clip-master\ClipMaster.App\sample\clip\sample_clip.mp4" -i "tools\clip-master\ClipMaster.App\sample\sound\sample_sound.mp3" -filter_complex "[1:a]volume=0.5,afade=t=in:st=0:d=1.0,afade=t=out:st=4.1:d=1.0[aout]" -map 0:v -map "[aout]" -c:v copy -c:a aac -shortest -y "tools\clip-master\ClipMaster.App\sample\test_output\sample_clip_test_merged.mp4"
+[2026-03-21 09:27:39] FFmpeg Error: ffmpeg version 7.1-essentials_build-www.gyan.dev Copyright (c) 2000-2024 the FFmpeg developers
+  built with gcc 14.2.0 (Rev1, Built by MSYS2 project)
+  configuration: --enable-gpl --enable-version3 --enable-static --disable-w32threads --disable-autodetect --enable-fontconfig --enable-iconv --enable-gnutls --enable-libxml2 --enable-gmp --enable-bzlib --enable-lzma --enable-zlib --enable-libsrt --enable-libssh --enable-libzmq --enable-avisynth --enable-sdl2 --enable-libwebp --enable-libx264 --enable-libx265 --enable-libxvid --enable-libaom --enable-libopenjpeg --enable-libvpx --enable-mediafoundation --enable-libass --enable-libfreetype --enable-libfribidi --enable-libharfbuzz --enable-libvidstab --enable-libvmaf --enable-libzimg --enable-amf --enable-cuda-llvm --enable-cuvid --enable-dxva2 --enable-d3d11va --enable-d3d12va --enable-ffnvcodec --enable-libvpl --enable-nvdec --enable-nvenc --enable-vaapi --enable-libgme --enable-libopenmpt --enable-libopencore-amrwb --enable-libmp3lame --enable-libtheora --enable-libvo-amrwbenc --enable-libgsm --enable-libopencore-amrnb --enable-libopus --enable-libspeex --enable-libvorbis --enable-librubberband
+  libavutil      59. 39.100 / 59. 39.100
+  libavcodec     61. 19.100 / 61. 19.100
+  libavformat    61.  7.100 / 61.  7.100
+  libavdevice    61.  3.100 / 61.  3.100
+  libavfilter    10.  4.100 / 10.  4.100
+  libswscale      8.  3.100 /  8.  3.100
+  libswresample   5.  3.100 /  5.  3.100
+  libpostproc    58.  3.100 / 58.  3.100
+Input #0, mov,mp4,m4a,3gp,3g2,mj2, from 'tools\clip-master\ClipMaster.App\sample\clip\sample_clip.mp4':
+  Metadata:
+    major_brand     : isom
+    minor_version   : 512
+    compatible_brands: isomiso2avc1mp41
+    encoder         : www.aliyun.com - Media Transcoding
+  Duration: 00:00:05.06, start: 0.000000, bitrate: 6190 kb/s
+  Stream #0:0[0x1](und): Video: h264 (High) (avc1 / 0x31637661), yuv420p(progressive), 512x752, 6187 kb/s, 16 fps, 16 tbr, 16384 tbn (default)
+      Metadata:
+        handler_name    : VideoHandler
+        vendor_id       : [0][0][0][0]
+[mp3 @ 000001b7f5ae58c0] Estimating duration from bitrate, this may be inaccurate
+Input #1, mp3, from 'tools\clip-master\ClipMaster.App\sample\sound\sample_sound.mp3':
+  Duration: 00:00:30.77, start: 0.000000, bitrate: 191 kb/s
+  Stream #1:0: Audio: mp3 (mp3float), 44100 Hz, stereo, fltp, 192 kb/s
+Stream mapping:
+  Stream #1:0 (mp3float) -> volume:default
+  Stream #0:0 -> #0:0 (copy)
+  afade:default -> Stream #0:1 (aac)
+Press [q] to stop, [?] for help
+Output #0, mp4, to 'tools\clip-master\ClipMaster.App\sample\test_output\sample_clip_test_merged.mp4':
+  Metadata:
+    major_brand     : isom
+    minor_version   : 512
+    compatible_brands: isomiso2avc1mp41
+    encoder         : Lavf61.7.100
+  Stream #0:0(und): Video: h264 (High) (avc1 / 0x31637661), yuv420p(progressive), 512x752, q=2-31, 6187 kb/s, 16 fps, 16 tbr, 16384 tbn (default)
+      Metadata:
+        handler_name    : VideoHandler
+        vendor_id       : [0][0][0][0]
+  Stream #0:1: Audio: aac (LC) (mp4a / 0x6134706D), 44100 Hz, stereo, fltp, 128 kb/s
+      Metadata:
+        encoder         : Lavc61.19.100 aac
+[out#0/mp4 @ 000001b7f5add780] video:3824KiB audio:84KiB subtitle:0KiB other streams:0KiB global headers:0KiB muxing overhead: 0.111871%
+frame=   81 fps=0.0 q=-1.0 Lsize=    3913KiB time=00:00:04.87 bitrate=6574.6kbits/s speed=22.7x    
+[aac @ 000001b7f5db3140] Qavg: 10284.802
+
+[2026-03-21 09:27:39] Merge Result: True
