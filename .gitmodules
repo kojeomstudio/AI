@@ -61,3 +61,6 @@
 [submodule "tools/FFmpeg"]
 	path = tools/FFmpeg
 	url = git@github.com:kojeomstudio/FFmpeg.git
+[submodule "llm/agent/nemoclaw"]
+	path = llm/agent/nemoclaw
+	url = git@github.com:kojeomstudio/NemoClaw.git
