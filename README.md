@@ -32,8 +32,10 @@
 - **Diablo 2 Utilities**: `CascLib`를 활용한 게임 데이터 라이브러리 연동.
 
 ### 4. Machine Learning Study (`/study`, `/reinforcement_learning`)
-- **ML/DL Foundations**: 분류, 회귀, CNN, RNN, Attention 등 기초 알고리즘 구현.
-- **Reinforcement Learning**: `Gridworld`, `Cartpole` 및 강화학습 기초 실험.
+- **ML/DL Foundations**: 분류, 회귀, CNN, RNN, Bidirectional RNN, Attention 등 기초 알고리즘 구현.
+- **Neural Translation**: 영어-스페인어 번역 모델 (인코더-디코더, Attention 기반).
+- **Reinforcement Learning**: `Gridworld`, `Cartpole` (REINFORCE 알고리즘) 및 강화학습 기초 실험.
+- **Algorithms**: Codility 스타일 알고리즘 문제 해결 (DP, 정렬, 그리디 등).
 
 ### 5. Tools & Infrastructure (`/tools`, `/web-servers`)
 - **Agent API**: `agent-executor-api-tool` (FastAPI 기반 에이전트 프록시).
@@ -86,15 +88,23 @@ source .venv/bin/activate  # macOS/Linux
 pip install -r requirements.txt
 ```
 
+### 6. LLM & Local AI (`/llm`)
+- **Local LLM Analyzer**: Ollama 기반 텍스트 파일 자동 분석 시스템 (FastAPI).
+- **Local RAG**: Ollama + LangChain + LangGraph 기반 RAG 웹서버.
+- **RAG Variants**: LangChain RAG, LangGraph RAG, LlamaIndex RAG 구현.
+- **MCP Integration**: MCP 서버/클라이언트 연동 예제 코드.
+- **Embedding Training**: 문서 임베딩 모델 커스텀 파인튜닝 파이프라인.
+
 ---
 
-## 📝 Documentation
+## 📄 Documentation
 
 프로젝트별 상세 가이드는 `docs/` 폴더 또는 각 프로젝트의 `README.md`를 참조하세요.
 
 - [시작 가이드 (Getting Started)](./docs/GETTING_STARTED.md)
 - [프로젝트 구조 (Project Structure)](./docs/PROJECT_STRUCTURE.md)
 - [서브모듈 관리 가이드 (Submodules Guide)](./docs/SUBMODULES.md)
+- [에이전트 가이드 (AGENTS.md)](./AGENTS.md) - 코딩 에이전트를 위한 리포지토리 가이드
 
 ---
 
