@@ -1,0 +1,19 @@
+
+{
+    "elements": [
+        { "name": "COAL_VEIN", "class_id": 0, "type": "node" },
+        { "name": "IRON_VEIN", "class_id": 7, "type": "node" },
+        { "name": "NORMAL_VEIN", "class_id": 8, "type": "node" },
+        { "name": "TREE", "class_id": 9, "type": "node" },
+        { "name": "UI_ATTACK", "class_id": 1, "type": "ui" },
+        { "name": "UI_INVENTORY", "class_id": 2, "type": "ui" },
+        { "name": "UI_RIDING", "class_id": 3, "type": "ui" },
+        { "name": "UI_RIDING_OUT", "class_id": 11, "type": "ui" },
+        { "name": "UI_MINING", "class_id": 4, "type": "ui" },
+        { "name": "UI_CRAFT", "class_id": 5, "type": "ui" },
+        { "name": "UI_COMPASS", "class_id": 6, "type": "ui" },
+        { "name": "UI_FELLING", "class_id": 12, "type": "ui" },
+        { "name": "UI_WORKING", "class_id": 10, "type": "ui" },
+        { "name": "UI_WING", "class_id": 13, "type": "ui" }
+    ]
+}
