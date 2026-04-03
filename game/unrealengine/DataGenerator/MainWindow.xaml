@@ -1,0 +1,17 @@
+<Window x:Class="DataGenerator.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="UnrealWorld Data Generator (WPF)" Height="450" Width="700">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        
+        <StackPanel Orientation="Horizontal" Grid.Row="0" Margin="0,0,0,10">
+            <Button x:Name="GenerateButton" Content="Generate All Data" Width="150" Height="40" Click="OnGenerateButtonClick"/>
+        </StackPanel>
+        
+        <ListBox x:Name="LogBox" Grid.Row="1" Background="#F0F0F0" FontFamily="Consolas"/>
+    </Grid>
+</Window>
