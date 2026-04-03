@@ -1,11 +1,14 @@
+import os
 import transformers
 import torch
 
 from huggingface_hub import login
 
-# my token...
-# 
-login(token='Youre Huggingface user token')
+token = os.environ.get("HF_TOKEN")
+if token:
+    login(token=token)
+else:
+    print("HF_TOKEN 환경변수가 설정되지 않았습니다. 로그인을 건너뜁니다.")
 
 # huggingface의 경우, 모델 다운로드 기본 경로가 유저/.cache/~
 # 필요하면 system var 추가해서 local storage 경로 변경 가능.

@@ -4,12 +4,12 @@ import pandas as pd
 
 from pydantic import BaseModel
 
-from langchain.llms import Ollama
+from langchain_community.llms import Ollama
 from langchain_chroma import Chroma
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.embeddings import OllamaEmbeddings
+from langchain_community.embeddings import OllamaEmbeddings
 from langchain.chains import RetrievalQA
-from langchain.document_loaders import DirectoryLoader
+from langchain_community.document_loaders import DirectoryLoader
 
 from langgraph.graph import StateGraph, END, START
 

@@ -58,4 +58,4 @@ y_pred = model.predict(x_new)
 print(f"y_pred : {y_pred}")
 
 model.save("./Models/wide_and_deep_regression_housing_model.keras")
-model.save_weights("./Mddels/wide_and_deep_regression_housing_weight.weights.h5")
+model.save_weights("./Models/wide_and_deep_regression_housing_weight.weights.h5")

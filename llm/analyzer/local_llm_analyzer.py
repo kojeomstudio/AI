@@ -68,7 +68,9 @@ DB_PATH = Path(__file__).parent / global_config["db_path"]
 OLLAMA_MODEL = global_config["ollama_model"]
 CHECK_DAYS = global_config["check_days"]
 CHECK_TIME = global_config["check_time"]
-OLLAMA_HOST_URL = global_config["ollama_host_url"]
+OLLAMA_HOST_URL = global_config.get("ollama_host_url", "http://localhost:11434")
+HOST = global_config.get("host", "0.0.0.0")
+PORT = global_config.get("port", 8000)
 
 ollama_client = AsyncClient(host=OLLAMA_HOST_URL)
 
@@ -88,7 +90,7 @@ async def process_files():
         async with aiosqlite.connect(DB_PATH) as db:
             for file in files:
                 file_path = TEXT_FILE_PATH / file
-                if not file_path.suffix in [".txt", ".md"]:
+                if file_path.suffix not in [".txt", ".md"]:
                     logger.debug(f"Skipping unsupported file: {file}")
                     continue
 
@@ -123,7 +125,7 @@ async def process_files():
                         
                     file_name, file_extension = os.path.splitext(file)
 
-                    output_path = OUTPUT_FILE_PATH / f"{file_name}_anlaysis.txt"
+                    output_path = OUTPUT_FILE_PATH / f"{file_name}_analysis.txt"
                     async with aiofiles.open(output_path, "w", encoding="utf-8") as out_f:
                         await out_f.write(result.response)
 
@@ -135,10 +137,11 @@ async def process_files():
 
         g_processing_files = 0  # 모든 작업 완료 후 리셋
 
-# 개선된 DB 초기화 함수
+db_connection = None
+
 async def init_db():
     global db_connection
-    if db_connection is None:  # 싱글톤 패턴 적용
+    if db_connection is None:
         db_connection = await aiosqlite.connect(DB_PATH)
 
     async with db_connection:
@@ -155,14 +158,15 @@ async def index(request: Request):
 
 @webserver_app.get("/api/config/reload")
 async def reload_config():
-    global global_config, TEXT_FILE_PATH, OUTPUT_FILE_PATH, OLLAMA_MODEL, HOST, PORT
+    global global_config, TEXT_FILE_PATH, OUTPUT_FILE_PATH, OLLAMA_MODEL, HOST, PORT, OLLAMA_HOST_URL
 
     global_config = load_config()
     TEXT_FILE_PATH = Path(__file__).parent / global_config["text_file_path"]
     OUTPUT_FILE_PATH = Path(__file__).parent / global_config["output_file_path"]
     OLLAMA_MODEL = global_config["ollama_model"]
-    HOST = global_config["host"]
-    PORT = global_config["port"]
+    HOST = global_config.get("host", "0.0.0.0")
+    PORT = global_config.get("port", 8000)
+    OLLAMA_HOST_URL = global_config.get("ollama_host_url", "http://localhost:11434")
 
     logger.debug(f"input file path : {TEXT_FILE_PATH}, output file path : {OUTPUT_FILE_PATH}, ollama_model : {OLLAMA_MODEL}")
     logger.debug(f"Config reloaded successfully!")

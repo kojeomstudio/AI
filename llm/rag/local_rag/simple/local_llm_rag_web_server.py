@@ -21,12 +21,12 @@ import uvicorn # 비동기 처리.
 from langchain_community.llms import Ollama
 from langchain_chroma import Chroma
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.embeddings import OllamaEmbeddings
+from langchain_community.embeddings import OllamaEmbeddings
 
 from langchain.chains import create_retrieval_chain
 from langchain.chains.combine_documents import create_stuff_documents_chain
 
-from langchain.document_loaders import DirectoryLoader
+from langchain_community.document_loaders import DirectoryLoader
 from langchain.prompts import PromptTemplate # 프롬프트 엔지니어링을 위한 라이브러리.
 
 from langgraph.graph import StateGraph, END, START
@@ -54,7 +54,7 @@ class PerformanceHelper:
         return execution_time_ms, execution_time_sec
     
 class AppConfig:
-    config_file : object
+    config_file : dict
     
     def __init__(self):
         # 현재 파이썬 파일이 위치한 디렉터리 경로 가져오기
@@ -241,10 +241,11 @@ def state_embedding(state : StateTypeDict):
 
     documents_source = state['documents']
 
-    vectorstore_process_msg = ""
+    vectorstore = None
 
     if not Embedding_Helper.exists_vector_db():
-        vectorstore_process_msg = Embedding_Helper.make_vector_store_db(documents_source)
+        vectorstore = Chroma.from_documents(documents=documents_source, embedding=OllamaEmbeddings(base_url=ollama_service_url, model=ollama_model_name), persist_directory=vectorstore_db_path)
+        vectorstore_process_msg = "기존에 존재하는 db가 없으므로 신규 생성합니다."
     else:
         vectorstore = Chroma(persist_directory=vectorstore_db_path, embedding_function=OllamaEmbeddings(base_url=ollama_service_url, model=ollama_model_name))
 
@@ -260,7 +261,8 @@ def state_embedding(state : StateTypeDict):
         is_new_docs_subset = set(new_docs).issubset(set(collected_docs))
 
         if not is_new_docs_subset:
-            vectorstore_process_msg = Embedding_Helper.make_vector_store_db(documents_source)
+            vectorstore = Chroma.from_documents(documents=documents_source, embedding=OllamaEmbeddings(base_url=ollama_service_url, model=ollama_model_name), persist_directory=vectorstore_db_path)
+            vectorstore_process_msg = "신규 문서가 감지되어 임베딩을 재생성합니다."
         else:
             vectorstore_process_msg = f"신규 문서가 없으므로, 기존 임베딩된 벡터스토어 DB를 사용합니다."
 
@@ -269,7 +271,7 @@ def state_embedding(state : StateTypeDict):
 
     result_msg = ""
     result_type = StateResultType.NONE
-    if vectorstore != None:
+    if vectorstore is not None:
         result_type = StateResultType.SUCCESS
         result_msg = f"임베딩에 성공했습니다. detail : {vectorstore_process_msg}"
     else:
@@ -459,7 +461,7 @@ def process_rag_system(in_user_query : str, in_graph_query_type : GraphQueryType
 async def process_rag_system_with_timeout(in_user_query: str, in_timeout: int = default_time_out_sec):
     try:
         # asyncio.wait_for를 사용하여 타임아웃 적용
-        llm_answer = await asyncio.wait_for(await asyncio.to_thread(process_rag_system, in_user_query, GraphQueryType.USER_REQUEST), timeout=in_timeout)
+        llm_answer = await asyncio.wait_for(asyncio.to_thread(process_rag_system, in_user_query, GraphQueryType.USER_REQUEST), timeout=in_timeout)
         return llm_answer
     except asyncio.TimeoutError:
         return f"llm 응답 생성에 실패했습니다. 다시 시도 해주세요!"

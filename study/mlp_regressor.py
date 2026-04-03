@@ -1,5 +1,5 @@
 from sklearn.datasets import fetch_california_housing
-from sklearn.metrics import mean_squared_error
+from sklearn.metrics import root_mean_squared_error
 from sklearn.model_selection import train_test_split
 from sklearn.neural_network import MLPRegressor
 from sklearn.pipeline import make_pipeline
@@ -20,5 +20,5 @@ print(f"score : {pipeline.score(x_train, y_train)}")
 y_pred = pipeline.predict(x_valid)
 print(f"y_pred : {y_pred}")
 
-rmse = mean_squared_error(y_valid, y_pred, squared=False)
+rmse = root_mean_squared_error(y_valid, y_pred)
 print(f"rmse : {rmse}")

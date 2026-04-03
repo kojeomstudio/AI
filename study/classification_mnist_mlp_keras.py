@@ -50,5 +50,5 @@ pd.DataFrame(result_history.history).plot(figsize=(8,5), xlim=[0, 29], ylim=[0, 
 plt.show()
 
 # 검증
-print(f"model evaluate : {model.evaluate()}")
+print(f"model evaluate : {model.evaluate(x_test, y_test)}")
 

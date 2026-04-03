@@ -47,12 +47,12 @@ print(f'Training set: {x_train.shape}, {y_train.shape}')
 print(f'Validation set: {x_val.shape}, {y_val.shape}')
 print(f'Test set: {x_test.shape}, {y_test.shape}')
 
-logisticiReg = LogisticRegression(C=100, max_iter=1000)
-logisticiReg.fit(x_train, y_train)
+logisticReg = LogisticRegression(C=100, max_iter=1000)
+logisticReg.fit(x_train, y_train)
 
-print("logisticRegression -> coef : {0}".format(logisticiReg.coef_))
-print("logisticRegression -> score (test data) : {0}".format(logisticiReg.score(x_test, y_test)))
-print("logisticRegression -> score (train data) : {0}".format(logisticiReg.score(x_train, y_train)))
+print("logisticRegression -> coef : {0}".format(logisticReg.coef_))
+print("logisticRegression -> score (test data) : {0}".format(logisticReg.score(x_test, y_test)))
+print("logisticRegression -> score (train data) : {0}".format(logisticReg.score(x_train, y_train)))
 
 # SVM 사용
 # SVM 모델 초기화 및 학습

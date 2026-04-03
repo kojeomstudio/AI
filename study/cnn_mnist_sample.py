@@ -1,9 +1,9 @@
 #import tensorflow as tf
 import keras
 from keras import Sequential
-from keras.api.layers import Conv2D, MaxPooling2D, Flatten, Dense
-from keras.api.datasets import mnist
-from keras.api.utils import to_categorical
+from keras.layers import Conv2D, MaxPooling2D, Flatten, Dense
+from keras.datasets import mnist
+from keras.utils import to_categorical
 
 # 1. 데이터 로드 및 전처리
 (x_train, y_train), (x_test, y_test) = mnist.load_data()

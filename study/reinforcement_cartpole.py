@@ -65,7 +65,7 @@ def discount_and_normalize_rewards(all_rewards, discount_factor):
     flat_rewards = np.concatenate(all_discounted_rewards)
     reward_mean = flat_rewards.mean()
     reward_std = flat_rewards.std()
-    return [(discount_rewards - reward_mean) / reward_std for discounted_rewards in all_discounted_rewards]
+    return [(discounted_rewards_i - reward_mean) / reward_std for discounted_rewards_i in all_discounted_rewards]
 
 n_iterations = 150
 n_episodes_per_update = 10

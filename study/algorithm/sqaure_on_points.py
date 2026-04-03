@@ -74,5 +74,8 @@ def solution(X, Y):
 
                 is_all &=(((target_x == left or target_x == right) and (bottom <= target_y <= top)) or ((target_y == bottom or target_y == top) and (left <= target_x <= right)))
 
+            if is_all:
+                return True
+
     return False
         

@@ -1,7 +1,6 @@
 import tensorflow as tf
 import keras
 import tensorflow_datasets as tfds
-import pandas
 
 
 raw_train_set, raw_valid_set, raw_test_set = tfds.load(

@@ -57,13 +57,13 @@ x_test_scaled = scaler.transform(x_test)
 sgd_clf = SGDClassifier(loss='log_loss', max_iter=1000, tol=1e-3, random_state=42, penalty='elasticnet', alpha=0.1)
 
 # 모델 학습
-sgd_clf.fit(x_train, y_train)
+sgd_clf.fit(x_train_scaled, y_train)
 
 print("sgd_clf.classes_ : {0}".format(sgd_clf.classes_))
 
 
 # 예측
-y_pred = sgd_clf.predict(x_test)
+y_pred = sgd_clf.predict(x_test_scaled)
 print("prediction y : {0}".format(y_pred))
 
 # 성능 평가 

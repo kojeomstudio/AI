@@ -9,16 +9,16 @@
 #
 
 from llama_index.core import SimpleDirectoryReader
+from llama_index.core import VectorStoreIndex
+from llama_index.core import Settings
 from llama_index.readers.file import (
     DocxReader,
     HWPReader,
     PyMuPDFReader,
 )
-from llama_index import VectorStoreIndex
-from llama_index import Settings
 from llama_index.embeddings.langchain import LangchainEmbedding
-from llama_index.vector_stores import ChromaVectorStore
-from langchain.embeddings import SentenceTransformerEmbeddings
+from llama_index.vector_stores.chroma import ChromaVectorStore
+from langchain_community.embeddings import SentenceTransformerEmbeddings
 import chromadb
 import ollama
 

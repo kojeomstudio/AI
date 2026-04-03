@@ -197,6 +197,7 @@ class App(tk.Tk):
                     self,
                     self.file_paths,
                     lambda current, total: self.after(0, self.update_progress, current, total),
+                    output_path_inst,
                 )
             self.after(0, self.update_ui, converted_files)
         except Exception as e:
@@ -228,7 +229,7 @@ class App(tk.Tk):
         self.file_paths.clear()
         self.update_file_listbox()
 
-def convert_files(app_inst : App , file_paths, update_progress_callback):
+def convert_files(app_inst : App , file_paths, update_progress_callback, output_base_path : Path):
     results = []
     for idx, target_file_path in enumerate(file_paths):
 
@@ -253,20 +254,20 @@ def convert_files(app_inst : App , file_paths, update_progress_callback):
             
             convert_result = doc_converter.convert(target_file_path)
 
-            if convert_result == None:
+            if convert_result is None:
                 app_inst.log_message(f"convert_result is None...")
                 continue
 
-            output_path = output_path_inst.joinpath(f"{convert_result.input.file.stem}.md")
+            output_path = output_base_path / f"{convert_result.input.file.stem}.md"
             output_file_abs_path_str = output_path.absolute()
 
             #app_inst.log_message(f"for convert_result in res: --> [detail :: model dump json ->  {convert_result.model_dump_json()}, output_path(abs) -> {output_path.absolute()}]")
                     
             with output_path.open("w", encoding="utf-8", errors="replace") as fp:
-                writed_bytes = fp.write(convert_result.document.export_to_markdown())
+                fp.write(convert_result.document.export_to_markdown())
 
-                logger.info(f"{output_path} is writed {writed_bytes} bytes")
-                app_inst.log_message(f"{output_path} is writed {writed_bytes} bytes")
+                logger.info(f"Converted: {output_path}")
+                app_inst.log_message(f"Converted: {output_path}")
 
             results.append(output_path)
                 

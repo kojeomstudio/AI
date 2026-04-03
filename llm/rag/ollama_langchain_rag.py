@@ -11,21 +11,20 @@
 
 import os
 
-from langchain.llms import Ollama
-from langchain.callbacks.manager import CallbackManager
-from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
+from langchain_community.llms import Ollama
+from langchain_community.callbacks.manager import CallbackManager
+from langchain_community.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 
-from langchain.document_loaders import WebBaseLoader
+from langchain_community.document_loaders import WebBaseLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
-from langchain.embeddings import OllamaEmbeddings
+from langchain_community.embeddings import OllamaEmbeddings
 from langchain_chroma import Chroma
 
 from langchain.chains import RetrievalQA
 
-from langchain.document_loaders import DirectoryLoader
+from langchain_community.document_loaders import DirectoryLoader
 import pandas as pd
-from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 
 ollama_model_name = "EEVE-Korean-Instruct-10.8B-v1.0-Q4_K_S.gguf:latest"

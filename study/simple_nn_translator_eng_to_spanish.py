@@ -12,7 +12,7 @@ print(f"target file path : {target_path}")
 
 text = target_path.read_text()
 
-text = text.replace('i', '').replace('¿', '') # 스페인어 역물음표
+text = text.replace('¿', '')
 pairs = [line.split('\t') for line in text.splitlines()]
 np.random.shuffle(pairs)
 
@@ -70,11 +70,11 @@ model.compile(loss='sparse_categorical_crossentropy', optimizer='nadam',
 model.fit((x_train, x_train_dec), y_train, epochs=10, validation_data=((x_valid, x_valid_dec), y_valid))
 
 def translate_helper(sentence_en):
-    transloation = ""
+    translation = ""
 
     for word_idx in range(max_length):
         x = np.array([sentence_en])
-        x_dec = np.array(["startofseq" + transloation])
+        x_dec = np.array(["startofseq" + translation])
         
         y_proba_local = model.predict((x, x_dec))[0, word_idx]
         predicted_word_id = np.argmax(y_proba_local)
@@ -82,8 +82,8 @@ def translate_helper(sentence_en):
 
         if predicted_word == 'endofseq':
             break
-        transloation += ' ' + predicted_word
-    return transloation.strip()
+        translation += ' ' + predicted_word
+    return translation.strip()
 
 result = translate_helper("I like Soccer")
 print(f"translated : {result}")
