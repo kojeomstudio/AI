@@ -64,3 +64,6 @@
 [submodule "llm/agent/nemoclaw"]
 	path = llm/agent/nemoclaw
 	url = git@github.com:kojeomstudio/NemoClaw.git
+[submodule "model-generative"]
+	path = model-generative
+	url = git@github.com:kojeomstudio/modly.git
