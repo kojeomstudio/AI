@@ -7,5 +7,10 @@
     <AssemblyName>QuadTerminal</AssemblyName>
     <RootNamespace>QuadTerminal</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <RuntimeIdentifiers>win-x64;win-x86;win-arm64</RuntimeIdentifiers>
+    <RollForward>LatestMajor</RollForward>
   </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="EasyWindowsTerminalControl" Version="1.0.36" />
+  </ItemGroup>
 </Project>

@@ -1,3 +1,4 @@
+using System;
 using System.ComponentModel;
 using System.Threading;
 using System.Windows;
@@ -14,6 +15,7 @@ public partial class MainWindow : Window
     private readonly AppSettings _settings;
     private readonly TerminalHost[] _terminals = new TerminalHost[4];
     private readonly TextBlock[] _headers = new TextBlock[4];
+    private int _nextPaneToStart;
 
     public MainWindow()
     {
@@ -43,6 +45,42 @@ public partial class MainWindow : Window
     {
         ApplyLayout(_settings.Layout);
         RestoreWindowBounds();
+        _nextPaneToStart = 0;
+        StartNextPane();
+    }
+
+    private void StartNextPane()
+    {
+        if (_nextPaneToStart >= 4) return;
+
+        bool showRight = _settings.Layout is "Quad" or "DualH";
+        bool showBottom = _settings.Layout is "Quad" or "DualV";
+
+        int idx = _nextPaneToStart;
+        bool shouldStart = idx switch
+        {
+            0 => true,
+            1 => showRight,
+            2 => showBottom,
+            3 => showRight && showBottom,
+            _ => false
+        };
+
+        if (!shouldStart)
+        {
+            _nextPaneToStart++;
+            StartNextPane();
+            return;
+        }
+
+        _terminals[idx].TerminalReady += (_, _) =>
+        {
+            Logger.Info($"[MainWindow] Pane {idx} ready, starting next...");
+            _nextPaneToStart++;
+            Dispatcher.BeginInvoke(new Action(StartNextPane));
+        };
+
+        _terminals[idx].StartTerminal();
     }
 
     private void Window_Closing(object? sender, CancelEventArgs e)
