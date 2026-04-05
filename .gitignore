@@ -1,25 +1,49 @@
-﻿/llama_env
-/llama_Scripts
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+*.keras
+.venv
+
+# Virtual environments
+/llama_env
 /my_ai_venv
 /my_r2r_venv
 /rl_venv
 /my_rag_venv
+/RL/rl_venv
+
+# Llama
+/llama_Scripts
+llama_local_storage
+
+# Study data
+pytorch_data
+iris_tree.dot
+processed_files.db
 llm/rag/test_docs
 llm/rag/chroma_db
-__pycache__
-iris_tree.dot
-llama_local_storage
-*.keras
-processed_files.db
-/RL/rl_venv
-.venv
 
-# datas for study.
-pytorch_data
-
-# test volumes
+# n8n
 .n8n_storage
 
-# binary artifacts
+# n8n workflow (only track: compose.yaml, scripts/, templates/, source submodule)
+workflow/n8n/*
+workflow/n8n/.*
+!workflow/n8n/compose.yaml
+!workflow/n8n/scripts/n8n_webhook.py
+!workflow/n8n/scripts/webhook_post.py
+!workflow/n8n/templates/ollama_chat.json
+!workflow/n8n/templates/rag.json
+!workflow/n8n/templates/web_search.json
+!workflow/n8n/templates/webhook_ollama.json
+!workflow/n8n/source
+
+# Binary artifacts
 tools/bin/
 Bins/
+
+# OS
+nul
+Thumbs.db
+.DS_Store
