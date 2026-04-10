@@ -70,7 +70,7 @@
         <GroupBox Grid.Row="3" Header="Log" Margin="0,0,0,4">
             <TextBox Name="TxtLog" IsReadOnly="True" VerticalScrollBarVisibility="Auto"
                      HorizontalScrollBarVisibility="Auto" TextWrapping="Wrap"
-                     FontFamily="Consolas" FontSize="11" Background="#1E1E1E" Foreground="#D4D4D4D"/>
+                     FontFamily="Consolas" FontSize="11" Background="#1E1E1E" Foreground="#D4D4D4"/>
         </GroupBox>
 
         <!-- Status -->

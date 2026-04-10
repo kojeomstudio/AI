@@ -61,7 +61,7 @@ public class ActionProcessor
             if (!_config.Actions.ContainsKey(rule.Action)) continue;
 
             var targetType = detectedTypes.FirstOrDefault(t => t.ToString() == rule.Action);
-            if (targetType == default && matched.ContainsKey(targetType))
+            if (targetType == default || !matched.ContainsKey(targetType))
                 continue;
 
             if (matched.TryGetValue(targetType, out var element))

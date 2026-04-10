@@ -1,7 +1,7 @@
 using System.IO;
 using Serilog;
 
-namespace MabinogiMacro.Services;
+namespace MabinogiMacro.Helpers;
 
 public static class LogHelper
 {

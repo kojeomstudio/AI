@@ -1,5 +1,4 @@
-using System.Collections.ObjectModel;
-using System.Text;
+using System.IO;
 using System.Windows;
 using MabinogiMacro.Models;
 using MabinogiMacro.Services;
@@ -13,6 +12,8 @@ public partial class MainWindow : Window
     private CancellationTokenSource? _cts;
     private InputManager? _inputManager;
     private ActionProcessor? _actionProcessor;
+    private YoloDetectionService? _detectionService;
+    private CaptureService? _captureService;
     private ConfigManager _configManager;
 
     public MainWindow()
@@ -72,6 +73,43 @@ public partial class MainWindow : Window
 
         _inputManager = new InputManager(windowTitle);
         _actionProcessor = new ActionProcessor(_configManager.ActionConfig, _inputManager);
+        _captureService = new CaptureService();
+        _detectionService = new YoloDetectionService(_configManager.ElementMapping);
+
+        var modelPath = _configManager.AppConfig.ModelPath;
+        if (!string.IsNullOrEmpty(modelPath) && File.Exists(modelPath))
+        {
+            if (_detectionService.LoadModel(modelPath))
+            {
+                LogToUi($"YOLO model loaded: {modelPath}");
+            }
+            else
+            {
+                LogToUi($"WARNING: Failed to load YOLO model from: {modelPath}");
+                LogToUi("Running without YOLO detection.");
+            }
+        }
+        else
+        {
+            var onnxPath = Path.ChangeExtension(modelPath, ".onnx");
+            if (!string.IsNullOrEmpty(onnxPath) && File.Exists(onnxPath))
+            {
+                if (_detectionService.LoadModel(onnxPath))
+                {
+                    LogToUi($"YOLO model loaded: {onnxPath}");
+                }
+                else
+                {
+                    LogToUi($"WARNING: Failed to load YOLO model from: {onnxPath}");
+                    LogToUi("Running without YOLO detection.");
+                }
+            }
+            else
+            {
+                LogToUi("No YOLO model found. Running without detection.");
+                LogToUi($"Expected: {modelPath} or .onnx variant");
+            }
+        }
 
         BtnStart.IsEnabled = false;
         BtnStop.IsEnabled = true;
@@ -103,8 +141,7 @@ public partial class MainWindow : Window
 
                     UpdateStatus("Running...");
 
-                    var capture = new CaptureService();
-                    var bitmap = capture.CaptureWindow(_inputManager.Hwnd);
+                    var bitmap = _captureService!.CaptureWindow(_inputManager.Hwnd);
                     if (bitmap == null)
                     {
                         LogToUi("Failed to capture window. Retrying in 5s...");
@@ -112,8 +149,30 @@ public partial class MainWindow : Window
                         continue;
                     }
 
-                    bitmap.Dispose();
-                    _actionProcessor!.ProcessDetectedElements(new Dictionary<ElementType, DetectedElement>());
+                    try
+                    {
+                        Dictionary<ElementType, DetectedElement> detections;
+
+                        if (_detectionService != null && _detectionService.IsModelLoaded)
+                        {
+                            detections = _detectionService.Detect(bitmap, (float)_configManager.AppConfig.ConfidenceThreshold);
+                            if (detections.Count > 0)
+                            {
+                                var names = string.Join(", ", detections.Keys.Select(t => t.ToString()));
+                                LogToUi($"Detected: {names}");
+                            }
+                        }
+                        else
+                        {
+                            detections = new Dictionary<ElementType, DetectedElement>();
+                        }
+
+                        _actionProcessor!.ProcessDetectedElements(detections);
+                    }
+                    finally
+                    {
+                        bitmap.Dispose();
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -127,10 +186,11 @@ public partial class MainWindow : Window
         }
         catch (OperationCanceledException)
         {
-            // Expected on stop
         }
         finally
         {
+            _detectionService?.Dispose();
+
             Dispatcher.Invoke(() =>
             {
                 BtnStart.IsEnabled = true;
@@ -214,6 +274,7 @@ public partial class MainWindow : Window
     private void Window_Closed(object sender, EventArgs e)
     {
         _cts?.Cancel();
+        _detectionService?.Dispose();
         Log.CloseAndFlush();
     }
 }

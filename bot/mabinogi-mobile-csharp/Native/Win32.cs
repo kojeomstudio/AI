@@ -101,6 +101,14 @@ public static class Win32
         public uint biClrImportant;
     }
 
+    [StructLayout(LayoutKind.Sequential)]
+    public struct BITMAPINFO
+    {
+        public BITMAPINFOHEADER bmiHeader;
+        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 1)]
+        public int[] bmiColors;
+    }
+
     public delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
 
     [DllImport(User32, SetLastError = true)]
@@ -160,7 +168,7 @@ public static class Win32
 
     [DllImport(Gdi32)]
     public static extern int GetDIBits(IntPtr hdc, IntPtr hbmp, uint uStartScan, uint cScanLines,
-        [Out] byte[] lpvBits, ref BITMAPINFOHEADER lpbi, uint uUsage);
+        byte[] lpvBits, ref BITMAPINFO lpbi, uint uUsage);
 
     [DllImport(User32)]
     public static extern bool DeleteObject(IntPtr hObject);
