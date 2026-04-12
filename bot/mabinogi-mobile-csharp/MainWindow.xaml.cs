@@ -76,7 +76,7 @@ public partial class MainWindow : Window
         _captureService = new CaptureService();
         _detectionService = new YoloDetectionService(_configManager.ElementMapping);
 
-        var modelPath = _configManager.AppConfig.ModelPath;
+        var modelPath = _configManager.ResolvePath(_configManager.AppConfig.ModelPath);
         if (!string.IsNullOrEmpty(modelPath) && File.Exists(modelPath))
         {
             if (_detectionService.LoadModel(modelPath))

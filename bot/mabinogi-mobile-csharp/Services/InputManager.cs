@@ -162,12 +162,10 @@ public class InputManager
 
     private bool ClickPostMessage(int x, int y, string button)
     {
-        var info = GetWindowInfo();
-        if (info == null) return false;
+        var clientPt = ScreenToClient(x, y);
+        if (clientPt == null) return false;
 
-        int clientX = x - info.Left;
-        int clientY = y - info.Top;
-        var lParam = Win32.MakeLParam(clientX, clientY);
+        var lParam = Win32.MakeLParam(clientPt.Value.X, clientPt.Value.Y);
 
         uint downMsg = button == "right" ? (uint)Win32.WM_RBUTTONDOWN : (uint)Win32.WM_LBUTTONDOWN;
         uint upMsg = button == "right" ? (uint)Win32.WM_RBUTTONUP : (uint)Win32.WM_LBUTTONUP;
@@ -177,18 +175,16 @@ public class InputManager
         Thread.Sleep(50);
         Win32.PostMessage(Hwnd, upMsg, IntPtr.Zero, lParam);
 
-        Log.Debug("PostMessage click at ({X},{Y}) client({CX},{CY}) {Button}", x, y, clientX, clientY, button);
+        Log.Debug("PostMessage click at ({X},{Y}) client({CX},{CY}) {Button}", x, y, clientPt.Value.X, clientPt.Value.Y, button);
         return true;
     }
 
     private bool ClickSendMessage(int x, int y, string button)
     {
-        var info = GetWindowInfo();
-        if (info == null) return false;
+        var clientPt = ScreenToClient(x, y);
+        if (clientPt == null) return false;
 
-        int clientX = x - info.Left;
-        int clientY = y - info.Top;
-        var lParam = Win32.MakeLParam(clientX, clientY);
+        var lParam = Win32.MakeLParam(clientPt.Value.X, clientPt.Value.Y);
 
         uint downMsg = button == "right" ? (uint)Win32.WM_RBUTTONDOWN : (uint)Win32.WM_LBUTTONDOWN;
         uint upMsg = button == "right" ? (uint)Win32.WM_RBUTTONUP : (uint)Win32.WM_LBUTTONUP;
@@ -198,7 +194,7 @@ public class InputManager
         Thread.Sleep(50);
         Win32.SendMessage(Hwnd, upMsg, IntPtr.Zero, lParam);
 
-        Log.Debug("SendMessage click at ({X},{Y}) client({CX},{CY}) {Button}", x, y, clientX, clientY, button);
+        Log.Debug("SendMessage click at ({X},{Y}) client({CX},{CY}) {Button}", x, y, clientPt.Value.X, clientPt.Value.Y, button);
         return true;
     }
 
@@ -250,6 +246,14 @@ public class InputManager
         if (KeyMap.TryGetValue(key, out var vk)) return vk;
         if (key.Length == 1 && char.IsLetterOrDigit(key[0])) return (ushort)char.ToUpper(key[0]);
         return 0;
+    }
+
+    private (int X, int Y)? ScreenToClient(int screenX, int screenY)
+    {
+        if (Hwnd == IntPtr.Zero) return null;
+        var point = new Win32.POINT { X = screenX, Y = screenY };
+        if (!Win32.ScreenToClient(Hwnd, ref point)) return null;
+        return (point.X, point.Y);
     }
 }
 

@@ -86,6 +86,12 @@ public static class Win32
     }
 
     [StructLayout(LayoutKind.Sequential)]
+    public struct POINT
+    {
+        public int X, Y;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
     public struct BITMAPINFOHEADER
     {
         public uint biSize;
@@ -187,6 +193,9 @@ public static class Win32
 
     [DllImport(User32)]
     public static extern int GetSystemMetrics(int nIndex);
+
+    [DllImport(User32)]
+    public static extern bool ScreenToClient(IntPtr hWnd, ref POINT lpPoint);
 
     public static IntPtr MakeLParam(int loWord, int hiWord)
     {

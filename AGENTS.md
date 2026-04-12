@@ -6,7 +6,8 @@ This is a personal AI playground monorepo containing ML studies, game automation
 
 ```
 /study/                  ML/DL study scripts (sklearn, tensorflow, keras, pytorch)
-/bot/mabinogi-mobile/    YOLO-based game macro bot (Python, typer, pyautogui, win32api)
+/bot/mabinogi-mobile/    YOLO-based game macro bot (C# WPF .NET 8, ONNX Runtime)
+/bot/mabinogi-mobile-csharp/  (deprecated, merged into above)
 /tools/agent-executor-api-tool/  FastAPI HTTP proxy for coding agents (Pydantic, uvicorn)
 /llm/                    LLM experiments (submodules: agents, MCP servers, RAG, search tools)
 /workflow/n8n/           Workflow automation (submodule - TypeScript monorepo)
@@ -25,7 +26,7 @@ All build outputs (executables, binaries, packages) **must** be placed under the
 
 ```
 Bins/
-├── mabinogi-mobile/          # Mabinogi macro bot (PyInstaller)
+├── mabinogi-mobile/          # Mabinogi macro bot (dotnet build)
 ├── agent-executor-api/       # FastAPI HTTP proxy (PyInstaller)
 ├── youtube-extractor/        # YouTube extractor (dotnet publish)
 ├── clip-master/              # Clip master (dotnet publish)
@@ -71,13 +72,21 @@ python -m app.main
 uvicorn app.main:app --host 0.0.0.0 --port 9999 --reload
 ```
 
-### Mabinogi Bot (`bot/mabinogi-mobile/`)
+### Mabinogi Bot (`bot/mabinogi-mobile-csharp/`)
 
 ```bash
-cd bot/mabinogi-mobile
-pip install -r requirements.txt  # if present
-python app.py run                # normal mode
-python app.py run --test         # test mode
+cd bot/mabinogi-mobile-csharp
+dotnet build -c Release        # builds to Bins/mabinogi-mobile/
+dotnet run -c Release           # run the WPF app
+```
+
+The bot uses ONNX Runtime for YOLO inference. Training is done separately with Python (ultralytics):
+```bash
+cd bot/mabinogi-mobile-csharp/ml
+pip install -r requirements.txt
+python train.py                 # trains YOLO model
+# Export to ONNX for C# inference:
+python -c "from ultralytics import YOLO; YOLO('training_output/mabinogi_model/weights/best.pt').export(format='onnx')"
 ```
 
 ### Submodule Initialization
@@ -94,11 +103,6 @@ No unified test runner at root level. Each subproject manages its own tests.
 ### Run a single test file
 
 ```bash
-# Bot project (unittest)
-python -m pytest bot/mabinogi-mobile/tests/test_action_processor.py
-# Or with unittest directly:
-python -m unittest bot.mabinogi-mobile.tests.test_action_processor
-
 # Agent executor tool
 python tools/agent-executor-api-tool/test_client.py
 python tools/agent-executor-api-tool/test_agents.py
@@ -110,7 +114,6 @@ cd workflow/n8n && npm run test -- --filter="package-name"
 ### Run all tests in a subproject
 
 ```bash
-cd bot/mabinogi-mobile && python -m pytest tests/
 cd workflow/n8n && npm run test
 ```
 

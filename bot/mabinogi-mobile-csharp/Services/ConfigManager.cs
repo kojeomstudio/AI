@@ -6,6 +6,7 @@ namespace MabinogiMacro.Services;
 
 public class ConfigManager
 {
+    private readonly string _baseDir;
     private readonly string _configDir;
 
     public AppConfig AppConfig { get; private set; } = new();
@@ -14,8 +15,16 @@ public class ConfigManager
 
     public ConfigManager()
     {
-        _configDir = Path.Combine(AppContext.BaseDirectory, "Config");
+        _baseDir = AppContext.BaseDirectory;
+        _configDir = Path.Combine(_baseDir, "Config");
         LoadAll();
+    }
+
+    public string ResolvePath(string relativePath)
+    {
+        if (string.IsNullOrEmpty(relativePath)) return relativePath;
+        if (Path.IsPathRooted(relativePath)) return relativePath;
+        return Path.Combine(_baseDir, relativePath);
     }
 
     private void LoadAll()
