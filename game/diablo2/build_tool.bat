@@ -35,5 +35,5 @@ echo.
 echo ==========================================
 echo Build Successful!
 echo ==========================================
-echo Output Directory: %ROOT_DIR%build
+echo Output Directory: %ROOT_DIR%..\..\Bins\diablo2-mod-master
 echo.

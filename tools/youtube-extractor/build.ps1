@@ -3,9 +3,9 @@ $ErrorActionPreference = "Stop"
 
 $root = $PSScriptRoot
 $appProject = Join-Path $root "YoutubeExtractor.App"
-# Binaries should be created in tools/bin/<tool-name>
-$parentDir = Split-Path $root -Parent
-$outputDir = Join-Path $parentDir "bin\youtube-extractor"
+# Binaries should be created in Bins/<tool-name>
+$repoRoot = (Split-Path $root -Parent).Parent
+$outputDir = Join-Path $repoRoot "Bins\youtube-extractor"
 
 Write-Host "Cleaning up bin directory..." -ForegroundColor Cyan
 if (Test-Path $outputDir) {

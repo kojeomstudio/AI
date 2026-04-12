@@ -24,7 +24,7 @@ if %errorlevel% neq 0 (
 
 echo.
 echo [3/3] Build Completed successfully!
-echo Binary directory: ..\bin\clip-master
+echo Binary directory: ..\..\Bins\clip-master
 echo.
 pause
 endlocal

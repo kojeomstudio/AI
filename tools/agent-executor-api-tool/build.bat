@@ -158,10 +158,10 @@ echo %INFO% Build mode: One folder (with dependencies)
 echo %INFO% This may take several minutes...
 echo.
 
-set "DIST_DIR=..\bin\agent-executor-api"
+set "DIST_DIR=..\..\Bins\agent-executor-api"
 if exist "%DIST_DIR%" rmdir /s /q "%DIST_DIR%"
 
-pyinstaller --clean --noconfirm --distpath "..\bin" agent-executor-api.spec
+pyinstaller --clean --noconfirm --distpath "..\..\Bins" agent-executor-api.spec
 
 if errorlevel 1 (
     echo.
@@ -182,15 +182,15 @@ echo                         Build Verification
 echo ========================================================================
 echo.
 
-if exist "..\bin\agent-executor-api\agent-executor-api.exe" (
+if exist "..\..\Bins\agent-executor-api\agent-executor-api.exe" (
     echo %SUCCESS% Executable created successfully!
     echo.
-    echo Location: %cd%\..\bin\agent-executor-api\
+    echo Location: %cd%\..\..\Bins\agent-executor-api\
     echo Executable: agent-executor-api.exe
     echo.
 
     REM Get file size
-    for %%A in ("..\bin\agent-executor-api\agent-executor-api.exe") do (
+    for %%A in ("..\..\Bins\agent-executor-api\agent-executor-api.exe") do (
         set SIZE=%%~zA
         set /a SIZE_MB=!SIZE! / 1048576
         echo File size: !SIZE_MB! MB
@@ -198,7 +198,7 @@ if exist "..\bin\agent-executor-api\agent-executor-api.exe" (
 
     echo.
     echo %INFO% Additional files in distribution:
-    dir /b "..\bin\agent-executor-api" | findstr /v "agent-executor-api.exe"
+    dir /b "..\..\Bins\agent-executor-api" | findstr /v "agent-executor-api.exe"
 
 ) else (
     echo %ERROR% Executable not found in expected location
@@ -216,7 +216,7 @@ echo                    Copying Configuration Files
 echo ========================================================================
 echo.
 
-set "FINAL_DIST_DIR=..\bin\agent-executor-api"
+set "FINAL_DIST_DIR=..\..\Bins\agent-executor-api"
 
 echo %INFO% Copying config.json.example to distribution...
 copy /y "config.json.example" "%FINAL_DIST_DIR%\config.json.example" >nul
@@ -269,10 +269,10 @@ echo ========================================================================
 echo.
 echo %SUCCESS% Build completed successfully!
 echo.
-echo Distribution directory: %cd%\dist\agent-executor-api\
+echo Distribution directory: %cd%\..\..\Bins\agent-executor-api\
 echo.
 echo To run the application:
-echo   1. Navigate to: dist\agent-executor-api\
+echo   1. Navigate to: ..\..\Bins\agent-executor-api\
 echo   2. Edit config.json as needed
 echo   3. Run: agent-executor-api.exe
 echo.
@@ -281,7 +281,7 @@ echo   - config.json: Main configuration (host, port, agents, templates, logging
 echo   - prompts/: Prompt template files (customizable)
 echo.
 echo To test the build:
-echo   cd dist\agent-executor-api
+echo   cd ..\..\Bins\agent-executor-api
 echo   agent-executor-api.exe
 echo.
 echo ========================================================================

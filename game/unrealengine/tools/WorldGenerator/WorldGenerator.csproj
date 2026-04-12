@@ -8,6 +8,8 @@
     <AssemblyName>WorldGenerator</AssemblyName>
     <RootNamespace>WorldGenerator</RootNamespace>
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <OutputPath>..\..\..\..\Bins\world-generator</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
   </PropertyGroup>
 
   <ItemGroup>

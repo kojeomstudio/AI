@@ -19,6 +19,30 @@ This is a personal AI playground monorepo containing ML studies, game automation
 /docs/                   Project documentation
 ```
 
+## Build Output Convention
+
+All build outputs (executables, binaries, packages) **must** be placed under the repository root `Bins/` directory:
+
+```
+Bins/
+├── mabinogi-mobile/          # Mabinogi macro bot (PyInstaller)
+├── agent-executor-api/       # FastAPI HTTP proxy (PyInstaller)
+├── youtube-extractor/        # YouTube extractor (dotnet publish)
+├── clip-master/              # Clip master (dotnet publish)
+├── diablo2-mod-master/       # D2R Mod Master (dotnet build)
+├── excel-to-json-exporter/   # UE Excel-to-JSON converter (dotnet build)
+├── data-generator/           # UE data generator (dotnet build)
+├── world-generator/          # UE world generator (dotnet build)
+├── package_size_predict/     # ML package size predictor (PyInstaller)
+└── *-release/                # Release packages (ZIP archives)
+```
+
+**Rules:**
+- Build scripts must output to `Bins/<project-name>/` (relative to project source directory)
+- Never commit built artifacts to version control — `Bins/` is gitignored
+- Clean previous output before each build
+- Release/distribution packages go to `Bins/<project-name>-release/`
+
 ## Build & Install Commands
 
 ### Python (root-level)

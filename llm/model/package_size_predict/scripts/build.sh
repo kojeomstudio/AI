@@ -5,6 +5,8 @@ VENV_PATH="${VENV_PATH:-.venv}"
 REQ_FILE="${REQ_FILE:-requirements.txt}"
 ENTRY="${ENTRY:-run_training.py}"
 NAME="${NAME:-package_size_predict}"
+REPO_ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
+DIST_DIR="${REPO_ROOT}/Bins/package_size_predict"
 
 if [ ! -d "$VENV_PATH" ]; then
   python -m venv "$VENV_PATH"
@@ -14,13 +16,15 @@ source "$VENV_PATH/bin/activate"
 python -m pip install --upgrade pip
 pip install -r "$REQ_FILE"
 
+rm -rf "$DIST_DIR"
+
 # Build single-file binary
 pyinstaller --onefile --name "$NAME" \
+  --distpath "$DIST_DIR" \
   --hidden-import openpyxl \
   --hidden-import pandas \
   --collect-all pandas \
   --collect-all openpyxl \
   "$ENTRY"
 
-echo "Build complete. Binary at ./dist/$NAME"
-
+echo "Build complete. Binary at $DIST_DIR/$NAME"

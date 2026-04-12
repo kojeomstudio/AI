@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 from ultralytics import YOLO
-from capture import get_game_window_image
+from utils.capture import get_game_window_image
 import sys
 import os
 import json

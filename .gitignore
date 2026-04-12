@@ -39,9 +39,17 @@ workflow/n8n/.*
 !workflow/n8n/templates/webhook_ollama.json
 !workflow/n8n/source
 
-# Binary artifacts
-tools/bin/
+# Build outputs
 Bins/
+tools/bin/
+game/diablo2/build/
+
+# PyInstaller build artifacts
+dist/
+build/
+
+# Release packages
+release/
 
 # OS
 nul

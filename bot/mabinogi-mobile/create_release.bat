@@ -14,20 +14,20 @@ if "%VERSION%"=="" set "VERSION=1.0.0"
 echo [1/3] 실행 파일 빌드 중...
 call build_with_spec.bat
 if errorlevel 1 (
-    echo ❌ 빌드 실패
+    echo 빌드 실패
     pause
     exit /b 1
 )
 
 :: 배포 폴더 생성
 echo [2/3] 배포 폴더 생성 중...
-set "RELEASE_DIR=release\MabinogiMobileMacro_v%VERSION%"
+set "RELEASE_DIR=..\..\Bins\mabinogi-mobile-release\MabinogiMobileMacro_v%VERSION%"
 if exist "%RELEASE_DIR%" rmdir /s /q "%RELEASE_DIR%"
 mkdir "%RELEASE_DIR%"
 
 :: 파일 복사
 echo 파일 복사 중...
-xcopy "dist\*" "%RELEASE_DIR%\" /E /I /Y >nul
+xcopy "..\..\Bins\mabinogi-mobile\*" "%RELEASE_DIR%\" /E /I /Y >nul
 
 :: 추가 파일 복사
 if exist "README_IMPROVED.md" (
@@ -43,7 +43,7 @@ echo ## 설치 및 실행
 echo.
 echo 1. 이 폴더의 모든 파일을 원하는 위치에 압축 해제하세요.
 echo 2. MabinogiMobileMacro.exe를 실행하세요.
-echo 3. 테스트 모드: MabinogiMobileMacro.exe --test
+echo 3. 테스트 모드: MabinogiMobileMacro.exe run --test
 echo.
 echo ## 주의사항
 echo.
@@ -77,14 +77,13 @@ echo.
 
 :: 배포 패키지 압축
 echo 배포 패키지 압축 중...
-set "ZIP_FILE=release\MabinogiMobileMacro_v%VERSION%.zip"
+set "ZIP_FILE=..\..\Bins\mabinogi-mobile-release\MabinogiMobileMacro_v%VERSION%.zip"
 if exist "%ZIP_FILE%" del "%ZIP_FILE%"
 
-:: PowerShell을 사용한 압축 (Windows 10 이상)
 powershell -command "Compress-Archive -Path '%RELEASE_DIR%' -DestinationPath '%ZIP_FILE%' -Force"
 
 if exist "%ZIP_FILE%" (
-    echo ✅ 배포 패키지 생성 완료!
+    echo 배포 패키지 생성 완료!
     echo.
     echo 파일 위치:
     echo - 폴더: %RELEASE_DIR%
@@ -98,9 +97,9 @@ if exist "%ZIP_FILE%" (
     )
     
 ) else (
-    echo ❌ 압축 파일 생성 실패
+    echo 압축 파일 생성 실패
 )
 
 echo.
 echo 배포 준비 완료!
-pause 
+pause

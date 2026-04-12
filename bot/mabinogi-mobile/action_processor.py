@@ -1,4 +1,6 @@
 import json
+import os
+import sys
 import time
 from typing import Dict, List, Tuple, Optional
 from jsonschema import validate, ValidationError
@@ -25,9 +27,14 @@ class ActionProcessor:
 
     def __init__(self, action_config_path: str, input_manager: InputManager):
         self.input_manager = input_manager
-        self.action_config = self._load_action_config(action_config_path)
+        self.action_config = self._load_action_config(self._resolve_path(action_config_path))
         self.last_action_time: Dict[str, float] = {}
         self.action_counts: Dict[str, int] = {}
+
+    @staticmethod
+    def _resolve_path(relative_path: str) -> str:
+        base_dir = os.path.dirname(sys.executable) if getattr(sys, 'frozen', False) else os.path.dirname(os.path.abspath(__file__))
+        return os.path.join(base_dir, relative_path)
 
     def _load_action_config(self, config_path: str) -> dict:
         """Loads and validates the action configuration file."""

@@ -189,10 +189,10 @@ log_info "Build mode: One folder (with dependencies)"
 log_info "This may take several minutes..."
 echo ""
 
-DIST_DIR="../bin/agent-executor-api"
+DIST_DIR="../../../Bins/agent-executor-api"
 rm -rf "$DIST_DIR"
 
-pyinstaller --clean --noconfirm --distpath "../bin" agent-executor-api.spec
+pyinstaller --clean --noconfirm --distpath "../../../Bins" agent-executor-api.spec
 
 if [ $? -ne 0 ]; then
     echo ""
@@ -213,21 +213,21 @@ echo "                       Build Verification"
 print_separator
 echo ""
 
-if [ -f "../bin/agent-executor-api/agent-executor-api" ]; then
+if [ -f "../../../Bins/agent-executor-api/agent-executor-api" ]; then
     log_success "Executable created successfully!"
     echo ""
-    echo "Location: $(pwd)/../bin/agent-executor-api/"
+    echo "Location: $(pwd)/../../../Bins/agent-executor-api/"
     echo "Executable: agent-executor-api"
     echo ""
 
     # Get file size
-    SIZE=$(stat -f%z "../bin/agent-executor-api/agent-executor-api" 2>/dev/null || stat -c%s "../bin/agent-executor-api/agent-executor-api" 2>/dev/null)
+    SIZE=$(stat -f%z "../../../Bins/agent-executor-api/agent-executor-api" 2>/dev/null || stat -c%s "../../../Bins/agent-executor-api/agent-executor-api" 2>/dev/null)
     SIZE_MB=$((SIZE / 1048576))
     echo "File size: ${SIZE_MB} MB"
 
     echo ""
     log_info "Additional files in distribution:"
-    ls -1 "../bin/agent-executor-api" | grep -v "agent-executor-api$"
+    ls -1 "../../../Bins/agent-executor-api" | grep -v "agent-executor-api$"
 
 else
     log_error "Executable not found in expected location"
@@ -245,7 +245,7 @@ echo "                  Copying Configuration Files"
 print_separator
 echo ""
 
-FINAL_DIST_DIR="../bin/agent-executor-api"
+FINAL_DIST_DIR="../../../Bins/agent-executor-api"
 
 log_info "Copying config.json.example to distribution..."
 cp -f "config.json.example" "$FINAL_DIST_DIR/config.json.example"
@@ -302,15 +302,15 @@ print_separator
 echo ""
 log_success "Build completed successfully!"
 echo ""
-echo "Distribution directory: $(pwd)/../bin/agent-executor-api/"
+echo "Distribution directory: $(pwd)/../../../Bins/agent-executor-api/"
 echo ""
 echo "To run the application:"
-echo "  1. Navigate to: ../bin/agent-executor-api/"
+echo "  1. Navigate to: ../../../Bins/agent-executor-api/"
 echo "  2. Edit config.json file if needed"
 echo "  3. Run: ./agent-executor-api"
 echo ""
 echo "To test the build:"
-echo "  cd ../bin/agent-executor-api"
+echo "  cd ../../../Bins/agent-executor-api"
 echo "  ./agent-executor-api"
 echo ""
 print_separator

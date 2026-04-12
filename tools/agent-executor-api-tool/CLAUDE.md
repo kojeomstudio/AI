@@ -21,7 +21,7 @@ uvicorn app.main:app --host 0.0.0.0 --port 9999 --reload
 run.bat
 
 # Build standalone executable
-build.bat  # Output: dist/agent-executor-api/
+build.bat  # Output: Bins/agent-executor-api/
 
 # Test API
 python test_client.py

@@ -7,8 +7,8 @@ from datetime import datetime
 from pynput import keyboard
 from pynput.keyboard import Key
 
-from capture import get_window_rect, capture_window
-from macro.macro_uitls import get_path
+from utils.capture import get_window_rect, capture_window
+from utils.macro.macro_uitls import get_path
 
 # ----------------------------
 # 설정 및 상수

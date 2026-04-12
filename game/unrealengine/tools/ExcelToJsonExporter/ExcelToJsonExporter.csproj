@@ -8,6 +8,8 @@
     <UseWPF>true</UseWPF>
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>ExcelToJsonExporter</RootNamespace>
+    <OutputPath>..\..\..\..\Bins\excel-to-json-exporter</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
   </PropertyGroup>
 
   <ItemGroup>

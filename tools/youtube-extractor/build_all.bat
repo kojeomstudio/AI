@@ -16,7 +16,7 @@ if %errorlevel% neq 0 (
 
 echo.
 echo Build Completed successfully!
-echo Binary directory: ..\bin\youtube-extractor
+echo Binary directory: ..\..\Bins\youtube-extractor
 echo.
 pause
 endlocal

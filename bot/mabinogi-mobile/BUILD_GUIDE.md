@@ -58,7 +58,7 @@ pip install -r ml/requirements.txt
 
 #### 2.2 기본 빌드
 ```bash
-pyinstaller --onefile --windowed --name "MabinogiMacro" main_improved.py
+pyinstaller --onefile --windowed --name "MabinogiMacro" app.py
 ```
 
 #### 2.3 완전한 빌드
@@ -74,7 +74,7 @@ pyinstaller --onefile --windowed --name "MabinogiMobileMacro" \
     --hidden-import "win32gui" \
     --hidden-import "win32con" \
     --hidden-import "win32api" \
-    main_improved.py
+    app.py
 ```
 
 #### 2.4 Spec 파일 사용
@@ -183,7 +183,7 @@ powershell -command "Compress-Archive -Path 'release\MabinogiMobileMacro_v1.0.0'
 
 ### 성공적인 빌드 후 생성되는 파일
 ```
-dist/
+Bins/mabinogi-mobile/
 ├── MabinogiMobileMacro.exe    # 실행 파일
 ├── config/                     # 설정 파일
 │   ├── config.json
@@ -195,7 +195,7 @@ dist/
 
 ### 배포 패키지 구조
 ```
-release/
+Bins/mabinogi-mobile-release/
 ├── MabinogiMobileMacro_v1.0.0/     # 배포 폴더
 │   ├── MabinogiMobileMacro.exe
 │   ├── config/
@@ -244,16 +244,16 @@ pyinstaller --version
 pyinstaller --help
 
 # 분석 모드 (빌드하지 않고 분석만)
-pyinstaller --analysis-only main_improved.py
+pyinstaller --analysis-only app.py
 ```
 
 ### 디버깅
 ```bash
 # 콘솔 모드로 빌드 (디버깅용)
-pyinstaller --onefile --console main_improved.py
+pyinstaller --onefile --console app.py
 
 # 디버그 정보 포함
-pyinstaller --onefile --debug all main_improved.py
+pyinstaller --onefile --debug all app.py
 ```
 
 ### 로그 확인

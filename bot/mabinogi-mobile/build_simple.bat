@@ -14,18 +14,24 @@ if errorlevel 1 (
 
 :: 의존성 설치
 echo 의존성 패키지 설치 중...
-pip install -r ml\requirements.txt
+if exist "requirements.txt" (
+    pip install -r requirements.txt
+)
 
 :: 기존 빌드 폴더 정리
+set "DIST_DIR=..\..\Bins\mabinogi-mobile"
+if exist "%DIST_DIR%" rmdir /s /q "%DIST_DIR%"
 if exist "dist" rmdir /s /q "dist"
 if exist "build" rmdir /s /q "build"
 if exist "*.spec" del /q "*.spec"
 
 :: PyInstaller 실행
 echo 패키지 생성 중... (잠시만 기다려주세요)
-pyinstaller --onefile --windowed --name "MabinogiMacro" ^
+pyinstaller --onefile --name "MabinogiMacro" ^
+    --distpath "%DIST_DIR%" ^
+    --workpath "build" ^
     --add-data "config;config" ^
-    --add-data "ml/training_output;ml/training_output" ^
+    --add-data "ml\training_output;ml\training_output" ^
     --hidden-import "ultralytics" ^
     --hidden-import "cv2" ^
     --hidden-import "numpy" ^
@@ -33,13 +39,13 @@ pyinstaller --onefile --windowed --name "MabinogiMacro" ^
     --hidden-import "win32gui" ^
     --hidden-import "win32con" ^
     --hidden-import "win32api" ^
-    main_improved.py
+    app.py
 
-if exist "dist\MabinogiMacro.exe" (
+if exist "%DIST_DIR%\MabinogiMacro.exe" (
     echo.
-    echo ✅ 빌드 완료! 실행 파일: dist\MabinogiMacro.exe
+    echo 빌드 완료! 실행 파일: %DIST_DIR%\MabinogiMacro.exe
 ) else (
-    echo ❌ 빌드 실패
+    echo 빌드 실패
 )
 
-pause 
+pause
