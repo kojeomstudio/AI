@@ -1,6 +1,6 @@
 {
     "window_title": "Mabinogi Mobile",
     "tick_interval": 0.5,
-    "model_path": "ml/training_output/mabinogi_model/weights/best.pt",
+    "model_path": "Model/best.onnx",
     "confidence_threshold": 0.5
 }
