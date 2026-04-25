@@ -3,26 +3,30 @@ __pycache__/
 *.py[cod]
 *.egg-info/
 *.keras
-.venv
 
 # Virtual environments
-/llama_env
-/my_ai_venv
-/my_r2r_venv
-/rl_venv
-/my_rag_venv
-/RL/rl_venv
+.venv/
+/llama_env/
+/my_ai_venv/
+/my_r2r_venv/
+/rl_venv/
+/my_rag_venv/
+/RL/rl_venv/
+**/my_macro_ml_venv/
+
+# ML weights (not tracked unless explicitly added)
+**/yolov8n.pt
 
 # Llama
-/llama_Scripts
-llama_local_storage
+/llama_Scripts/
+llama_local_storage/
 
 # Study data
-pytorch_data
+pytorch_data/
 iris_tree.dot
 processed_files.db
-llm/rag/test_docs
-llm/rag/chroma_db
+llm/rag/test_docs/
+llm/rag/chroma_db/
 
 # n8n
 .n8n_storage

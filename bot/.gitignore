@@ -1,7 +1,14 @@
-/build
+# Build artifacts
+/build/
 *.spec
-mabinogi-mobile/logs
 *.log
-mabinogi-mobile/utils/screenshots
-mabinogi-mobile/my_macro_ml_venv
-mabinogi-mobile/utils/macro/screenshots
+
+# Mabinogi mobile (Python) artifacts
+mabinogi-mobile/logs/
+mabinogi-mobile/utils/screenshots/
+mabinogi-mobile/utils/macro/screenshots/
+mabinogi-mobile/ml/screenshots/
+
+# Python venvs and downloaded ML weights
+**/my_macro_ml_venv/
+**/yolov8n.pt
