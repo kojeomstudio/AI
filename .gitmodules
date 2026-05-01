@@ -67,3 +67,6 @@
 [submodule "workflow/n8n/source"]
 	path = workflow/n8n/source
 	url = git@github.com:kojeomstudio/n8n.git
+[submodule "video-generative/pixelle-video"]
+	path = video-generative/pixelle-video
+	url = git@github.com:kojeomstudio/Pixelle-Video.git
