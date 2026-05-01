@@ -7,6 +7,10 @@ from pathlib import Path
 import requests
 import argparse
 import base64
+import signal
+import subprocess
+import sys
+import time
 
 # --- TeamCity service message helpers ---
 def _tc_escape(s: str) -> str:
@@ -57,6 +61,84 @@ def getenv(name, default=None, cast=None):
             return default
     return val
 
+def is_server_running(base_url: str, timeout: int = 5) -> bool:
+    try:
+        requests.get(f"{base_url}/sdapi/v1/memory", timeout=timeout)
+        return True
+    except Exception:
+        return False
+
+def start_sd_webui(sd_webui_dir: str) -> subprocess.Popen:
+    tc_message(f"Starting Stable Diffusion WebUI from: {sd_webui_dir}")
+    if sys.platform == "win32":
+        script = os.path.join(sd_webui_dir, "webui-user.bat")
+        proc = subprocess.Popen(
+            ["cmd", "/c", script],
+            cwd=sd_webui_dir,
+            creationflags=subprocess.CREATE_NEW_PROCESS_GROUP,
+        )
+    else:
+        script = os.path.join(sd_webui_dir, "webui-user.sh")
+        proc = subprocess.Popen(
+            ["bash", script],
+            cwd=sd_webui_dir,
+            preexec_fn=os.setsid,
+        )
+    tc_message(f"SD WebUI process started (PID={proc.pid})")
+    return proc
+
+def stop_sd_webui(host: str, port: int) -> bool:
+    tc_message(f"Stopping Stable Diffusion WebUI on {host}:{port}")
+    if sys.platform == "win32":
+        try:
+            result = subprocess.run(
+                ["netstat", "-ano"],
+                capture_output=True, text=True, timeout=10,
+            )
+            for line in result.stdout.splitlines():
+                if f":{port}" in line and "LISTENING" in line:
+                    parts = line.split()
+                    pid = int(parts[-1])
+                    subprocess.run(["taskkill", "/F", "/PID", str(pid)], timeout=10)
+                    tc_message(f"Terminated SD WebUI process (PID={pid})")
+                    return True
+            tc_message(f"No SD WebUI process found on port {port}")
+            return False
+        except Exception as e:
+            tc_message(f"Failed to stop SD WebUI: {e}", status="ERROR")
+            return False
+    else:
+        try:
+            result = subprocess.run(
+                ["lsof", "-ti", f":{port}"],
+                capture_output=True, text=True, timeout=10,
+            )
+            pids = result.stdout.strip().split()
+            if not pids:
+                tc_message(f"No SD WebUI process found on port {port}")
+                return False
+            for pid_str in pids:
+                pid_int = int(pid_str)
+                os.kill(pid_int, signal.SIGTERM)
+                tc_message(f"Sent SIGTERM to SD WebUI process (PID={pid_int})")
+            return True
+        except Exception as e:
+            tc_message(f"Failed to stop SD WebUI: {e}", status="ERROR")
+            return False
+
+def wait_for_server(base_url: str, timeout: int = 120, poll_interval: int = 3, min_wait: int = 10) -> bool:
+    tc_message(f"Waiting for SD WebUI to be ready (min_wait={min_wait}s, timeout={timeout}s)...")
+    time.sleep(min_wait)
+    elapsed = min_wait
+    while elapsed < timeout:
+        if is_server_running(base_url):
+            tc_message(f"SD WebUI is ready (~{elapsed}s)")
+            return True
+        time.sleep(poll_interval)
+        elapsed += poll_interval
+    tc_message(f"SD WebUI did not become ready within {timeout}s", status="ERROR")
+    return False
+
 def _decode_base64_image(b64_str: str) -> bytes:
     # 일부 배포본은 "data:image/png;base64,..." 접두사가 붙을 수 있으므로 분리 처리
     if "," in b64_str and b64_str.strip().lower().startswith("data:"):
@@ -87,6 +169,22 @@ def main():
     host = getenv("SD_HOST", "127.0.0.1")
     port = getenv("SD_PORT", "7860")
     base_url = f"http://{host}:{port}"
+
+    # --- 1-1) SD WebUI 서버 관리 ---
+    sd_webui_dir = getenv("SD_WEBUI_DIR", "")
+    if not sd_webui_dir:
+        sd_webui_dir = str(Path(__file__).resolve().parents[4] / "image-generative" / "stable-diffusion-webui")
+
+    server_started_by_us = False
+    if not is_server_running(base_url):
+        tc_message("SD WebUI is not running. Starting...")
+        server_started_by_us = True
+        start_sd_webui(sd_webui_dir)
+        if not wait_for_server(base_url):
+            tc_problem("SD WebUI failed to start within timeout")
+            raise SystemExit(1)
+    else:
+        tc_message("SD WebUI is already running")
 
     outdir_root = Path(getenv("OUTDIR", "out"))
     outdir_root.mkdir(parents=True, exist_ok=True)
@@ -241,6 +339,10 @@ def main():
 
     # 메모리 해제 필요 시 사용
     # try_unload_checkpoint(base_url, timeout=timeout)
+
+    # --- 5) 이미지 생성 완료 후 SD WebUI 서버 종료 ---
+    if server_started_by_us:
+        stop_sd_webui(host, int(port))
 
 if __name__ == "__main__":
     main()
