@@ -55,6 +55,20 @@ build/
 # Release packages
 release/
 
+# Secrets and credentials
+.env
+.env.*
+!.env.example
+!.env.template
+*.key
+*.pem
+*.p12
+*.pfx
+credentials.json
+service-account*.json
+secrets.yml
+secrets.yaml
+
 # OS
 nul
 Thumbs.db

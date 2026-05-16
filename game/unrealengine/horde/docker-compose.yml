@@ -8,9 +8,8 @@ services:
     image: mongo:7.0.5-jammy
     restart: always
     environment:
-      # Default username and password, change these!
-      MONGO_INITDB_ROOT_USERNAME: horde
-      MONGO_INITDB_ROOT_PASSWORD: dbPass123
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER:-horde}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:?Set MONGO_ROOT_PASSWORD in .env}
     command: --quiet --logpath /dev/null
     ports:
       - 27017:27017
@@ -38,7 +37,7 @@ services:
       Horde__HttpPort: 13340
       Horde__Http2Port: 13342
       Horde__RedisConnectionConfig: redis:30002
-      Horde__DatabaseConnectionString: mongodb://horde:dbPass123@mongodb:27017/Horde?authSource=admin
+      Horde__DatabaseConnectionString: mongodb://${MONGO_ROOT_USER:-horde}:${MONGO_ROOT_PASSWORD}@mongodb:27017/Horde?authSource=admin
     ports:
       - 13340:13340 # HTTP/1
       - 13342:13342 # HTTP/2
