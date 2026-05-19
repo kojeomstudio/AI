@@ -73,3 +73,6 @@ secrets.yaml
 nul
 Thumbs.db
 .DS_Store
+
+# Claude Code harness state (keep settings.local.json tracked)
+.claude/scheduled_tasks.lock
