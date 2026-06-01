@@ -13,7 +13,12 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <PlatformTarget>x64</PlatformTarget>
     <Platforms>x64</Platforms>
+    <ApplicationIcon>Resource\app-icon-diablo2_logo.ico</ApplicationIcon>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Resource Include="Resource\app-icon-diablo2_logo.png" />
+  </ItemGroup>
 
   <ItemGroup>
     <None Update="CascLib.dll">

@@ -3,7 +3,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="{Binding Version, StringFormat='D2R Mod Master {0}'}" 
         Height="750" Width="1100" MinHeight="600" MinWidth="900"
-        WindowStartupLocation="CenterScreen">
+        WindowStartupLocation="CenterScreen"
+        Icon="pack://application:,,,/Resource/app-icon-diablo2_logo.png">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
         <Style x:Key="DetailLabelStyle" TargetType="TextBlock">
