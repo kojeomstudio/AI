@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Linq;
 using System.Net.WebSockets;
 using Mabinogi2D.Server.Auth;
 using Mabinogi2D.Server.Data;
@@ -10,8 +11,8 @@ using EntityState = Mabinogi2D.Shared.Protocol.EntityState;
 namespace Mabinogi2D.Server.Game;
 
 /// <summary>
-/// 권위(authoritative) 월드. 단일 공유 맵, 플레이어 이동만 시뮬레이션(MVP).
-/// 입력은 수신 스레드가 큐잉하고, 위치 갱신/스냅샷 발행은 <see cref="Tick"/>(틱 스레드)이 단독으로 한다.
+/// 권위(authoritative) 월드. 단일 공유 맵, 플레이어 이동 + 근접 전투(고정 몬스터)를 시뮬레이션(MVP).
+/// 입력은 수신 스레드가 큐잉하고, 위치/전투/스냅샷은 <see cref="Tick"/>(틱 스레드)이 단독으로 처리한다.
 /// </summary>
 public sealed class GameWorld
 {
@@ -20,14 +21,39 @@ public sealed class GameWorld
     private readonly ILogger<GameWorld> _logger;
 
     private readonly ConcurrentDictionary<long, PlayerSession> _sessions = new();
+    private readonly List<Monster> _monsters = new();   // 틱 스레드만 변경
     private long _nextEntityId;
     private uint _serverTick;
+    private double _now;   // 누적 게임시간(초), 틱 스레드 단독 소유
 
     public GameWorld(JwtService jwt, IServiceScopeFactory scopeFactory, ILogger<GameWorld> logger)
     {
         _jwt = jwt;
         _scopeFactory = scopeFactory;
         _logger = logger;
+        SpawnMonsters();
+    }
+
+    private void SpawnMonsters()
+    {
+        (float x, float y, string name)[] spawns =
+        {
+            (120f, 0f, "Slime"),
+            (-120f, 60f, "Slime"),
+            (0f, 140f, "Goblin"),
+        };
+        foreach (var (x, y, name) in spawns)
+        {
+            _monsters.Add(new Monster
+            {
+                EntityId = Interlocked.Increment(ref _nextEntityId),
+                Name = name,
+                X = x, Y = y, SpawnX = x, SpawnY = y,
+                Hp = GameConstants.MonsterMaxHp,
+                MaxHp = GameConstants.MonsterMaxHp,
+            });
+        }
+        _logger.LogInformation("몬스터 {Count}마리 스폰", _monsters.Count);
     }
 
     // ── 틱 루프 (GameLoop 호출) ───────────────────────────────────────────────
@@ -35,8 +61,16 @@ public sealed class GameWorld
     {
         _serverTick++;
         const float dt = 1f / GameConstants.TickRate;
+        _now += dt;
 
-        // 1) 입력 적용 — 위치는 틱 스레드 단독 소유
+        ApplyMovement(dt);
+        ProcessAttacks();
+        RespawnMonsters();
+        BroadcastSnapshots();
+    }
+
+    private void ApplyMovement(float dt)
+    {
         foreach (var s in _sessions.Values)
         {
             var mv = s.PendingMove;
@@ -48,30 +82,72 @@ public sealed class GameWorld
                 s.Y += mv.DirY / len * GameConstants.PlayerMoveSpeed * dt;
             }
         }
+    }
 
-        // 2) 세션별 관심영역(AOI) 스냅샷 발행
-        var sessions = _sessions.Values;
+    private void ProcessAttacks()
+    {
+        const float rangeSq = GameConstants.AttackRange * GameConstants.AttackRange;
+        foreach (var s in _sessions.Values)
+        {
+            while (s.PendingAttacks.TryDequeue(out var targetId))
+            {
+                if (_now < s.NextAttackTime) continue;   // 쿨다운 중
+                var m = _monsters.FirstOrDefault(x => x.EntityId == targetId && x.Alive);
+                if (m is null) continue;                 // 없거나 이미 죽은 대상
+
+                float dx = m.X - s.X, dy = m.Y - s.Y;
+                if (dx * dx + dy * dy > rangeSq) continue;   // 사거리 밖
+
+                s.NextAttackTime = _now + GameConstants.AttackCooldownSeconds;
+                m.Hp -= GameConstants.AttackDamage;
+                bool died = m.Hp <= 0;
+                if (died)
+                {
+                    m.Hp = 0;
+                    m.RespawnAt = _now + GameConstants.MonsterRespawnSeconds;
+                    s.Exp += GameConstants.ExpPerKill;
+                    _logger.LogInformation("{Player} 처치: {Monster} (exp +{Exp} → 누적 {Total})",
+                        s.Name, m.Name, GameConstants.ExpPerKill, s.Exp);
+                }
+
+                Broadcast(ProtocolCodec.Encode(MessageType.CombatEvent, new CombatEvent
+                {
+                    AttackerId = s.EntityId,
+                    TargetId = m.EntityId,
+                    Damage = GameConstants.AttackDamage,
+                    TargetDied = died,
+                }));
+            }
+        }
+    }
+
+    private void RespawnMonsters()
+    {
+        foreach (var m in _monsters)
+        {
+            if (!m.Alive && _now >= m.RespawnAt)
+            {
+                m.Hp = m.MaxHp;
+                m.X = m.SpawnX;
+                m.Y = m.SpawnY;
+            }
+        }
+    }
+
+    private void BroadcastSnapshots()
+    {
         const float aoiSq = GameConstants.AoiRadius * GameConstants.AoiRadius;
-        foreach (var self in sessions)
+        var players = _sessions.Values;
+        foreach (var self in players)
         {
             var visible = new List<EntityState>();
-            foreach (var other in sessions)
-            {
-                float dx = other.X - self.X, dy = other.Y - self.Y;
-                if (dx * dx + dy * dy <= aoiSq)
-                {
-                    visible.Add(new EntityState
-                    {
-                        EntityId = other.EntityId,
-                        X = other.X,
-                        Y = other.Y,
-                        Hp = other.Hp,
-                        MaxHp = other.MaxHp,
-                        Kind = EntityKind.Player,
-                        Name = other.Name,
-                    });
-                }
-            }
+            foreach (var other in players)
+                if (WithinAoi(self, other.X, other.Y, aoiSq))
+                    visible.Add(PlayerState(other));
+            foreach (var m in _monsters)
+                if (m.Alive && WithinAoi(self, m.X, m.Y, aoiSq))
+                    visible.Add(MonsterState(m));
+
             self.Enqueue(ProtocolCodec.Encode(MessageType.WorldSnapshot, new WorldSnapshot
             {
                 ServerTick = _serverTick,
@@ -80,10 +156,27 @@ public sealed class GameWorld
         }
     }
 
+    private static bool WithinAoi(PlayerSession self, float x, float y, float aoiSq)
+    {
+        float dx = x - self.X, dy = y - self.Y;
+        return dx * dx + dy * dy <= aoiSq;
+    }
+
+    private static EntityState PlayerState(PlayerSession s) => new()
+    {
+        EntityId = s.EntityId, X = s.X, Y = s.Y, Hp = s.Hp, MaxHp = s.MaxHp,
+        Kind = EntityKind.Player, Name = s.Name,
+    };
+
+    private static EntityState MonsterState(Monster m) => new()
+    {
+        EntityId = m.EntityId, X = m.X, Y = m.Y, Hp = m.Hp, MaxHp = m.MaxHp,
+        Kind = EntityKind.Monster, Name = m.Name,
+    };
+
     // ── 연결 처리 (WebSocket 엔드포인트 호출) ─────────────────────────────────
     public async Task HandleConnectionAsync(WebSocket socket, CancellationToken ct)
     {
-        // 1) 첫 메시지는 반드시 JoinRequest
         var first = await ReceiveAsync(socket, ct);
         if (first is null) return;
 
@@ -102,7 +195,6 @@ public sealed class GameWorld
             return;
         }
 
-        // 2) 캐릭터 로드 + 소유권 확인
         Character? ch;
         using (var scope = _scopeFactory.CreateScope())
         {
@@ -115,7 +207,6 @@ public sealed class GameWorld
             return;
         }
 
-        // 3) 세션 생성 및 등록
         var session = new PlayerSession
         {
             EntityId = Interlocked.Increment(ref _nextEntityId),
@@ -127,6 +218,7 @@ public sealed class GameWorld
             Y = ch.PosY,
             Hp = ch.Hp,
             MaxHp = ch.MaxHp,
+            Exp = ch.Exp,
         };
         _sessions[session.EntityId] = session;
         _logger.LogInformation("입장: {Name} (entity {Id}), 접속 {Count}명", session.Name, session.EntityId, _sessions.Count);
@@ -138,7 +230,6 @@ public sealed class GameWorld
             ServerTickRate = GameConstants.TickRate,
         }));
 
-        // 4) 송신 펌프 + 수신 루프 동시 구동
         var sendPump = SendPumpAsync(session, ct);
         try
         {
@@ -168,6 +259,11 @@ public sealed class GameWorld
                     s.PendingMove = ProtocolCodec.DecodePayload<MoveInput>(env);
                     break;
 
+                case MessageType.AttackInput:
+                    var atk = ProtocolCodec.DecodePayload<AttackInput>(env);
+                    s.PendingAttacks.Enqueue(atk.TargetEntityId);
+                    break;
+
                 case MessageType.ChatSend:
                     var chat = ProtocolCodec.DecodePayload<ChatSend>(env);
                     Broadcast(ProtocolCodec.Encode(MessageType.ChatBroadcast, new ChatBroadcast
@@ -185,8 +281,6 @@ public sealed class GameWorld
                         ServerTimeMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
                     }));
                     break;
-
-                // AttackInput(전투)은 다음 증분에서 처리
             }
         }
     }
@@ -220,6 +314,7 @@ public sealed class GameWorld
             ch.PosX = s.X;
             ch.PosY = s.Y;
             ch.Hp = s.Hp;
+            ch.Exp = s.Exp;
             await db.SaveChangesAsync();
         }
         catch (Exception ex)

@@ -78,9 +78,11 @@ curl -X POST localhost:<port>/auth/login    -H "Content-Type: application/json" 
 - [x] 단일 서버 프로세스: 20Hz 틱 루프 + WebSocket(`/ws`), 이동 동기화 서버측
 - [x] Godot 클라이언트(`client/`) — 로그인→WS 입장→스냅샷 수신/보간/입력 전송. 빌드·헤드리스 임포트·실서버 입장까지 검증
 - [x] 통합 실행 스크립트 `run-dev.ps1` (서버 + 클라 N개, 인자로 캐릭터 분리) — 메커니즘 검증 완료
-- [ ] 멀티플레이 육안 확인 (`.\run-dev.ps1` 실행해 두 창에서 서로 움직임 확인)
-- [ ] 몬스터 1종 + 기본 전투(`AttackInput`/`CombatEvent`)
+- [x] 몬스터 + 기본 전투 — 고정 몬스터 스폰, 근접 공격(사거리·쿨다운·데미지), 처치 시 exp + 부활. 봇으로 처치·부활 검증
+- [ ] 멀티플레이 육안 확인 (`.\run-dev.ps1` 실행해 두 창에서 이동/전투 확인)
 - [ ] 그리드 스프라이트 시트 임포터 + ComfyUI/SD 생성 파이프라인 (`docs/asset-pipeline.md`)
+
+조작: 화살표=이동, Space=가장 가까운 몬스터 공격. 클라 인자 `--bot`을 주면 자동으로 몬스터를 사냥(테스트/부하용).
 
 ## 통합 실행 (권장)
 

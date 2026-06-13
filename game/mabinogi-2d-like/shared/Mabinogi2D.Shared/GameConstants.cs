@@ -14,4 +14,23 @@ public static class GameConstants
 
     /// <summary>MVP 단일 공유 맵 id.</summary>
     public const int StartingMapId = 1;
+
+    // ── 전투 ──────────────────────────────────────────────
+    /// <summary>근접 공격 사거리(월드 유닛).</summary>
+    public const float AttackRange = 56f;
+
+    /// <summary>공격 쿨다운(초).</summary>
+    public const float AttackCooldownSeconds = 0.5f;
+
+    /// <summary>1회 공격 데미지.</summary>
+    public const int AttackDamage = 25;
+
+    /// <summary>몬스터 기본 체력.</summary>
+    public const int MonsterMaxHp = 100;
+
+    /// <summary>몬스터 사망 후 부활까지(초).</summary>
+    public const float MonsterRespawnSeconds = 5f;
+
+    /// <summary>몬스터 처치 시 획득 경험치.</summary>
+    public const long ExpPerKill = 10;
 }
