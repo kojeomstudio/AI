@@ -35,7 +35,30 @@ public partial class NetClient : Node
     private bool _wsStarted;
     private bool _joinSent;
 
-    public override void _Ready() => _ = AuthAsync();
+    public override void _Ready()
+    {
+        ParseCmdlineArgs();
+        _ = AuthAsync();
+    }
+
+    /// <summary>`-- --user X --char Y --server http://host:port` 형태의 사용자 인자로 기본값을 덮어쓴다(다중 인스턴스 테스트용).</summary>
+    private void ParseCmdlineArgs()
+    {
+        var args = OS.GetCmdlineUserArgs();
+        for (int i = 0; i + 1 < args.Length; i++)
+        {
+            switch (args[i])
+            {
+                case "--user": Username = args[i + 1]; break;
+                case "--char": CharacterName = args[i + 1]; break;
+                case "--server":
+                    var b = args[i + 1].TrimEnd('/');
+                    HttpBase = b;
+                    WsUrl = b.Replace("https://", "wss://").Replace("http://", "ws://") + "/ws";
+                    break;
+            }
+        }
+    }
 
     /// <summary>회원가입(있으면 무시) → 로그인 → 캐릭터 확보. 백그라운드 Task, 결과는 플래그로 전달.</summary>
     private async Task AuthAsync()

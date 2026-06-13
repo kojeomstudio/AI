@@ -77,19 +77,31 @@ curl -X POST localhost:<port>/auth/login    -H "Content-Type: application/json" 
 - [x] 인증 REST + JWT (회원가입/로그인/캐릭터) — 스모크 테스트 통과
 - [x] 단일 서버 프로세스: 20Hz 틱 루프 + WebSocket(`/ws`), 이동 동기화 서버측
 - [x] Godot 클라이언트(`client/`) — 로그인→WS 입장→스냅샷 수신/보간/입력 전송. 빌드·헤드리스 임포트·실서버 입장까지 검증
-- [ ] 멀티플레이 육안 확인 (에디터에서 2개 인스턴스 동시 실행)
+- [x] 통합 실행 스크립트 `run-dev.ps1` (서버 + 클라 N개, 인자로 캐릭터 분리) — 메커니즘 검증 완료
+- [ ] 멀티플레이 육안 확인 (`.\run-dev.ps1` 실행해 두 창에서 서로 움직임 확인)
 - [ ] 몬스터 1종 + 기본 전투(`AttackInput`/`CombatEvent`)
 - [ ] 그리드 스프라이트 시트 임포터 + ComfyUI/SD 생성 파이프라인 (`docs/asset-pipeline.md`)
 
-## 클라이언트 실행 (Godot)
+## 통합 실행 (권장)
 
-```bash
-# 1) 서버 먼저 (별도 터미널)
+서버 + 클라이언트 N개를 한 번에 빌드·실행하고, 창을 닫으면 서버까지 정리한다:
+
+```powershell
+.\run-dev.ps1                 # 서버 + 클라 2개 (hero1/hero2, 서로 다른 캐릭터)
+.\run-dev.ps1 -Clients 3      # 클라 3개
+.\run-dev.ps1 -NoBuild        # 빌드 생략
+.\run-dev.ps1 -Godot "D:\Godot\Godot.exe"   # Godot 경로 지정 (또는 GODOT_BIN 환경변수)
+```
+
+클라이언트는 화살표키로 이동. 각 인스턴스는 `-- --user/--char/--server` 인자로 서로 다른 캐릭터로 입장한다.
+
+## 수동 실행 (개별)
+
+```powershell
+# 서버
 dotnet run --project server/Mabinogi2D.Server        # http://localhost:5080
-
-# 2) Godot .NET 에디터로 client/ 열기
-& "C:\workspaces\Godot_v4.6.3-stable_mono_win64\Godot_v4.6.3-stable_mono_win64.exe" --path client
-#    에디터에서 ▶(F5) 실행. 화살표키로 이동.
-#    멀티플레이 확인: Debug > Run Multiple Instances 로 2개 띄우면 서로 움직임이 보인다.
-#    (인스턴스마다 다른 캐릭터로 붙이려면 NetClient의 Username/CharacterName을 다르게)
+# 클라이언트(게임 모드, 다른 캐릭터로)
+& "C:\workspaces\Godot_v4.6.3-stable_mono_win64\Godot_v4.6.3-stable_mono_win64.exe" `
+    --path client -- --user hero2 --char Hero2 --server http://localhost:5080
+# 에디터로 열려면: ... --editor --path client
 ```
