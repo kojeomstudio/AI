@@ -1,0 +1,17 @@
+; Godot 4.6 프로젝트 설정. 에디터로 client/ 폴더를 열면 인식된다.
+config_version=5
+
+[application]
+
+config/name="mabinogi-2d-like client"
+run/main_scene="res://Main.tscn"
+config/features=PackedStringArray("4.6", "C#", "Forward Plus")
+
+[dotnet]
+
+project/assembly_name="Mabinogi2D.Client"
+
+[display]
+
+window/size/viewport_width=960
+window/size/viewport_height=540

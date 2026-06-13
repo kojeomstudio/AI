@@ -1,0 +1,17 @@
+# .NET build output
+bin/
+obj/
+*.user
+
+# Godot generated
+.godot/
+.import/
+export_presets.cfg
+
+# 로컬 개발 DB (커밋 금지)
+*.db
+*.db-shm
+*.db-wal
+
+# 로컬 시크릿 오버라이드 (Jwt__Key 등은 환경변수/user-secrets로)
+appsettings.*.local.json

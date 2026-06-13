@@ -1,0 +1,19 @@
+[gd_scene load_steps=3 format=3 uid="uid://b2dlikemain01"]
+
+[ext_resource type="Script" path="res://scripts/Main.cs" id="1_main"]
+[ext_resource type="Script" path="res://scripts/NetClient.cs" id="2_net"]
+
+[node name="Main" type="Node2D"]
+script = ExtResource("1_main")
+
+[node name="NetClient" type="Node" parent="."]
+script = ExtResource("2_net")
+
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="Status" type="Label" parent="UI"]
+offset_left = 8.0
+offset_top = 8.0
+offset_right = 800.0
+offset_bottom = 36.0
+text = "starting..."

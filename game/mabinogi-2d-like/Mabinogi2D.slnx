@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/server/">
+    <Project Path="server/Mabinogi2D.Server/Mabinogi2D.Server.csproj" />
+  </Folder>
+  <Folder Name="/shared/">
+    <Project Path="shared/Mabinogi2D.Shared/Mabinogi2D.Shared.csproj" />
+  </Folder>
+</Solution>

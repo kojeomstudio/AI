@@ -1,0 +1,13 @@
+<Project Sdk="Godot.NET.Sdk/4.6.3">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <EnableDynamicLoading>true</EnableDynamicLoading>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Mabinogi2D.Client</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- 서버와 동일한 프로토콜 DTO/상수 공유 -->
+    <ProjectReference Include="..\shared\Mabinogi2D.Shared\Mabinogi2D.Shared.csproj" />
+  </ItemGroup>
+</Project>

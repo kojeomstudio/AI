@@ -1,0 +1,23 @@
+# 로컬 개발용 DB. 초반은 가볍게 Postgres 하나만 띄운다.
+# 사용: docker compose up -d
+# (세션/캐시용 Redis는 규모가 커질 때 추가. 지금은 서버 인메모리로 충분.)
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: mabinogi-postgres
+    environment:
+      POSTGRES_USER: mabinogi
+      POSTGRES_PASSWORD: mabinogi_dev
+      POSTGRES_DB: mabinogi
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mabinogi"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  pgdata:
